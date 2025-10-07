@@ -191,7 +191,7 @@ def main(fasta_filename: str, fasta_out_filename: str, esm_folder: str):
             model=EsmModel(esm_folder),
             special_aas=list("RK"),
             mask_percent=0.3,
-            sort_optimization=False,
+            sort_optimization=True,
             batch_size=64
         )
     )
