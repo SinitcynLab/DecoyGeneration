@@ -1,0 +1,6 @@
+.venv/
+.vscode/
+test/
+.DS_Store/
+_pycache__/
+*.pyc
