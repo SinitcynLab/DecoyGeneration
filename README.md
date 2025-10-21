@@ -1,11 +1,11 @@
-# Introduction
+# Generative Decoy Peptides for Proteomics
 
-In mass spectrometry (MS)-based proteomics, peptide identification is typically performed by matching experimental spectra against theoretical spectra derived from protein databases. To estimate the false discovery rate (FDR), target-decoy strategies are widely employed: the search space is augmented with *decoy peptides* that are not expected to exist in the sample. By comparing matches to targets versus decoys, one can statistically control for incorrect identifications.  
+## Overview
 
-The quality of FDR estimation, however, depends critically on the realism of the generated decoys. Current decoy generation methods are simplistic: they often create decoys by reversing amino acid sequences, shuffling them, or applying small permutations decoy. While computationally convenient, such strategies produce peptides that do not reflect the true physicochemical or structural properties of real peptides. Consequently, these decoys may be too easily distinguishable from targets, which can bias FDR estimation and reduce confidence in proteomics studies.
+In mass spectrometry (MS)-based proteomics, peptide identification relies on comparing experimental spectra with theoretical spectra derived from protein databases.
+To estimate the false discovery rate (FDR), researchers typically use *target-decoy* strategies, where synthetic *decoy peptides* serve as negative controls.
+However, current decoy generation methods - such as sequence reversal or random shuffling - are often too simplistic.
+They produce unrealistic peptides that may bias FDR estimation and reduce confidence in peptide identification.
 
-
-```
-
-## License
-MIT
+This project explores generative AI approaches to create more realistic decoy peptides that better mimic the properties of true peptides while remaining biologically implausible.
+By improving decoy realism, we aim to strengthen FDR estimation and enhance the reliability of proteomics analyses.
