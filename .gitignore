@@ -1,5 +1,6 @@
 .venv/
 .vscode/
+.idea/
 test/
 .DS_Store/
 _pycache__/
