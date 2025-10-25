@@ -1,8 +1,10 @@
 import torch
 from typing import Iterable
 
+from src.encoders.peptide_encoder import PeptideEncoder
+
 class PeptideClassifier(object):
-    def __init__(self, encoder):
+    def __init__(self, encoder : PeptideEncoder):
         object.__init__(self)
         self.encoder = encoder
     

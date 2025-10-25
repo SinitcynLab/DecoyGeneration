@@ -29,7 +29,7 @@ class DescriptionEncoder(PeptideEncoder):
         self.get_features = lambda x : compute_descriptors(x, self.features, self.pH)
 
     def __call__(self, sequences : Iterable[str]) -> torch.Tensor:
-        dict_list = list(map(self.get_features, sequences))
+        dict_list = list(map(self.get_features, sequences)) # will be list of dicts
         n_features = len(dict_list[0].values()) # hacky, could be moved into __init__
         x = torch.zeros((len(sequences), n_features))
         for i, dictionary in dict_list:

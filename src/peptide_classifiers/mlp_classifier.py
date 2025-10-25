@@ -1,16 +1,18 @@
 import torch
-import math
+import copy
+import numpy as np
 
 from src.peptide_classifiers.peptide_classifier import PeptideClassifier
+from src.encoders.peptide_encoder import PeptideEncoder
 from typing import Iterable
 
-class mlp_classifier(PeptideClassifier, torch.nn.Module):
-    def __init__(self, network:torch.nn.Sequential, encoder):
+class MLPClassifier(PeptideClassifier, torch.nn.Module):
+    def __init__(self, network : torch.nn.Sequential, encoder : PeptideEncoder):
         PeptideClassifier.__init__(self, encoder)
         torch.nn.Module.__init__(self)
         self.network = network
 
-    def forward(self, x : torch.Tensor) -> torch.Tensor:
+    def forward(self, x) -> torch.Tensor:
         return self.network(x)
     
     def classify(self, sequences : Iterable[str]) -> list[bool]:
@@ -27,4 +29,36 @@ class mlp_classifier(PeptideClassifier, torch.nn.Module):
         outcomes_tensor = torch.FloatTensor(list(outcomes))
         loss : torch.Tensor = torch.abs(x - outcomes_tensor)
         return list(zip(corr.tolist(), loss.tolist()))
+    
+def train_mlp(mlp : MLPClassifier, X_train : Iterable[str], y_train : Iterable[bool], X_val : Iterable[str], 
+              y_val : Iterable[str], n_epochs : int, batch_size : int, optimizer : torch.optim.Optimizer):
+    X_train = mlp.encoder(X_train)
+    y_train = torch.IntTensor(list(y_train))
+    X_train = mlp.encoder(X_val)
+    y_val = torch.IntTensor(list(y_val))
 
+    loss_fn = torch.nn.BCELoss()
+    batch_starts = torch.arange(0, len(X_train), batch_size)
+
+    best_acc = - np.inf
+    best_weights = None
+
+    for epoch in range(n_epochs):
+        mlp.train()
+        for start in batch_starts:
+            X_batch = X_train[start:start+batch_size]
+            y_batch = y_train[start:start+batch_size]
+            y_pred = mlp(X_batch)
+            loss = loss_fn(y_pred, y_batch)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+        mlp.eval()
+        y_pred = mlp(X_val)
+        acc = (y_pred.round() == y_val).float().mean()
+        acc = float(acc)
+        print("Validation accuracy after epoch %d: %.3f \n" % (epoch, acc))
+        if acc > best_acc:
+            best_acc = acc
+            best_weights = copy.deepcopy(mlp.state_dict())
+        mlp.load_state_dict(best_weights) # restore best weights        
