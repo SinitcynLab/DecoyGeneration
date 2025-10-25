@@ -10,7 +10,7 @@ from src.decoy_generators.shuffle_generator import ShuffleGenerator
 from src.io.fasta import write_fasta_file, read_fasta_file
 
 if __name__ == "__main__":
-    target_filename: str = "data/UP000000625_83333.fasta"
+    target_filename: str = "data/targets/UP000000625_83333.fasta"
 
     special_amino_acids: List[str] = ['R', 'K']
 
@@ -26,24 +26,6 @@ if __name__ == "__main__":
         ShuffleGenerator(
             special_amino_acids,
             random=random
-        ),
-        EsmGenerator(
-            local_path="models/esm2_t6_8M_UR50D",
-            random=random,
-            special_amino_acids=special_amino_acids,
-            mask_percent=0.3,
-            sort_optimization=True,
-            batch_size=64,
-            esm_generator_type=EsmGeneratorType.WORST
-        ),
-        EsmGenerator(
-            local_path="models/esm2_t6_8M_UR50D",
-            random=random,
-            special_amino_acids=special_amino_acids,
-            mask_percent=0.3,
-            sort_optimization=True,
-            batch_size=64,
-            esm_generator_type=EsmGeneratorType.BEST
         )
     ]
     for generator in generators:
