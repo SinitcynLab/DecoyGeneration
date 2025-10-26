@@ -32,7 +32,7 @@ class DescriptionEncoder(PeptideEncoder):
         dict_list = list(map(self.get_features, sequences)) # will be list of dicts
         n_features = len(dict_list[0].values()) # hacky, could be moved into __init__
         x = torch.zeros((len(sequences), n_features))
-        for i, dictionary in dict_list:
-            value_list = dictionary.values()
+        for i, dictionary in enumerate(dict_list):
+            value_list = list(dictionary.values())
             x[i,:] = torch.FloatTensor(value_list)
         return x
