@@ -35,4 +35,6 @@ class DescriptionEncoder(PeptideEncoder):
         for i, dictionary in enumerate(dict_list):
             value_list = list(dictionary.values())
             x[i,:] = torch.FloatTensor(value_list)
+        print(x[1:10])
+        x = self.normalize_tensor(x)
         return x

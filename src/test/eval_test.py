@@ -2,15 +2,20 @@ import torch
 
 from sklearn.model_selection import train_test_split
 from src.peptide_classifiers.mlp_classifier import MLPClassifier, train_mlp
+from src.encoders.descriptor_encoder import DescriptionEncoder
 from src.encoders.protbert_encoder import ProtBertEncoder
 from src.io.fasta import read_fasta_file
 
 if __name__ == "__main__":
     # define MLP classifier
     net = torch.nn.Sequential(
-        torch.nn.Linear(1024, 2),
+        torch.nn.Linear(1024, 512),
         torch.nn.ReLU(),
-        torch.nn.Linear(2, 1),
+        torch.nn.Linear(512, 256),
+        torch.nn.ReLU(),
+        torch.nn.Linear(256, 16),
+        torch.nn.ReLU(),
+        torch.nn.Linear(16, 1),
         torch.nn.Sigmoid()
     )
     encoder = ProtBertEncoder()
@@ -44,4 +49,6 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(classifier.parameters(), lr=0.0001)
     n_epochs = 250
     batch_size = 10
-    train_mlp(classifier, X_train, y_train, X_val, y_val, n_epochs, batch_size, optimizer)
+    N = 1000
+    M = round(N * 0.2)
+    train_mlp(classifier, X_train[1:N], y_train[1:N], X_val[1:M], y_val[1:M], n_epochs, batch_size, optimizer)
