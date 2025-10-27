@@ -20,6 +20,7 @@ class DescriptionEncoder(PeptideEncoder):
                 'isoelectric_point', 
                 'length', 
                 'molecular_weight', 
+                'molecular_formula',
                 'n_h_donors', 
                 'n_h_acceptors', 
                 'topological_polar_surface_area']

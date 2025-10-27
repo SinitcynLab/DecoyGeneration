@@ -39,7 +39,7 @@ if __name__ == "__main__":
     # train MLP:
     print("Starting training...")
     optimizer = torch.optim.Adam(classifier.parameters(), lr=0.00001)
-    n_epochs = 1000
+    n_epochs = 250
     batch_size = 10
     N = 2000
     M = round(N * 0.2)
