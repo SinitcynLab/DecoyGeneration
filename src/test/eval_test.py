@@ -11,18 +11,18 @@ from src.io.fasta import read_fasta_file
 
 if __name__ == "__main__":
     # define MLP classifier
-    tokenized_len = 64
+    tokenized_len = 128
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = torch.nn.Sequential(
         torch.nn.Dropout(p=0.3),
-        torch.nn.Linear(320 * tokenized_len, 512),
+        torch.nn.Linear(tokenized_len * 1024, 512),
         torch.nn.ReLU(),
         torch.nn.Linear(512, 64),
         torch.nn.ReLU(),
         torch.nn.Linear(64, 1),
         torch.nn.Sigmoid()
     )
-    encoder = EsmEncoder(max_tokenized_length=tokenized_len, device=device)
+    encoder = ProtBertEncoder(max_tokenized_length=tokenized_len, device=device)
     classifier = MLPClassifier(network=net, encoder=encoder, device=device)
 
     # load data:
@@ -45,6 +45,6 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-3, weight_decay=1e-5)
     n_epochs = 250
     batch_size = 10
-    N = 8000
+    N = 100
     M = round(N * test_fraction)
     train_mlp(classifier, X_train[1:N], y_train[1:N], X_val[1:M], y_val[1:M], n_epochs, batch_size, optimizer)

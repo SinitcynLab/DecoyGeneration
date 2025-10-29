@@ -47,6 +47,8 @@ def train_mlp(mlp : MLPClassifier, X_train : Iterable[str], y_train : Iterable[b
     best_acc = - np.inf
     best_weights = None
     print((X_train[1] - X_train[0]).sum())
+    print(X_train[1])
+    print(X_train[3])
     N = X_train.shape[0]
     M = X_val.shape[0]
     for epoch in range(n_epochs):
