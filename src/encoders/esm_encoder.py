@@ -16,6 +16,6 @@ class EsmEncoder(TransformerEncoder):
         self.model.to(self.device)
 
     def __call__(self, sequences : Iterable[str]):
-        embeddings = self._embed_batched(sequences) # [n.o. sequences, max_tokenized_length, 320]
+        output_list = self._embed_batched(sequences) # [n.o. sequences, max_tokenized_length, 320]
         embeddings = embeddings.flatten(start_dim = 1, end_dim = 2) # [n.o. sequences, max_tokenized_length * 320]
         return embeddings

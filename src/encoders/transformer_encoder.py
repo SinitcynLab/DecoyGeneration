@@ -30,7 +30,11 @@ class TransformerEncoder(PeptideEncoder):
             batch_inputs.to(self.device)
             with torch.no_grad():
                 batch_outputs = self.model(**batch_inputs, output_hidden_states=True)
-            batch_hidden_states = batch_outputs.last_hidden_state # extract the embeddings
+            if hasattr(batch_outputs, 'last_hidden_state'):
+                batch_hidden_states = batch_outputs.last_hidden_state # extract the embeddings
+            else:
+                batch_hidden_states = batch_outputs.hidden_states[-1] # extract the embeddings
+                batch_hidden_states = self.normalize_tensor(batch_hidden_states) # normalize (embedding not always normalized in this case)
             print(batch_hidden_states.shape)
             output_list.append(batch_hidden_states)
         return torch.cat(output_list, axis=0)

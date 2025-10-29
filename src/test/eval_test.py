@@ -45,6 +45,6 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-3, weight_decay=1e-5)
     n_epochs = 250
     batch_size = 10
-    N = 100
+    N = 1000
     M = round(N * test_fraction)
     train_mlp(classifier, X_train[1:N], y_train[1:N], X_val[1:M], y_val[1:M], n_epochs, batch_size, optimizer)
