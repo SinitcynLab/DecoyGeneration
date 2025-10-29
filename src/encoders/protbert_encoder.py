@@ -1,31 +1,36 @@
 import torch
-import numpy as np
-import tensorflow as tf
 
 from src.encoders.peptide_encoder import PeptideEncoder
 from typing import Iterable
-from proteinbert import load_pretrained_model
-from proteinbert.conv_and_global_attention_model import get_model_with_hidden_layers_as_outputs
+from transformers import BertModel, BertTokenizer
 
 class ProtBertEncoder(PeptideEncoder):
-    def __init__(self, seq_len : int = 512):
+    def __init__(self, max_tokenized_length : int = 64):
         PeptideEncoder.__init__(self)
-        self.seq_len = seq_len
-        with tf.device('CPU'):
-            self.pretrained_model_generator, self.input_encoder = load_pretrained_model()
-            self.model = get_model_with_hidden_layers_as_outputs(self.pretrained_model_generator.create_model(seq_len))
+        self.max_tokenized_length = max_tokenized_length
+        MODEL_NAME = "Rostlab/prot_bert_bfd_localization"
+        self.bert = BertModel.from_pretrained(MODEL_NAME)
+        self.tokenizer = BertTokenizer.from_pretrained(MODEL_NAME, do_lower_case=False)
 
     def __call__(self, sequences: Iterable[str], batch_size : int = 32) -> torch.Tensor:
-        for idx, sequence in enumerate(sequences):
-            if len(sequence) > self.seq_len - 2:
-                sequences[idx] = sequence[0:self.seq_len-2]
-        with tf.device('CPU'):
-            x = self.input_encoder.encode_X(list(sequences), self.seq_len)
-            local_reps, _ = self.model.predict(x, batch_size = batch_size)
-        x = local_reps
-        x = torch.from_numpy(x)
-        print(x.shape)
-        x = torch.mean(x, dim=2)
-        x = self.normalize_tensor(x)
-        print(x.shape)
-        return x
+        encodings = self.tokenizer.batch_encode_plus(sequences, 
+                                   truncation=True, 
+                                   add_special_tokens=True, 
+                                   return_token_type_ids=False,
+                                   return_attention_mask=True,
+                                   max_length = self.max_tokenized_length,
+                                   padding='max_length',
+                                   return_tensors='pt')
+        print("tokenized")
+        return self.__embed_batched(encodings)
+
+    def __embed_batched(self, encodings):
+        N = encodings['input_ids'].shape[0]
+        pooler_outputs = torch.zeros(N, 1024)
+        for idx in range(N):
+            input_ids = encodings['input_ids'][idx].unsqueeze(0)
+            attention_mask = encodings['attention_mask'][idx].unsqueeze(0)
+            embedding = self.bert(input_ids=input_ids, attention_mask=attention_mask)
+            pooler_outputs[idx] = embedding.pooler_output
+            print(idx)
+        return pooler_outputs

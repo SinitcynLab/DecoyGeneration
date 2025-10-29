@@ -42,8 +42,7 @@ def train_mlp(mlp : MLPClassifier, X_train : Iterable[str], y_train : Iterable[b
 
     best_acc = - np.inf
     best_weights = None
-    print(X_train[0])
-    print(X_train[1])
+    print((X_train[1] - X_train[0]).sum())
     for epoch in range(n_epochs):
         mlp.train()
         for batch_start in batch_starts:
@@ -53,7 +52,7 @@ def train_mlp(mlp : MLPClassifier, X_train : Iterable[str], y_train : Iterable[b
             y_pred = mlp(X_batch)
             loss = loss_fn(y_pred, y_batch)
             optimizer.zero_grad()
-            loss.backward()
+            loss.backward(retain_graph=True)
             optimizer.step()
         mlp.eval()
         batch_starts = torch.arange(0, X_val.shape[0], batch_size)

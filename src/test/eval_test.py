@@ -10,7 +10,7 @@ from src.io.fasta import read_fasta_file
 if __name__ == "__main__":
     # define MLP classifier
     net = torch.nn.Sequential(
-        torch.nn.Linear(512, 2048),
+        torch.nn.Linear(1024, 2048),
         torch.nn.ReLU(),
         torch.nn.Linear(2048, 512),
         torch.nn.ReLU(),
@@ -19,7 +19,7 @@ if __name__ == "__main__":
         torch.nn.Linear(64, 1),
         torch.nn.Sigmoid()
     )
-    encoder = TokenizerEncoder()
+    encoder = ProtBertEncoder()
     classifier = MLPClassifier(net, encoder)
 
     # load data:
@@ -41,6 +41,6 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(classifier.parameters(), lr=0.00001)
     n_epochs = 250
     batch_size = 10
-    N = 2000
+    N = 10
     M = round(N * 0.2)
     train_mlp(classifier, X_train[1:N], y_train[1:N], X_val[1:M], y_val[1:M], n_epochs, batch_size, optimizer)
