@@ -13,6 +13,7 @@ class ProtBertEncoder(PeptideEncoder):
         self.tokenizer = BertTokenizer.from_pretrained(MODEL_NAME, do_lower_case=False)
 
     def __call__(self, sequences: Iterable[str], batch_size : int = 32) -> torch.Tensor:
+        sequences = [" ".join(sequence) for sequence in sequences]
         encodings = self.tokenizer.batch_encode_plus(sequences, 
                                    truncation=True, 
                                    add_special_tokens=True, 

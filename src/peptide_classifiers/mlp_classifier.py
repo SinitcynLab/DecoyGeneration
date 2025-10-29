@@ -7,10 +7,11 @@ from src.encoders.peptide_encoder import PeptideEncoder
 from typing import Iterable
 
 class MLPClassifier(PeptideClassifier, torch.nn.Module):
-    def __init__(self, network : torch.nn.Sequential, encoder : PeptideEncoder):
-        PeptideClassifier.__init__(self, encoder)
+    def __init__(self, network : torch.nn.Sequential, encoder : PeptideEncoder, device : torch.device):
+        PeptideClassifier.__init__(self, encoder, device)
         torch.nn.Module.__init__(self)
         self.network = network
+        network.to(device)
 
     def forward(self, x) -> torch.Tensor:
         return self.network(x)
@@ -30,23 +31,30 @@ class MLPClassifier(PeptideClassifier, torch.nn.Module):
         loss : torch.Tensor = torch.abs(x - outcomes_tensor)
         return list(zip(corr.tolist(), loss.tolist()))
     
+    def set_device(self, device : torch.device):
+        PeptideClassifier.set_device(device)
+        self.network.to(device)
+    
 def train_mlp(mlp : MLPClassifier, X_train : Iterable[str], y_train : Iterable[bool], X_val : Iterable[str], 
               y_val : Iterable[str], n_epochs : int, batch_size : int, optimizer : torch.optim.Optimizer):
     X_train = mlp.encoder(X_train)
-    y_train = torch.FloatTensor(list(y_train)).unsqueeze(1)
+    y_train = torch.FloatTensor(list(y_train)).unsqueeze(1).to(mlp.device)
     X_val = mlp.encoder(X_val)
-    y_val = torch.FloatTensor(list(y_val)).unsqueeze(1)
+    y_val = torch.FloatTensor(list(y_val)).unsqueeze(1).to(mlp.device)
 
     loss_fn = torch.nn.BCELoss()
-    batch_starts = torch.arange(0, X_train.shape[0], batch_size)
 
     best_acc = - np.inf
     best_weights = None
     print((X_train[1] - X_train[0]).sum())
+    N = X_train.shape[0]
+    M = X_val.shape[0]
     for epoch in range(n_epochs):
         mlp.train()
+        batch_starts = torch.arange(0, N, batch_size)
+        tot_acc = 0
         for batch_start in batch_starts:
-            batch_end = min(batch_start+batch_size, X_train.shape[0])
+            batch_end = min(batch_start+batch_size, N)
             X_batch = X_train[batch_start:batch_end]
             y_batch = y_train[batch_start:batch_end]
             y_pred = mlp(X_batch)
@@ -54,16 +62,19 @@ def train_mlp(mlp : MLPClassifier, X_train : Iterable[str], y_train : Iterable[b
             optimizer.zero_grad()
             loss.backward(retain_graph=True)
             optimizer.step()
+            acc = (y_pred.round() == y_batch).float().mean()
+            tot_acc += (batch_end - batch_start) / N * acc
+        print("Training accuracy after epoch %d: %.10f" % (epoch, tot_acc))
         mlp.eval()
-        batch_starts = torch.arange(0, X_val.shape[0], batch_size)
+        batch_starts = torch.arange(0, M, batch_size)
         tot_acc = 0
         for batch_start in batch_starts:
-            batch_end = min(batch_start+batch_size, X_val.shape[0])
+            batch_end = min(batch_start+batch_size, M)
             X_batch = X_val[batch_start:batch_end]
             y_batch = y_val[batch_start:batch_end]
             y_pred = mlp(X_batch)
             acc = (y_pred.round() == y_batch).float().mean()
-            tot_acc += (batch_end - batch_start) / len(X_val) * acc
+            tot_acc += (batch_end - batch_start) / M * acc
         print("Validation accuracy after epoch %d: %.10f" % (epoch, tot_acc))
         if tot_acc > best_acc:
             best_acc = tot_acc
