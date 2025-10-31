@@ -13,7 +13,7 @@ from src.io.fasta import read_fasta_file
 
 if __name__ == "__main__":
     # define MLP classifier
-    tokenized_len = 256
+    tokenized_len = 64
     pca_dim = 100
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = torch.nn.Sequential(
@@ -44,9 +44,9 @@ if __name__ == "__main__":
     X_train, X_val, y_train, y_val = train_test_split(sequences, labels, test_size=test_fraction)
     
     # train MLP:
-    N = 100
+    N = 2000
     M = round(N * test_fraction)
-    optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-3, weight_decay=1e-7)
+    optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-3)
     n_epochs = 20
     batch_size = 10
     train_ann(classifier, X_train[0:N], y_train[0:N], X_val[0:M], y_val[0:M], n_epochs, batch_size, optimizer)
