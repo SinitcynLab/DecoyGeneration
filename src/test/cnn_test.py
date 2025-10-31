@@ -6,19 +6,29 @@ from src.encoders.image_encoder import ImageEncoder
 from src.io.fasta import read_fasta_file
 
 if __name__ == "__main__":
-    # define MLP classifier
-    tokenized_len = 128
+    # define CNN classifier
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = torch.nn.Sequential(
         torch.nn.Conv2d(1, 4, kernel_size=3),
         torch.nn.MaxPool2d(kernel_size=2),
-        torch.nn.Conv2d(4, 16, kernel_size=3),
+        torch.nn.Conv2d(4, 16, kernel_size=4),
         torch.nn.MaxPool2d(kernel_size=2),
         torch.nn.Flatten(),
-        torch.nn.Linear(16*54*54, 1),
+        torch.nn.Linear(16*62*254, 128),
+        torch.nn.ReLU(),
+        torch.nn.Linear(128, 32),
+        torch.nn.ReLU(),
+        torch.nn.Linear(32, 1),
         torch.nn.Sigmoid()
     )
-    encoder = ImageEncoder(device=device, image_dim=256)
+    # dim calculation:
+    # O = ((W - K + 2 * P) / S) + 1
+    # O: output size
+    # W: Input size
+    # K: kernel size
+    # P: padding (0 for our case)
+    # S: stride
+    encoder = ImageEncoder(image_height=256, device=device)
     classifier = AnnClassifier(network=net, encoder=encoder, device=device)
 
     # load data:
@@ -38,9 +48,9 @@ if __name__ == "__main__":
     
     # train MLP:
     print("Starting training...")
-    optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-3, weight_decay=1e-5)
+    optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-3, weight_decay=1e-6)
     n_epochs = 20
     batch_size = 10
-    N = 500
+    N = 200
     M = round(N * test_fraction)
     train_ann(classifier, X_train[1:N], y_train[1:N], X_val[1:M], y_val[1:M], n_epochs, batch_size, optimizer)
