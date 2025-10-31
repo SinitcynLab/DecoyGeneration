@@ -53,4 +53,4 @@ if __name__ == "__main__":
     batch_size = 10
     N = 200
     M = round(N * test_fraction)
-    train_ann(classifier, X_train[1:N], y_train[1:N], X_val[1:M], y_val[1:M], n_epochs, batch_size, optimizer)
+    train_ann(classifier, X_train[0:N], y_train[0:N], X_val[0:M], y_val[0:M], n_epochs, batch_size, optimizer)
