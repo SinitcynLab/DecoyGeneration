@@ -35,6 +35,6 @@ class TransformerEncoder(PeptideEncoder):
             else:
                 batch_hidden_states = batch_outputs.hidden_states[-1] # extract the embeddings
                 batch_hidden_states = self.normalize_tensor(batch_hidden_states) # normalize (embedding not always normalized in this case)
-            print(batch_hidden_states.shape)
             output_list.append(batch_hidden_states)
+            print("%d / %d" % (batch_end, len(sequences)))
         return torch.cat(output_list, axis=0)
