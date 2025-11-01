@@ -7,6 +7,7 @@ from typing import Iterable
 
 class ImageEncoder(PeptideEncoder):
     def __init__(self, image_height : int = 256, device : torch.device = 'cpu'):
+        PeptideEncoder.__init__(self)
         self.image_height = image_height
         self.device = device
 

@@ -1,7 +1,7 @@
 import torch
 
 from sklearn.model_selection import train_test_split
-from src.peptide_classifiers.ann_classifier import AnnClassifier, train_ann
+from src.peptide_classifiers.feed_forward_nn_classifier import FeedForwardNNClassifier, train_feed_forward_nn
 from src.encoders.image_encoder import ImageEncoder
 from src.io.fasta import read_fasta_file
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # P: padding (0 for our case)
     # S: stride
     encoder = ImageEncoder(image_height=256, device=device)
-    classifier = AnnClassifier(network=net, encoder=encoder, device=device)
+    classifier = FeedForwardNNClassifier(network=net, encoder=encoder, device=device)
 
     # load data:
     target_records = read_fasta_file("data/targets/UP000000625_83333.fasta")
@@ -53,4 +53,4 @@ if __name__ == "__main__":
     batch_size = 10
     N = 200
     M = round(N * test_fraction)
-    train_ann(classifier, X_train[0:N], y_train[0:N], X_val[0:M], y_val[0:M], n_epochs, batch_size, optimizer)
+    train_feed_forward_nn(classifier, X_train[0:N], y_train[0:N], X_val[0:M], y_val[0:M], n_epochs, batch_size, optimizer)
