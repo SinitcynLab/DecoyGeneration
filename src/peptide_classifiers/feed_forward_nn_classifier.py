@@ -11,7 +11,7 @@ class FeedForwardNNClassifier(NNClassifier, torch.nn.Module):
         NNClassifier.__init__(self, network, encoder, device)
 
     def forward(self, x : torch.Tensor) -> torch.Tensor:
-        return self.network(x)
+        return torch.flatten(self.network(x))
     
     def classify(self, sequences : Iterable[str]) -> list[bool]:
         x : torch.Tensor = self.encoder(sequences)
@@ -31,28 +31,13 @@ class FeedForwardNNClassifier(NNClassifier, torch.nn.Module):
     
     def set_device(self, device : torch.device):
         NNClassifier.set_device(device)
-
-    def run_on_batch(self, X_batch, y_batch):
-        y_pred = self(X_batch)
-        acc = (y_pred.round() == y_batch).float().mean()
-        return y_pred, acc
-
-    def train_on_batch(self, X_batch, y_batch, loss_fn, optimizer, loss):
-        encoding = self.encoder(X_batch)
-        y_tensor = torch.FloatTensor(y_batch).to(self.device)
-        y_pred, acc = self.run_on_batch(self, encoding, y_tensor)
-        loss = loss_fn(y_pred, y_batch)
-        optimizer.zero_grad()
-        loss.backward(retain_graph=True)
-        optimizer.step()
-        return acc
     
 def train_feed_forward_nn(feed_foward_nn : FeedForwardNNClassifier, X_train : Iterable[str], y_train : Iterable[bool], X_val : Iterable[str], 
               y_val : Iterable[str], n_epochs : int, batch_size : int, optimizer : torch.optim.Optimizer):
     X_train = feed_foward_nn.encoder(X_train)
-    y_train = torch.FloatTensor(list(y_train)).unsqueeze(1).to(feed_foward_nn.device)
+    y_train = torch.FloatTensor(list(y_train)).to(feed_foward_nn.device)
     X_val = feed_foward_nn.encoder(X_val)
-    y_val = torch.FloatTensor(list(y_val)).unsqueeze(1).to(feed_foward_nn.device)
+    y_val = torch.FloatTensor(list(y_val)).to(feed_foward_nn.device)
 
     loss_fn = torch.nn.BCELoss()
 

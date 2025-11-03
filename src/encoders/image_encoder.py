@@ -15,5 +15,6 @@ class ImageEncoder(PeptideEncoder):
 
     def __call__(self, sequences: Iterable[str]):
         embeddings = self.wrapped_encoder(sequences)
+        embeddings = self.normalize_tensor(embeddings) # check this
         N = len(sequences)
         return torch.reshape(embeddings, (N, 1, 1024, self.image_height)) # [N, C, W, H]

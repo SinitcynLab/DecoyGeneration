@@ -42,7 +42,7 @@ class TransformerEncoder(PeptideEncoder):
             else:
                 batch_hidden_states = batch_outputs.hidden_states[-1] # extract the embeddings
             output_list.append(batch_hidden_states)
-            print("%d / %d" % (batch_end, len(sequences)))
+            #print("%d / %d" % (batch_end, len(sequences)))
         # Return output as tensor if we mandate constant length, output list otherwise:
         if self.constant_length:
             return torch.cat(output_list, axis=0)
