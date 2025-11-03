@@ -20,6 +20,13 @@ class TransformerEncoder(PeptideEncoder):
         model.eval()
         model.to(self.device)
         return model, tokenizer
+    
+    def __extract_hidden_state(self, output_object) -> torch.Tensor:
+        if hasattr(output_object, 'last_hidden_state'):
+            hidden_states = output_object.last_hidden_state # extract the embeddings
+        else:
+            hidden_states = output_object.hidden_states[-1] # extract the embeddings
+        return hidden_states
 
     def _embed_batched(self, sequences : Iterable[str], batch_size : int = 32) -> Union[torch.Tensor, list[torch.Tensor]]:
         if self.constant_length:
@@ -37,12 +44,8 @@ class TransformerEncoder(PeptideEncoder):
             batch_inputs.to(self.device)
             with torch.no_grad():
                 batch_outputs = self.model(**batch_inputs, output_hidden_states=True)
-            if hasattr(batch_outputs, 'last_hidden_state'):
-                batch_hidden_states = batch_outputs.last_hidden_state # extract the embeddings
-            else:
-                batch_hidden_states = batch_outputs.hidden_states[-1] # extract the embeddings
+            batch_hidden_states = self.__extract_hidden_state(batch_outputs)
             output_list.append(batch_hidden_states)
-            #print("%d / %d" % (batch_end, len(sequences)))
         # Return output as tensor if we mandate constant length, output list otherwise:
         if self.constant_length:
             return torch.cat(output_list, axis=0)

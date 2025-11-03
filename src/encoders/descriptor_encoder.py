@@ -24,14 +24,14 @@ class DescriptionEncoder(PeptideEncoder):
                 'n_h_donors', 
                 'n_h_acceptors', 
                 'topological_polar_surface_area']
-        super().__init__()
+        PeptideEncoder.__init__(self)
         self.features = features
         self.pH = pH
         self.get_features = lambda x : compute_descriptors(x, self.features, self.pH)
 
     def __call__(self, sequences : Iterable[str]) -> torch.Tensor:
         dict_list = list(map(self.get_features, sequences)) # will be list of dicts
-        n_features = len(dict_list[0].values()) # hacky, could be moved into __init__
+        n_features = len(dict_list[0].values())
         x = torch.zeros((len(sequences), n_features))
         for i, dictionary in enumerate(dict_list):
             value_list = list(dictionary.values())
