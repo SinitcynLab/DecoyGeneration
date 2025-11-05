@@ -6,12 +6,13 @@ from transformers import EsmTokenizer, EsmForMaskedLM
 from src.encoders.peptide_encoder import PeptideEncoder
 
 class TransformerEncoder(PeptideEncoder):
-    def __init__(self, max_tokenized_length : int = 256, device : torch.device = 'cpu', constant_length : bool = True):
+    def __init__(self, max_tokenized_length : int = 256, device : torch.device = 'cpu', constant_length : bool = True, cls_only : bool = False):
         PeptideEncoder.__init__(self)
         self.max_tokenized_length = max_tokenized_length
         self.device = device
         self.canonical_amino_acids = list("ACDEFGHIKLMNPQRSTVWY")
         self.constant_length = constant_length
+        self.cls_only = cls_only
 
     def _load_transformer_from_path(self, path : str):
         model = EsmForMaskedLM.from_pretrained(path, local_files_only=True)
@@ -26,11 +27,15 @@ class TransformerEncoder(PeptideEncoder):
             hidden_states = output_object.last_hidden_state # extract the embeddings
         else:
             hidden_states = output_object.hidden_states[-1] # extract the embeddings
-        return hidden_states
+        if self.cls_only:
+            hidden_states = hidden_states[0][0] # [1, num_tokens, 1024], first token is CLS token
+            return hidden_states.unsqueeze(0) # add dimension to get each sample as a row
+        else:
+            return hidden_states
 
     def _embed_batched(self, sequences : Iterable[str], batch_size : int = 32) -> Union[torch.Tensor, list[torch.Tensor]]:
-        if self.constant_length:
-            batch_size = 1 # if constant length, one sample per batch.
+        if not self.constant_length:
+            batch_size = 1 # if non-constant length, one sample per batch.
         batch_starts = torch.arange(0, len(sequences), batch_size)
         output_list = []
         for batch_start in batch_starts:
@@ -47,7 +52,7 @@ class TransformerEncoder(PeptideEncoder):
             batch_hidden_states = self.__extract_hidden_state(batch_outputs)
             output_list.append(batch_hidden_states)
         # Return output as tensor if we mandate constant length, output list otherwise:
-        if self.constant_length:
+        if self.constant_length or self.cls_only:
             return torch.cat(output_list, axis=0)
         else:
             return output_list

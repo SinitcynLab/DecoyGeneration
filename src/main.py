@@ -17,25 +17,6 @@ if __name__ == "__main__":
     n: int = 3
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
-        ReverseGenerator(
-            special_amino_acids
-        ),
-        DiannGenerator(
-            special_amino_acids
-        ),
-        ShuffleGenerator(
-            special_amino_acids,
-            random=random
-        ),
-        EsmGenerator(
-            local_path="models/esm2_t6_8M_UR50D",
-            random=random,
-            special_amino_acids=special_amino_acids,
-            mask_percent=0.3,
-            sort_optimization=True,
-            batch_size=64,
-            esm_generator_type=EsmGeneratorType.WORST
-        ),
         EsmGenerator(
             local_path="models/esm2_t6_8M_UR50D",
             random=random,
@@ -52,7 +33,7 @@ if __name__ == "__main__":
         match generator.decoy_generation_type:
             case DecoyGeneratorType.ONE2ONE:
                 filename_out = f"{filename}.{generator}{extension}"
-                write_fasta_file(filename_out, generator.convert_fasta(read_fasta_file(target_filename)))
+                write_fasta_file(filename_out, generator.convert_fasta(read_fasta_file(target_filename)[1:1000]))
             case DecoyGeneratorType.ONE2MANY:
                 for i in range(n):
                     filename_out = f"{filename}.{generator}.{i}{extension}"
