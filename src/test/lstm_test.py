@@ -1,25 +1,25 @@
 import torch
-import numpy as np
 
 from sklearn.model_selection import train_test_split
-from src.peptide_classifiers.recurrent_nn_classifier import RecurrentNNClassifier
+from src.peptide_classifiers.lstm_classifier import LSTMClassifier
 from src.peptide_classifiers.nn_classifier import train_nn
 from src.encoders.protbert_encoder import ProtBertEncoder
+from src.encoders.esm_encoder import ESMEncoder
 from src.io.fasta import read_fasta_file
 
 if __name__ == "__main__":
     # define RNN classifier
-    out_size = 128
+    hidden_size = 128
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    rnn = torch.nn.RNN(1024, out_size, bidirectional=True)
+    lstm = torch.nn.LSTM(320, hidden_size, 1)
     net = torch.nn.Sequential( # each character (amino acid) is encoded using 1024 numbers
-        torch.nn.Linear(2*out_size, 1),
+        torch.nn.Linear(hidden_size, 1),
         torch.nn.Sigmoid()
     )
-    encoder = ProtBertEncoder(device=device, constant_length=False, flatten=False)
-    classifier = RecurrentNNClassifier(rnn=rnn, network=net, encoder=encoder, device=device)
+    encoder = ESMEncoder(device=device, constant_length=False, flatten=False)
+    classifier = LSTMClassifier(lstm=lstm, network=net, encoder=encoder, device=device)
 
-    base = 'UP000002311_559292'
+    base = 'UP000000625_83333'
 
     # load data:
     target_records = read_fasta_file(f"data/targets/{base}.fasta")
@@ -37,11 +37,11 @@ if __name__ == "__main__":
     test_fraction = 0.3
     X_train, X_val, y_train, y_val = train_test_split(sequences, labels, test_size=test_fraction)
     
-    # train RNN:
-    N = 300 # 100 each
+    # train MLP:
+    N = 3000 # 100 each
     M = round(N * test_fraction)
     optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-3)
     n_epochs = 20
     batch_size = 10
     best_acc = train_nn(classifier, X_train[0:N], y_train[0:N], X_val[0:M], y_val[0:M], n_epochs, batch_size, optimizer)
-    print(f"Best accuracy of RNN on {base}: {best_acc}")
+    print(f"Best accuracy of LSTM on {base}: {best_acc}")

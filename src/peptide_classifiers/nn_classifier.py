@@ -2,7 +2,7 @@ import torch
 import copy
 import numpy as np
 
-from typing import Iterable
+from typing import Iterable, Union
 from src.peptide_classifiers.peptide_classifier import PeptideClassifier
 from src.encoders.peptide_encoder import PeptideEncoder
 
@@ -29,6 +29,27 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
         loss.backward(retain_graph=True)
         optimizer.step()
         return acc
+    
+    def classify(self, sequences : Iterable[str]) -> list[bool]:
+        # get inputs:
+        encodings : Union[torch.Tensor, list[torch.Tensor]] = self.encoder(sequences) # could be single tensor or list of tensor, depending on implementation of encoder
+        # get outputs through forward
+        out = self.forward(encodings)
+        # cast outputs to list and return:
+        return torch.round(out).tolist()
+    
+    def score(self, sequences : Iterable[str], outcomes : Iterable[bool]) -> tuple[list[bool], list[float]]:
+        # get inputs:
+        encodings : Union[torch.Tensor, list[torch.Tensor]] = self.encoder(sequences) # could be single tensor or list of tensor, depending on implementation of encoder
+        # get outputs through forward
+        out = self.forward(encodings)
+        # compute predictions, get accuracy:
+        pred : torch.Tensor = torch.round(out)
+        outcomes_tensor = torch.IntTensor(list(outcomes)).to(self.device)
+        corr : torch.Tensor = torch.eq(pred, outcomes_tensor)
+        loss : torch.Tensor = torch.abs(out - outcomes_tensor.float())
+        # return whether predictions correct, and loss measure with each prediction:
+        return corr.tolist(), loss.tolist()
 
 def set_up_nn_training(nn : NNClassifier, X_train, y_train, X_val, y_val):
     X_train = nn.encoder(X_train)

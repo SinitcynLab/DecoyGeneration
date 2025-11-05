@@ -10,5 +10,4 @@ class ESMCLSEncoder(ESMEncoder):
 
     def __call__(self, sequences: Iterable[str]) -> torch.Tensor:
         embeddings = self._embed_batched(sequences) # [n.o. sequences, max_tokenized_length, 320]
-        print(embeddings.shape)
         return embeddings

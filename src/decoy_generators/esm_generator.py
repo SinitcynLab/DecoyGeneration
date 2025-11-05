@@ -49,9 +49,11 @@ class EsmGenerator(DecoyGenerator):
         self.sort_optimization = sort_optimization
         self.batch_size = batch_size
         self.esm_generator_type = esm_generator_type
+        self.local_path = local_path
 
     def __str__(self):
-        return f"esm.{self.esm_generator_type.name.lower()}"
+        param_count = self.local_path.split('/')[-1].split('_')[2]
+        return f"esm{param_count}.{self.esm_generator_type.name.lower()}.[{self.mask_percent}]"
 
     def __get_masked_positions(self, sequence: str):
         positions: List[int] = list(self.get_positions_special_aas(sequence))

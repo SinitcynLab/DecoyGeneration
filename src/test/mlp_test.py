@@ -49,4 +49,4 @@ if __name__ == "__main__":
     n_epochs = 20
     batch_size = 10
     best_acc = train_nn(classifier, X_train[0:N], y_train[0:N], X_val[0:M], y_val[0:M], n_epochs, batch_size, optimizer)
-    print(f"Best accuracy of MLP on {decoy_file.rsplit('/')[-1]}: {best_acc}")
+    print(f"Best accuracy of MLP on {decoy_file.split('/')[-1]}: {best_acc}")

@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # var_len_encoder = ProtBertEncoder(device=device, constant_length=False, flatten=False)
     # rnn = RecurrentNNClassifier(rnn=rnn_module, network=rnn_net, encoder=var_len_encoder, device=device)
 
-    extensions = ['esm.best.0']
+    extensions = ['esm.best.[0.05].0']
     nets = [mlp]
     names = ["mlp"] # should probably add name property to classifiers
     base = 'UP000000625_83333'
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         
         for i, net in enumerate(nets):
             # train net:
-            N = 500 # 1000 each
+            N = 1000
             M = round(N * test_fraction)
             optimizer = torch.optim.Adam(net.parameters(), lr=1e-3)
             n_epochs = 20
