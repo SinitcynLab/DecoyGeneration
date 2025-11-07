@@ -23,10 +23,14 @@ if __name__ == "__main__":
 
     # load data:
     target_records = read_fasta_file(f"data/targets/{base}.fasta")
-    decoy_records = read_fasta_file(f"/home/ctrl/DecoyGeneration/data/decoys/{base}.reverse.fasta")
-
+    #decoy_records = read_fasta_file(f"/home/ctrl/DecoyGeneration/data/decoys/{base}.esm650M.best.[0.05].0.(1233).fasta")
+    decoy_records = read_fasta_file(f"/home/ctrl/DecoyGeneration/data/decoys/{base}.diann.fasta")
+    
+    K = 1233
     target_sequences = [record.sequence for record in target_records]
     decoy_sequences = [record.sequence for record in decoy_records]
+    target_sequences = target_sequences[0:K]
+    decoy_sequences = decoy_sequences[0:K]
 
     target_labels = [0 for _ in range(len(target_sequences))]
     decoy_labels = [1 for _ in range(len(decoy_sequences))]
