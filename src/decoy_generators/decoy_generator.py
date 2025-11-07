@@ -28,7 +28,7 @@ class DecoyGenerator(object):
             FastaRecord(head=record.head, sequence=new_seq)
             for record, new_seq in zip(targets2, self.convert(record.sequence for record in targets1))
         )
-
+    
     def get_positions_special_aas(self, sequence: str) -> Iterator[int]:
         if sequence[0] == "M":  # special case of the first amino acid in proteins, which is usually M
             yield 0

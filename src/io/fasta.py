@@ -30,8 +30,8 @@ def read_fasta_file(filename: str) -> Iterator[FastaRecord]:
         )
 
 
-def write_fasta_file(filename: str, fasta_records: Iterator[FastaRecord], width: int = 60):
-    with open(filename, 'w') as filestream:
+def write_fasta_file(filename: str, fasta_records: Iterator[FastaRecord], width: int = 60, write_mode: str = 'w'):
+    with open(filename, write_mode) as filestream:
         for record in fasta_records:
             filestream.write(f">{record.head}\n")
             for idx in range(0, len(record.sequence), width):

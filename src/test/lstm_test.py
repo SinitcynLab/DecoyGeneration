@@ -37,7 +37,7 @@ if __name__ == "__main__":
     test_fraction = 0.3
     X_train, X_val, y_train, y_val = train_test_split(sequences, labels, test_size=test_fraction)
     
-    # train MLP:
+    # train LSTM:
     N = 3000 # 100 each
     M = round(N * test_fraction)
     optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-3)
