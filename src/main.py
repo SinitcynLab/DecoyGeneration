@@ -5,7 +5,7 @@ from typing import List
 
 from src.decoy_generators.decoy_generator import DecoyGenerator, DecoyGeneratorType
 from src.decoy_generators.diann_generator import DiannGenerator
-from src.decoy_generators.esm_generator import EsmGenerator, EsmGeneratorType
+from src.decoy_generators.esm_generator import EsmGenerator, MlGeneratorType
 from src.decoy_generators.reverse_generator import ReverseGenerator
 from src.decoy_generators.shuffle_generator import ShuffleGenerator
 from src.io.fasta import write_fasta_file, read_fasta_file
@@ -23,10 +23,10 @@ if __name__ == "__main__":
             local_path="models/esm2_t33_650M_UR50D",
             random=random,
             special_amino_acids=special_amino_acids,
-            mask_percent=0.3,
+            mask_percent=0.05,
             sort_optimization=True,
             batch_size=1,
-            esm_generator_type=EsmGeneratorType.BEST
+            ml_generator_type=MlGeneratorType.BEST
         )
     ]
     for generator in generators:

@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 from src.peptide_classifiers.lstm_classifier import LSTMClassifier
 from src.peptide_classifiers.nn_classifier import train_nn
 from src.encoders.protbert_encoder import ProtBertEncoder
-from src.encoders.esm_encoder import ESMEncoder
+from src.encoders.esm_encoder import EsmEncoder
 from src.io.fasta import read_fasta_file
 
 if __name__ == "__main__":
@@ -16,7 +16,7 @@ if __name__ == "__main__":
         torch.nn.Linear(hidden_size, 1),
         torch.nn.Sigmoid()
     )
-    encoder = ESMEncoder(device=device, constant_length=False, flatten=False)
+    encoder = EsmEncoder(device=device, constant_length=False, flatten=False)
     classifier = LSTMClassifier(lstm=lstm, network=net, encoder=encoder, device=device)
 
     base = 'UP000000625_83333'

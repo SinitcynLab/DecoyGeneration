@@ -3,7 +3,7 @@ import torch
 from src.encoders.protbert_encoder import ProtBertEncoder
 from typing import Iterable
 
-class ProtBertCLSEncoder(ProtBertEncoder):
+class ProtBertClsEncoder(ProtBertEncoder):
     def __init__(self, device='cpu'):
         ProtBertEncoder.__init__(self, device=device, constant_length=False)
         self.cls_only = True

@@ -4,7 +4,8 @@ from enum import Enum
 import torch
 from torch import Tensor
 
-from src.decoy_generators.decoy_generator import DecoyGenerator, DecoyGeneratorType
+from src.decoy_generators.decoy_generator import DecoyGeneratorType
+from src.decoy_generators.ml_generator import MlGenerator, MlGeneratorType
 from typing import Iterator, List, Tuple
 from transformers import EsmTokenizer, EsmForMaskedLM
 
@@ -14,19 +15,14 @@ torch.set_num_threads(1)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-class EsmGeneratorType(Enum):
-    BEST = 1,
-    WORST = 2
-
-
-class EsmGenerator(DecoyGenerator):
+class EsmGenerator(MlGenerator):
     model: EsmForMaskedLM
     tokenize: EsmTokenizer
     random: Random
     mask_percent: float
     sort_optimization: bool
     batch_size: int
-    esm_generator_type: EsmGeneratorType
+    esm_generator_type: MlGeneratorType
 
     decoy_generation_type: DecoyGeneratorType = DecoyGeneratorType.ONE2MANY
 
@@ -38,36 +34,19 @@ class EsmGenerator(DecoyGenerator):
             mask_percent: float = 0.3,  # should be between 0.0 and 1.0
             sort_optimization: bool = True,
             batch_size: int = 64,
-            esm_generator_type: EsmGeneratorType = EsmGeneratorType.BEST
+            ml_generator_type: MlGeneratorType = MlGeneratorType.BEST
     ):
-        super().__init__(special_amino_acids)
+        MlGenerator.__init__(self, local_path, random, special_amino_acids, mask_percent, sort_optimization,
+                             batch_size, ml_generator_type)
         self.model = EsmForMaskedLM.from_pretrained(local_path, local_files_only=True)
         self.tokenizer = EsmTokenizer.from_pretrained(local_path, local_files_only=True)
         self.model.eval()
-        self.random = random
-        self.mask_percent = mask_percent
-        self.sort_optimization = sort_optimization
-        self.batch_size = batch_size
-        self.esm_generator_type = esm_generator_type
-        self.local_path = local_path
 
     def __str__(self):
         param_count = self.local_path.split('/')[-1].split('_')[2]
         return f"esm{param_count}.{self.esm_generator_type.name.lower()}.[{self.mask_percent}]"
 
-    def __get_masked_positions(self, sequence: str):
-        positions: List[int] = list(self.get_positions_special_aas(sequence))
-        for idx in range(1, len(positions)):
-            start: int = positions[idx - 1] + 1
-            end: int = positions[idx]
-            n: int = end - start
-            m: int = math.ceil(n * self.mask_percent)
-            if m == 0:
-                continue
-            for i in sorted(self.random.sample(range(start, end), m)):
-                yield i
-
-    def __batch_convert(self, target_batch: List[str]) -> Iterator[str]:
+    def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
         aa_ids = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
 
         k: int = 2 + len(self.special_amino_acids)  # why 2 - aa itself and I/L dillema
@@ -75,7 +54,7 @@ class EsmGenerator(DecoyGenerator):
         inputs = self.tokenizer(target_batch, return_tensors="pt", padding=True)  # [batch_size, L, vocab]
         mask_positions: List[List[int]] = [[] for _ in range(len(target_batch))]
         for sequence_idx, sequence in enumerate(target_batch):
-            for mask_idx in self.__get_masked_positions(sequence):
+            for mask_idx in self._get_masked_positions(sequence):
                 inputs["input_ids"][sequence_idx][mask_idx] = self.tokenizer.mask_token_id
                 mask_positions[sequence_idx].append(mask_idx)
 
@@ -88,9 +67,9 @@ class EsmGenerator(DecoyGenerator):
             for mask_position in mask_positions[sequence_idx]:
                 top_idx: Tensor = None
                 match self.esm_generator_type:
-                    case EsmGeneratorType.BEST:
+                    case MlGeneratorType.BEST:
                         _, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=True)
-                    case EsmGeneratorType.WORST:
+                    case MlGeneratorType.WORST:
                         _, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=False)
 
                 original_aa: str = sequence[mask_position]
@@ -106,33 +85,3 @@ class EsmGenerator(DecoyGenerator):
                     new_sequence[mask_position] = new_aa
                     break
             yield "".join(new_sequence)
-
-    @staticmethod
-    def __batch(a: Iterator[str], batch_size: int) -> Iterator[List[str]]:
-        b: List[str] = []
-        n: int = 0
-        for item in iter(a):
-            b.append(item)
-            n += 1
-            if n % batch_size == 0:
-                yield b
-                b = []
-        yield b
-
-    def convert(self, targets: Iterator[str]) -> Iterator[str]:
-        if self.sort_optimization:
-            target_list: List[str] = list(targets)
-            target_out_list: List[Tuple[int, str]] = []
-            sort_idx: List[int] = sorted(range(0, len(target_list)), key=lambda idx: len(target_list[idx]))
-            for i in range(0, len(target_list), self.batch_size):
-                tmp: List[str] = [
-                    _ for _ in self.__batch_convert([target_list[idx] for idx in sort_idx[i: i + self.batch_size]])
-                ]
-                for idx, record in zip(sort_idx[i: i + self.batch_size], tmp):
-                    target_out_list.append((idx, record))
-            target_out_list.sort()
-            for idx, record in target_out_list:
-                yield record
-        else:
-            for fasta_records_batch in self.__batch(targets, self.batch_size):
-                yield from self.__batch_convert(fasta_records_batch)

@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from src.peptide_classifiers.nn_classifier import train_nn
 from src.peptide_classifiers.feed_forward_nn_classifier import FeedForwardNNClassifier
-from src.encoders.protbert_cls_encoder import ProtBertCLSEncoder
+from src.encoders.protbert_cls_encoder import ProtBertClsEncoder
 from src.io.fasta import read_fasta_file
 
 if __name__ == "__main__":
@@ -19,7 +19,7 @@ if __name__ == "__main__":
         torch.nn.Linear(64, 1),
         torch.nn.Sigmoid()
     )
-    encoder = ProtBertCLSEncoder(device=device)
+    encoder = ProtBertClsEncoder(device=device)
     classifier = FeedForwardNNClassifier(network=net, encoder=encoder, device=device)
 
     base = 'UP000000625_83333'
