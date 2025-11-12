@@ -4,7 +4,7 @@ script="$1"
 
 #SBATCH --job-name=my_job
 #SBATCH --output=my_job_output_%j.txt
-#SBATCH --partition=tue.gpu.q         # Choose a partition that has GPUs
+#SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
 #SBATCH --time=16:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
