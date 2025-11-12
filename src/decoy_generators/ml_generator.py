@@ -4,6 +4,7 @@ import torch
 from typing import Iterator, List, Tuple
 from random import Random
 from enum import Enum
+from torch import Tensor
 
 from src.decoy_generators.decoy_generator import DecoyGenerator
 
@@ -29,9 +30,6 @@ class MlGenerator(DecoyGenerator):
         self.batch_size = batch_size
         self.esm_generator_type = ml_generator_type
         self.local_path = local_path
-
-    def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
-        raise NotImplementedError()
 
     def _get_masked_positions(self, sequence: str):
         positions: List[int] = list(self.get_positions_special_aas(sequence))

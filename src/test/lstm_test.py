@@ -8,25 +8,29 @@ from src.encoders.esm_encoder import EsmEncoder
 from src.io.fasta import read_fasta_file
 
 if __name__ == "__main__":
-    # define RNN classifier
-    hidden_size = 128
+    # define LSTM classifier
+    hidden_size = 2048
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    lstm = torch.nn.LSTM(320, hidden_size, 1)
+    lstm = torch.nn.LSTM(1024, hidden_size, 1, bidirectional=True)
     net = torch.nn.Sequential( # each character (amino acid) is encoded using 1024 numbers
-        torch.nn.Linear(hidden_size, 1),
+        torch.nn.Linear(2*hidden_size, 1),
         torch.nn.Sigmoid()
     )
-    encoder = EsmEncoder(device=device, constant_length=False, flatten=False)
+    encoder = ProtBertEncoder(device=device, constant_length=False, flatten=False)
     classifier = LSTMClassifier(lstm=lstm, network=net, encoder=encoder, device=device)
 
-    base = 'UP000000625_83333'
+    base = 'UP000002311_559292'
 
     # load data:
     target_records = read_fasta_file(f"data/targets/{base}.fasta")
-    decoy_records = read_fasta_file(f"/home/ctrl/DecoyGeneration/data/decoys/{base}.reverse.fasta")
+    decoy_records = read_fasta_file(f"data/targets/{base}.fasta")
+    #decoy_records = read_fasta_file(f"/home/ctrl/DecoyGeneration/data/decoys/{base}.reverse.fasta")
 
     target_sequences = [record.sequence for record in target_records]
     decoy_sequences = [record.sequence for record in decoy_records]
+
+    target_sequences = target_sequences[0:len(decoy_sequences)//2]
+    decoy_sequences = decoy_sequences[len(decoy_sequences)//2:len(decoy_sequences)]
 
     target_labels = [0 for _ in range(len(target_sequences))]
     decoy_labels = [1 for _ in range(len(decoy_sequences))]
@@ -38,7 +42,7 @@ if __name__ == "__main__":
     X_train, X_val, y_train, y_val = train_test_split(sequences, labels, test_size=test_fraction)
     
     # train LSTM:
-    N = 3000 # 100 each
+    N = 100 # 100 each
     M = round(N * test_fraction)
     optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-3)
     n_epochs = 20

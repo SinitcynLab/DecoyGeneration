@@ -19,15 +19,11 @@ if __name__ == "__main__":
     n: int = 3
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
-        EsmGenerator(
-            local_path="models/esm2_t33_650M_UR50D",
+        ShuffleGenerator(
+            special_amino_acids,
             random=random,
-            special_amino_acids=special_amino_acids,
-            mask_percent=0.05,
-            sort_optimization=True,
-            batch_size=1,
-            ml_generator_type=MlGeneratorType.BEST
-        )
+            skip_prob=0.75
+        ),
     ]
     for generator in generators:
         filename, extension = os.path.splitext(target_filename)

@@ -32,11 +32,11 @@ if __name__ == "__main__":
     encoder = ImageEncoder(image_height=256, device=device)
     classifier = FeedForwardNNClassifier(network=net, encoder=encoder, device=device)
 
-    base = 'UP000000625_83333'
+    base = 'UP000002311_559292'
 
     # load data:
     target_records = read_fasta_file(f"data/targets/{base}.fasta")
-    decoy_records = read_fasta_file(f"/home/ctrl/DecoyGeneration/data/decoys/{base}.shuffle.0.fasta")
+    decoy_records = read_fasta_file(f"/home/ctrl/DecoyGeneration/data/decoys/{base}.esm8M.best.[0.05].0.fasta")
 
     target_sequences = [record.sequence for record in target_records]
     decoy_sequences = [record.sequence for record in decoy_records]
