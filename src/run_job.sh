@@ -1,7 +1,5 @@
 #!/bin/bash
 
-script="$1"
-
 #SBATCH --job-name=my_job
 #SBATCH --output=my_job_output_%j.txt
 #SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
@@ -12,9 +10,6 @@ script="$1"
 #SBATCH --mem-per-cpu=2G
 #SBATCH --gpus=1                      # This is how to request a GPU
 
-# Load modules or software if needed
-# In the example PyTorch is made available for import in to my_sript.py
 module load PyTorch/2.1.2-foss-2023a
 
-# Execute the script or command
 python src/main.py
