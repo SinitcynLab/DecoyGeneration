@@ -17,4 +17,4 @@ script="$1"
 module load PyTorch/2.1.2-foss-2023a
 
 # Execute the script or command
-python script
+python src/main.py
