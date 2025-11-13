@@ -20,7 +20,7 @@ if __name__ == "__main__":
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
         EsmGenerator(
-            local_path="models/esm2_t48_15B_UR50D",
+            local_path="models/esm2_t36_3B_UR50D",
             random=random,
             special_amino_acids=special_amino_acids,
             mask_percent=0.3,
