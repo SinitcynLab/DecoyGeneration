@@ -25,7 +25,7 @@ if __name__ == "__main__":
             special_amino_acids=special_amino_acids,
             mask_percent=0.3,
             sort_optimization=True,
-            batch_size=64,
+            batch_size=8,
             ml_generator_type=MlGeneratorType.BEST
         )
     ]
