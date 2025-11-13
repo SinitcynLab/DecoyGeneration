@@ -6,3 +6,4 @@ _pycache__/
 *.pyc
 pyproject.toml
 models/
+src/bash/run_job.sh
