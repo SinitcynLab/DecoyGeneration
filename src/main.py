@@ -2,6 +2,7 @@ import os
 import numpy as np
 from random import Random
 from typing import List
+import torch
 
 from src.decoy_generators.decoy_generator import DecoyGenerator, DecoyGeneratorType
 from src.decoy_generators.diann_generator import DiannGenerator
@@ -15,6 +16,7 @@ if __name__ == "__main__":
     write_batched: bool = True
 
     special_amino_acids: List[str] = ['R', 'K']
+    torch.set_num_threads(6)
 
     n: int = 3
     random: Random = Random(42)
