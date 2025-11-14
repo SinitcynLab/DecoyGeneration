@@ -38,7 +38,7 @@ class MlGenerator(DecoyGenerator):
         self.local_path = local_path
         self.device = device
         self.masking_type = masking_type
-        self.mask_percent = mask_percent,
+        self.mask_percent = mask_percent
         self.mask_count = mask_count
 
     def _get_masked_positions(self, sequence: str):
@@ -94,11 +94,7 @@ class MlGenerator(DecoyGenerator):
             for fasta_records_batch in self._batch(targets, self.batch_size):
                 yield from self._batch_convert(fasta_records_batch)
 
-    def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
-        aa_ids = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
-
-        k: int = 2 + len(self.special_amino_acids)  # why 2 - aa itself and I/L dillema
-
+    def _mask_and_get_probs(self, target_batch: List[str]) -> (Tuple[Tensor, List[List[int]]]):
         inputs = self.tokenizer(target_batch, return_tensors="pt", padding=True)  # [batch_size, L, vocab]
         inputs.to(self.device)
         mask_positions: List[List[int]] = [[] for _ in range(len(target_batch))]
@@ -110,6 +106,14 @@ class MlGenerator(DecoyGenerator):
         with torch.no_grad():
             outputs = self.model(**inputs)
         probs: Tensor = torch.softmax(outputs.logits, dim=-1)  # [batch_size, L, vocab]
+        return (probs, mask_positions)
+
+    def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
+        aa_ids = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
+
+        k: int = 2 + len(self.special_amino_acids)  # why 2 - aa itself and I/L dillema
+
+        probs, mask_positions = self._mask_and_get_probs(target_batch)
 
         for sequence_idx, sequence in enumerate(target_batch):
             new_sequence: List[str] = list(sequence)
