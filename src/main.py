@@ -18,7 +18,7 @@ if __name__ == "__main__":
     write_batched: bool = True
 
     special_amino_acids: List[str] = ['R', 'K']
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     n: int = 3
     random: Random = Random(42)
