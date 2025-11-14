@@ -5,8 +5,8 @@ import torch
 from torch import Tensor
 
 from src.decoy_generators.decoy_generator import DecoyGeneratorType
-from src.decoy_generators.ml_generator import MlGenerator, MlGeneratorType
-from typing import Iterator, List, Tuple
+from src.decoy_generators.ml_generator import MlGenerator, MaskingType, MlGeneratorType
+from typing import List
 from transformers import EsmTokenizer, EsmForMaskedLM
 
 from random import Random
@@ -22,7 +22,7 @@ class EsmGenerator(MlGenerator):
     mask_percent: float
     sort_optimization: bool
     batch_size: int
-    esm_generator_type: MlGeneratorType
+    ml_generator_type: MlGeneratorType
 
     decoy_generation_type: DecoyGeneratorType = DecoyGeneratorType.ONE2MANY
 
@@ -31,14 +31,16 @@ class EsmGenerator(MlGenerator):
             local_path: str,
             random: Random,
             special_amino_acids: List[str],
-            mask_percent: float = 0.3,  # should be between 0.0 and 1.0
             sort_optimization: bool = True,
             batch_size: int = 64,
             ml_generator_type: MlGeneratorType = MlGeneratorType.BEST,
-            device: torch.device = 'cpu'
+            device: torch.device = 'cpu',
+            masking_type: MaskingType = MaskingType.PERCENT,
+            mask_percent: float = 0.3,
+            mask_count: int = 1
     ):
-        MlGenerator.__init__(self, local_path, random, special_amino_acids, mask_percent, sort_optimization,
-                             batch_size, ml_generator_type, device)
+        MlGenerator.__init__(self, local_path, random, special_amino_acids, sort_optimization,
+                             batch_size, ml_generator_type, device, masking_type, mask_percent, mask_count)
         self.model = EsmForMaskedLM.from_pretrained(local_path, local_files_only=True)
         self.tokenizer = EsmTokenizer.from_pretrained(local_path, local_files_only=True)
         self.model.eval()
@@ -46,4 +48,4 @@ class EsmGenerator(MlGenerator):
 
     def __str__(self):
         param_count = self.local_path.split('/')[-1].split('_')[2]
-        return f"esm{param_count}.{self.esm_generator_type.name.lower()}.[{self.mask_percent}]"
+        return f"esm{param_count}.{self.ml_generator_type.name.lower()}.[{self.mask_percent}]"

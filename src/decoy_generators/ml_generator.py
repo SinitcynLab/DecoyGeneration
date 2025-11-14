@@ -8,6 +8,10 @@ from torch import Tensor
 
 from src.decoy_generators.decoy_generator import DecoyGenerator
 
+class MaskingType(Enum):
+    COUNT = 1,
+    PERCENT = 2
+
 class MlGeneratorType(Enum):
     BEST = 1,
     WORST = 2
@@ -18,20 +22,24 @@ class MlGenerator(DecoyGenerator):
             local_path: str,
             random: Random,
             special_amino_acids: List[str],
-            mask_percent: float = 0.3,  # should be between 0.0 and 1.0
             sort_optimization: bool = True,
             batch_size: int = 64,
             ml_generator_type: MlGeneratorType = MlGeneratorType.BEST,
-            device : torch.device = 'cpu'
+            device : torch.device = 'cpu',
+            masking_type: MaskingType = MaskingType.PERCENT,
+            mask_percent: float = 0.3,
+            mask_count: int = 1
     ):
         DecoyGenerator.__init__(self, special_amino_acids)
         self.random = random
-        self.mask_percent = mask_percent
         self.sort_optimization = sort_optimization
         self.batch_size = batch_size
-        self.esm_generator_type = ml_generator_type
+        self.ml_generator_type = ml_generator_type
         self.local_path = local_path
         self.device = device
+        self.masking_type = masking_type
+        self.mask_percent = mask_percent,
+        self.mask_count = mask_count
 
     def _get_masked_positions(self, sequence: str):
         positions: List[int] = list(self.get_positions_special_aas(sequence))
@@ -39,11 +47,22 @@ class MlGenerator(DecoyGenerator):
             start: int = positions[idx - 1] + 1
             end: int = positions[idx]
             n: int = end - start
-            m: int = math.ceil(n * self.mask_percent)
+            m: int = self._get_masking_count(n)
             if m == 0:
                 continue
-            for i in sorted(self.random.sample(range(start, end), m)):
+            for i in sorted(self._select_mask(start, end, m)):
                 yield i
+
+    def _select_mask(self, start: int, end: int, size: int):
+        return self.random.sample(range(start, end), size)
+
+    def _get_masking_count(self, seq_len: int) -> int:
+        if self.masking_type == MaskingType.PERCENT:
+            return math.ceil(seq_len * self.mask_percent)
+        elif self.masking_type == MaskingType.COUNT:
+            return min(seq_len, self.mask_count)
+        else:
+            raise ValueError("No valid masking type has been set for generator.")
 
     @staticmethod
     def _batch(a: Iterator[str], batch_size: int) -> Iterator[List[str]]:
@@ -96,7 +115,7 @@ class MlGenerator(DecoyGenerator):
             new_sequence: List[str] = list(sequence)
             for mask_position in mask_positions[sequence_idx]:
                 top_idx: Tensor = None
-                match self.esm_generator_type:
+                match self.ml_generator_type:
                     case MlGeneratorType.BEST:
                         _, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=True)
                     case MlGeneratorType.WORST:
