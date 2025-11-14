@@ -16,19 +16,20 @@ if __name__ == "__main__":
     write_batched: bool = True
 
     special_amino_acids: List[str] = ['R', 'K']
-    torch.set_num_threads(6)
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     n: int = 3
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
         EsmGenerator(
-            local_path="models/esm2_t36_3B_UR50D",
+            local_path="models/esm2_t33_650M_UR50D",
             random=random,
             special_amino_acids=special_amino_acids,
             mask_percent=0.3,
             sort_optimization=True,
             batch_size=1,
-            ml_generator_type=MlGeneratorType.BEST
+            ml_generator_type=MlGeneratorType.BEST,
+            device=device
         )
     ]
     for generator in generators:

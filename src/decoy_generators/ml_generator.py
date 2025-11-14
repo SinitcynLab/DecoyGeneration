@@ -21,7 +21,8 @@ class MlGenerator(DecoyGenerator):
             mask_percent: float = 0.3,  # should be between 0.0 and 1.0
             sort_optimization: bool = True,
             batch_size: int = 64,
-            ml_generator_type: MlGeneratorType = MlGeneratorType.BEST
+            ml_generator_type: MlGeneratorType = MlGeneratorType.BEST,
+            device : torch.device = 'cpu'
     ):
         DecoyGenerator.__init__(self, special_amino_acids)
         self.random = random
@@ -30,6 +31,7 @@ class MlGenerator(DecoyGenerator):
         self.batch_size = batch_size
         self.esm_generator_type = ml_generator_type
         self.local_path = local_path
+        self.device = device
 
     def _get_masked_positions(self, sequence: str):
         positions: List[int] = list(self.get_positions_special_aas(sequence))
@@ -79,6 +81,7 @@ class MlGenerator(DecoyGenerator):
         k: int = 2 + len(self.special_amino_acids)  # why 2 - aa itself and I/L dillema
 
         inputs = self.tokenizer(target_batch, return_tensors="pt", padding=True)  # [batch_size, L, vocab]
+        inputs.to(self.device)
         mask_positions: List[List[int]] = [[] for _ in range(len(target_batch))]
         for sequence_idx, sequence in enumerate(target_batch):
             for mask_idx in self._get_masked_positions(sequence):

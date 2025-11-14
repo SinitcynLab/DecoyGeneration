@@ -34,13 +34,15 @@ class EsmGenerator(MlGenerator):
             mask_percent: float = 0.3,  # should be between 0.0 and 1.0
             sort_optimization: bool = True,
             batch_size: int = 64,
-            ml_generator_type: MlGeneratorType = MlGeneratorType.BEST
+            ml_generator_type: MlGeneratorType = MlGeneratorType.BEST,
+            device: torch.device = 'cpu'
     ):
         MlGenerator.__init__(self, local_path, random, special_amino_acids, mask_percent, sort_optimization,
-                             batch_size, ml_generator_type)
+                             batch_size, ml_generator_type, device)
         self.model = EsmForMaskedLM.from_pretrained(local_path, local_files_only=True)
         self.tokenizer = EsmTokenizer.from_pretrained(local_path, local_files_only=True)
         self.model.eval()
+        self.model.to(self.device)
 
     def __str__(self):
         param_count = self.local_path.split('/')[-1].split('_')[2]
