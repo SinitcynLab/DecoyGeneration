@@ -35,7 +35,7 @@ if __name__ == "__main__":
     decoy_labels = [1 for _ in range(len(decoy_sequences))]
 
     # cross-validate MLP:
-    N = 200
+    N = 1000
     optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-3)
     n_epochs = 20
     batch_size = 10

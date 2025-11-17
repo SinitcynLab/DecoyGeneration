@@ -103,7 +103,7 @@ def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterab
                 best_val_metrics = val_metrics
                 corr_train_metrics = train_metrics
 
-        print(f"Best validatoin AUC over #{fold + 1}, with other corresponding metrics:")
+        print(f"Best validation AUC over #{fold + 1}, with other corresponding metrics:")
         metric.print_values(best_val_metrics)
 
         mean_best_val_metrics += best_val_metrics / n_folds

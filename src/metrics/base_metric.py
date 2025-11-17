@@ -20,7 +20,7 @@ class BaseMetric(object):
         return out
     
     def print_values(self, value_arr: np.ndarray):
-        for i, name in enumerate(self.metric_list):
+        for i, name in enumerate(self.metric_names):
             print(f"{name}: {value_arr[i]:.3f}.")
 
     def to(self, device: torch.device):
