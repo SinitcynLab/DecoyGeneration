@@ -12,6 +12,10 @@ class DiannGenerator(DecoyGenerator):
         )
     }
 
+    def __init__(self, special_amino_acids: List[str], terminus: str = 'C'):
+        DecoyGenerator.__init__(self, special_amino_acids)
+        self.terminus = terminus
+
     def __str__(self):
         return "diann"
 
@@ -23,5 +27,9 @@ class DiannGenerator(DecoyGenerator):
                 a: int = positions[idx - 1] + 1
                 b: int = positions[idx]
                 if b - a < 1: continue
-                sequence[b - 1] = self.translation[sequence[b - 1]]
+                if self.terminus == 'C':
+                    idx = b - 1
+                else:
+                    idx = a + 1
+                sequence[idx] = self.translation[sequence[idx]]
             yield "".join(sequence)
