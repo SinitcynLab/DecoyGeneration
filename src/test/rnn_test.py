@@ -17,7 +17,7 @@ if __name__ == "__main__":
         torch.nn.Sigmoid()
     )
     encoder = ProtBertEncoder(device=device, constant_length=False, flatten=False)
-    classifier = RecurrentNNClassifier(rnn=rnn, network=net, encoder=encoder, device=device)
+    classifier = RecurrentNNClassifier(rnn=rnn, network=net, encoder=encoder, device=device, name="rnn")
 
     base = 'UP000002311_559292'
     target_path = f"data/targets/{base}.fasta"

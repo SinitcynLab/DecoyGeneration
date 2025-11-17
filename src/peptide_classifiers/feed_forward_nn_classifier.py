@@ -7,8 +7,8 @@ from src.encoders.peptide_encoder import PeptideEncoder
 from typing import Iterable
 
 class FeedForwardNNClassifier(NNClassifier):
-    def __init__(self, network : torch.nn.Sequential, encoder : PeptideEncoder, device : torch.device):
-        NNClassifier.__init__(self, network, encoder, device)
+    def __init__(self, network : torch.nn.Sequential, encoder : PeptideEncoder, name: str, device : torch.device):
+        NNClassifier.__init__(self, network, encoder, name, device)
 
     def forward(self, x : torch.Tensor) -> torch.Tensor:
         return torch.flatten(self.network(x))

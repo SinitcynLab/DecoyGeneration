@@ -17,7 +17,7 @@ if __name__ == "__main__":
         torch.nn.Sigmoid()
     )
     encoder = ProtBertEncoder(device=device, constant_length=False, flatten=False)
-    classifier = LSTMClassifier(lstm=lstm, network=net, encoder=encoder, device=device)
+    classifier = LSTMClassifier(lstm=lstm, network=net, encoder=encoder, device=device, name="lstm")
 
     base = 'UP000002311_559292'
 

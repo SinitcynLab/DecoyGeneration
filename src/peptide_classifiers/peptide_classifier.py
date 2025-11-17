@@ -4,10 +4,11 @@ from typing import Iterable
 from src.encoders.peptide_encoder import PeptideEncoder
 
 class PeptideClassifier(object):
-    def __init__(self, encoder : PeptideEncoder, device : torch.device = 'cpu'):
+    def __init__(self, encoder : PeptideEncoder, name: str, device : torch.device = 'cpu'):
         object.__init__(self)
         self.encoder = encoder
         self.device=device
+        self.name = name
     
     # take sequence and return predicted class (0 = real, 1 = decoy)
     def classify(sequences: Iterable[str]) -> list[bool]:
@@ -19,3 +20,6 @@ class PeptideClassifier(object):
     
     def set_device(self, device: torch.device):
         self.device = device
+
+    def __str__(self):
+        return self.name

@@ -30,7 +30,7 @@ if __name__ == "__main__":
     # P: padding (0 for our case)
     # S: stride
     encoder = ImageEncoder(image_height=256, device=device)
-    classifier = FeedForwardNNClassifier(network=net, encoder=encoder, device=device)
+    classifier = FeedForwardNNClassifier(network=net, encoder=encoder, device=device, name="cnn")
 
     base = 'UP000002311_559292'
 

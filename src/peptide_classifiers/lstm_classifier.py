@@ -5,8 +5,8 @@ from src.encoders.peptide_encoder import PeptideEncoder
 from typing import Iterable
 
 class LSTMClassifier(NNClassifier):
-    def __init__(self, lstm : torch.nn.LSTM, network : torch.nn.Sequential, encoder : PeptideEncoder, device : torch.device):
-        NNClassifier.__init__(self, network, encoder, device)
+    def __init__(self, lstm : torch.nn.LSTM, network : torch.nn.Sequential, encoder : PeptideEncoder, device : torch.device, name: str):
+        NNClassifier.__init__(self, network, encoder, name, device)
         self.lstm = lstm
         self.lstm.to(self.device)
 
