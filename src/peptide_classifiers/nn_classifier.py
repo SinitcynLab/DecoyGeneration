@@ -9,6 +9,8 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import shuffle
 from torchmetrics import AUROC
 from torchmetrics.classification import BinaryAccuracy, BinaryPrecision, BinaryRecall
+from src.metrics.base_metric import BaseMetric
+from src.metrics.default_metric import DefaultMetric
 
 class NNClassifier(PeptideClassifier, torch.nn.Module):
     def __init__(self, network : torch.nn.Sequential, encoder : PeptideEncoder, name: str, device : torch.device):
@@ -36,23 +38,6 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
         loss.backward(retain_graph=True)
         optimizer.step()
         return y_pred
-    
-    # perhaps following two methods should be moved to separate 'metrics' class, but this seems overkill for now
-    def extract_metrics(self, predictions: torch.Tensor, targets: torch.Tensor) -> np.ndarray:
-        int_targets = targets.int()
-        auc = self.auroc(predictions, int_targets)
-        acc = self.accuracy(predictions, int_targets)
-        precision = self.precision(predictions, int_targets)
-        recall = self.recall(predictions, int_targets)
-        return torch.tensor([auc, acc, precision, recall]).cpu().numpy()
-    
-    def print_metrics(self, metrics:np.ndarray, label_metrics:str):
-        if label_metrics not in ['training', 'validation']:
-            raise ValueError("Please provide an appropriate label for the metrics ('training' or 'validation')")
-        print(f"Best {label_metrics} ROC of {self}: {metrics[0]:.3f} (Note: can be mean over folds).")
-        print(f"Corresponding {label_metrics} accuracy of {self}: {metrics[1]:.3f}.")
-        print(f"Corresponding {label_metrics} precision of {self}: {metrics[2]:.3f}.")
-        print(f"Corresponding {label_metrics} recall of {self}: {metrics[3]:.3f}.")
     
     def classify(self, sequences : Iterable[str]) -> list[bool]:
         # get inputs:
@@ -89,8 +74,10 @@ def set_up_nn_training(nn : NNClassifier, X_train, y_train, X_val, y_val):
     return X_train, y_train, X_val, y_val, loss_fn, best_acc, best_weights
 
 def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterable[str], 
-                   n_epochs: int, batch_size: int, 
-                   optimizer: torch.optim.Optimizer, n_folds: int = 5) -> float:
+                   n_epochs: int, batch_size: int, optimizer: torch.optim.Optimizer, n_folds: int = 5,
+                   metric: BaseMetric = DefaultMetric()) -> float:
+    metric.to(nn.device)
+
     sequences, labels = shuffle(sequences, labels)
     data: torch.Tensor = nn.encoder(sequences)
     labels: torch.Tensor = torch.FloatTensor(list(labels))
@@ -110,31 +97,30 @@ def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterab
 
         for _ in range(n_epochs):
             train_metrics, val_metrics = train_val_iteration(nn, train_data, val_data, train_labels,
-                                                              val_labels, loss_fn, optimizer, batch_size)
+                                                              val_labels, loss_fn, optimizer, batch_size, metric)
             # use ROC as criterion:
             if val_metrics[0] > best_val_metrics[0]: 
                 best_val_metrics = val_metrics
                 corr_train_metrics = train_metrics
 
-        print(f"Validation metrics over fold #{fold + 1}:")
-        nn.print_metrics(best_val_metrics, 'validation')
+        print(f"Best validatoin AUC over #{fold + 1}, with other corresponding metrics:")
+        metric.print_values(best_val_metrics)
 
         mean_best_val_metrics += best_val_metrics / n_folds
         mean_corr_train_metrics += corr_train_metrics / n_folds
 
     print(f"")
-    print(f"### Average over all {n_folds} folds: ###")
-    print(f"--- Validation ---")
-    nn.print_metrics(mean_best_val_metrics, 'validation')
-    print(f"--- Training ---")
-    nn.print_metrics(mean_corr_train_metrics, 'training')
+    print(f"### Average best validation AUC and corresponding validation metrics over all {n_folds} folds: ###")
+    metric.print_values(mean_best_val_metrics)
+    print(f"### Average corresponding training metrics over all {n_folds} folds: ###")
+    metric.print_values(mean_corr_train_metrics)
 
     return mean_best_val_metrics[0] # return mean recorded 'best' ROC
 
 
 def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: torch.Tensor, 
                         train_labels: torch.Tensor, val_labels: torch.Tensor, loss, 
-                        optimizer:torch.optim.Optimizer, batch_size: int):
+                        optimizer:torch.optim.Optimizer, batch_size: int, metric: BaseMetric = DefaultMetric()):
     # train:
     N: int = len(train_data)
     nn.train()
@@ -146,7 +132,7 @@ def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: to
         batch_labels: torch.Tensor = train_labels[batch_start:batch_end]
         y_pred = nn.train_on_batch(batch_data, batch_labels, loss, optimizer)
         predictions[batch_start:batch_end] = y_pred
-    avg_train_metrics = nn.extract_metrics(predictions, train_labels)
+    avg_train_metrics = metric.extract_values(predictions, train_labels)
 
     # validate:
     M: int = len(val_data)
@@ -160,7 +146,7 @@ def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: to
         batch_labels: torch.Tensor = val_labels[batch_start:batch_end]
         y_pred = nn.evaluate_on_batch(batch_data, batch_labels)
         predictions[batch_start:batch_end] = y_pred
-    avg_val_metrics = nn.extract_metrics(predictions, val_labels)
+    avg_val_metrics = metric.extract_values(predictions, val_labels)
 
     return avg_train_metrics, avg_val_metrics
 

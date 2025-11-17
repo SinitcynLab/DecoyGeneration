@@ -1,7 +1,5 @@
 import torch
-import numpy as np
 
-from sklearn.model_selection import train_test_split
 from src.peptide_classifiers.nn_classifier import cross_validate_nn
 from src.peptide_classifiers.feed_forward_nn_classifier import FeedForwardNNClassifier
 from src.encoders.esm_cls_encoder import ESMCLSEncoder
