@@ -101,19 +101,20 @@ def cross_validate(nn: NNClassifier, sequences: Iterable[str], labels: Iterable[
                 best_val_metrics = val_metrics
                 corr_train_metrics = train_metrics
 
-        print(f"Metrics over fold {fold}:")
+        print(f"Validation metrics over fold #{fold}:")
         print_metrics(nn, best_val_metrics, 'validation')
 
         mean_best_val_metrics += best_val_metrics / n_folds
         mean_corr_train_metrics += corr_train_metrics / n_folds
 
     print(f"")
-    print(f"### Average over folds: ###")
+    print(f"### Average over all {n_folds} folds: ###")
     print(f"--- Validation ---")
     print_metrics(nn, mean_best_val_metrics, 'validation')
     print(f"--- Training ---")
     print_metrics(nn, mean_best_val_metrics, 'training')
-    return mean_best_val_metrics[0] # return mean recorded ROC
+
+    return mean_best_val_metrics[0] # return mean recorded 'best' ROC
 
 def print_metrics(nn:NNClassifier, metrics:np.ndarray, label_metrics:str):
     if label_metrics not in ['training', 'validation']:
