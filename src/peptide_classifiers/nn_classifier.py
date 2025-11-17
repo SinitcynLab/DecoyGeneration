@@ -5,13 +5,18 @@ import numpy as np
 from typing import Iterable, Union
 from src.peptide_classifiers.peptide_classifier import PeptideClassifier
 from src.encoders.peptide_encoder import PeptideEncoder
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
+from torchmetrics import AUROC, Accuracy, Precision, Recall
 
 class NNClassifier(PeptideClassifier, torch.nn.Module):
     def __init__(self, network : torch.nn.Sequential, encoder : PeptideEncoder, device : torch.device):
         PeptideClassifier.__init__(self, encoder, device)
         torch.nn.Module.__init__(self)
         self.network = network
+        self.auroc = AUROC(task='binary')
+        self.accuracy = Accuracy(task='binary')
+        self.precision = Precision(task='binary')
+        self.recall = Recall(task='binary')
         network.to(device)
 
     def set_device(self, device : torch.device):
@@ -20,16 +25,20 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
 
     def evaluate_on_batch(self, X_batch, y_batch) -> tuple[torch.Tensor, float]:
         y_pred = self(X_batch)
-        acc = (y_pred.round() == y_batch).float().mean()
-        return y_pred, acc
+        acc = self.accuracy(y_pred, y_batch) # computes acc
+        auc = self.auroc(y_pred, y_batch) # computes ROC
+        precision = self.precision(y_pred, y_batch)
+        recall = self.recall(y_pred, y_batch) # computes precision
+        # computes recall
+        return y_pred, np.array([auc, acc, precision, recall])
 
     def train_on_batch(self, X_batch, y_batch, loss_fn, optimizer) -> float:
-        y_pred, acc = self.evaluate_on_batch(X_batch, y_batch)
+        y_pred, metrics_arr = self.evaluate_on_batch(X_batch, y_batch)
         loss = loss_fn(y_pred, y_batch)
         optimizer.zero_grad()
         loss.backward(retain_graph=True)
         optimizer.step()
-        return acc
+        return metrics_arr
     
     def classify(self, sequences : Iterable[str]) -> list[bool]:
         # get inputs:
@@ -72,56 +81,77 @@ def cross_validate(nn: NNClassifier, sequences: Iterable[str], labels: Iterable[
     labels: torch.Tensor = torch.FloatTensor(list(labels)).to(nn.device)
 
     loss_fn: torch.Module = torch.nn.BCELoss()
-    mean_best_acc: int = 0
+    mean_best_val_metrics: np.ndarray = np.zeros(4)
+    mean_corr_train_metrics: np.ndarray = np.zeros(4)
 
-    kfold = KFold(n=n_folds, shuffle=True)
+    kfold = StratifiedKFold(n=n_folds, shuffle=True)
     for fold, (train_ids, val_ids) in enumerate(kfold.split(data)):
-        best_acc: float = - np.inf
+        best_val_metrics: np.ndarray = np.ones(4) * (- np.inf) # [auc, acc, prec, rec]
+        corr_train_metrics: np.ndarray = np.zeros(4)
         train_data: torch.Tensor = data[train_ids]
         val_data: torch.Tensor = data[val_ids]
         train_labels: torch.Tensor = labels[train_ids]
         val_labels: torch.Tensor = labels[val_ids]
 
-        for epoch in range(n_epochs):
-            _, val_acc = train_val_iteration(nn, train_data, train_labels, val_data, val_labels,
-                                loss_fn, optimizer, batch_size)
-            if val_acc > best_acc:
-                best_acc = val_acc
+        for _ in range(n_epochs):
+            train_metrics, val_metrics = train_val_iteration(nn, train_data, 
+                                train_labels, val_data, val_labels, loss_fn, optimizer, batch_size)
+            # use ROC as criterion:
+            if val_metrics[0] > best_val_metrics[0]: 
+                best_val_metrics = val_metrics
+                corr_train_metrics = train_metrics
 
-        print(f"Best accuracy of {nn} on fold {fold}: {best_acc:.3f}.")
-        mean_best_acc += best_acc / n_folds
+        print(f"Metrics over fold {fold}:")
+        print_metrics(nn, best_val_metrics, 'validation')
 
-    print(f"Mean best accuracy of {nn} on all {n_folds} folds: {mean_best_acc:.3f}.")
-    return mean_best_acc
+        mean_best_val_metrics += best_val_metrics / n_folds
+        mean_corr_train_metrics += corr_train_metrics / n_folds
+
+    print(f"")
+    print(f"### Average over folds: ###")
+    print(f"--- Validation ---")
+    print_metrics(nn, mean_best_val_metrics, 'validation')
+    print(f"--- Training ---")
+    print_metrics(nn, mean_best_val_metrics, 'training')
+    return mean_best_val_metrics[0] # return mean recorded ROC
+
+def print_metrics(nn:NNClassifier, metrics:np.ndarray, label_metrics:str):
+    if label_metrics not in ['training', 'validation']:
+        raise ValueError("Please provide an appropriate label for the metrics ('training' or 'validation')")
+    print(f"Best {label_metrics} ROC of {nn}: {metrics[0]:.3f}.")
+    print(f"Corresponding {label_metrics} accuracy of {nn}: {metrics[1]:.3f}.")
+    print(f"Corresponding {label_metrics} precision of {nn}: {metrics[2]:.3f}.")
+    print(f"Corresponding {label_metrics} recall of {nn}: {metrics[3]:.3f}.")
+
 
 def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: torch.Tensor, 
                         train_labels: torch.Tensor, val_labels: torch.Tensor, loss: torch.Module, 
                         optimizer:torch.optim.Optimizer, batch_size: int):
     # train:
     N: int = len(train_data)
-    train_acc: float = 0
+    avg_train_metrics: np.ndarray = np.zeros(4)
     nn.train()
     batch_starts: torch.Tensor = torch.arange(0, N, batch_size)
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, N)
         batch_data: torch.Tensor = train_data[batch_start:batch_end]
         batch_labels: torch.Tensor = train_labels[batch_start:batch_end]
-        acc = nn.train_on_batch(batch_data, batch_labels, loss, optimizer)
-        train_acc += (batch_end - batch_start) / N * acc
+        metrics_arrray = nn.train_on_batch(batch_data, batch_labels, loss, optimizer)
+        avg_train_metrics += (batch_end - batch_start) / N * metrics_arrray
     
     # validate:
     M: int = len(val_data)
-    val_acc: float = 0
+    avg_val_metrics: np.ndarray = np.zeros(4)
     nn.eval()
     batch_starts: torch.Tensor = torch.arange(0, M, batch_size)
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, M)
         batch_data: torch.Tensor = val_data[batch_start:batch_end]
         batch_labels: torch.Tensor = val_labels[batch_start:batch_end]
-        acc = nn.evaluate_on_batch(batch_data, batch_labels)
-        val_acc += (batch_end - batch_start) / M * acc
+        _, metrics_array = nn.evaluate_on_batch(batch_data, batch_labels)
+        avg_val_metrics += (batch_end - batch_start) / M * metrics_array
 
-    return train_acc, val_acc
+    return avg_train_metrics, avg_val_metrics
 
 def train_nn(nn : NNClassifier, X_train : Iterable[str], y_train : Iterable[bool], X_val : Iterable[str], 
               y_val : Iterable[str], n_epochs : int, batch_size : int, optimizer : torch.optim.Optimizer):

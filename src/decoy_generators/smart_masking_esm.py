@@ -49,7 +49,7 @@ class SmartMaskingEsmGenerator(EsmGenerator):
             modified_input_ids = torch.clone(input["input_ids"])
             for peptide in self.__get_all_peptides(sequence):
                 min_diff: float = torch.inf
-                min_pos_and_choices: int = 0
+                min_pos: int = 0
                 token_choice_at_min = None
                 for pos in peptide:
                     input["input_ids"] = torch.clone(modified_input_ids)
@@ -65,27 +65,28 @@ class SmartMaskingEsmGenerator(EsmGenerator):
                     # if new smallest found, save position and k most likely tokens:
                     if rel_diff < min_diff:
                         min_diff = rel_diff
-                        min_pos_and_choices = pos
+                        min_pos = pos
                         token_choice_at_min = token_choice
                 # save position and token choice for this peptide:
-                min_pos_and_choices.append((min_pos_and_choices, token_choice_at_min))
+                min_pos_and_choices.append((min_pos, token_choice_at_min))
 
                 # we now have the position and token choice for this peptide
                 # we immediately put in the most-easily substituted aa and then proceed to next peptide, 
                 # taking this new aa into account:
-                original_aa: str = sequence[min_pos_and_choices]
-                selected_token_id = self.__select_token(original_aa, token_choice)
-                modified_input_ids[0][min_pos_and_choices] = selected_token_id
+                original_aa: str = sequence[min_pos]
+                selected_token_id = self._select_token(original_aa, token_choice)
+                modified_input_ids[0][min_pos] = selected_token_id
 
             new_sequence: List[str] = list(sequence)
             for mask_position, token_choice in min_pos_and_choices:
                 original_aa: str = sequence[mask_position]
-                selected_token_id = self.__select_token(original_aa, token_choice)
+                selected_token_id = self._select_token(original_aa, token_choice)
                 new_sequence[mask_position] = self.canonical_amino_acids[selected_token_id]
 
             yield "".join(new_sequence)
 
-    def __select_token(self, original_aa: str, token_choice: Tensor):
+    # should be in parent class, but kept it here because I'm not 1000% sure of correctness
+    def _select_token(self, original_aa: str, token_choice: Tensor):
         for idx in token_choice:
             new_aa: str = self.canonical_amino_acids[idx]
             if new_aa == original_aa:
@@ -96,3 +97,5 @@ class SmartMaskingEsmGenerator(EsmGenerator):
                     new_aa == 'L' and original_aa == 'I'):
                 continue
             return idx
+        # if no aa satisfies constraints, default to original (esm gen itself does this too):
+        return self.canonical_amino_acids.index(original_aa)
