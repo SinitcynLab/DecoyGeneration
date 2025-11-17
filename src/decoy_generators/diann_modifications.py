@@ -1,6 +1,6 @@
 from random import Random
 
-from typing import List
+from typing import List, Set
 from src.decoy_generators.diann_generator import DiannGenerator
 
 class DiannRandomPos(DiannGenerator):
@@ -27,6 +27,8 @@ class DiannRandomAcid(DiannGenerator):
     def __init__(self, special_amino_acids: List[str], random: Random):
         DiannGenerator.__init__(self, special_amino_acids)
         self.random = random
+        aa_choices_set: Set[str] = set(self.canonical_amino_acids) - set(self.special_amino_acids)
+        self.valid_aa_choices: List[str] = list(aa_choices_set)
     
     def __str__(self):
         return "diann_random_acid"
@@ -39,6 +41,6 @@ class DiannRandomAcid(DiannGenerator):
                 a: int = positions[idx - 1] + 1
                 b: int = positions[idx]
                 if b - a < 1: continue
-                sequence[b-a] = self.random.choice(self.canonical_amino_acids)
+                sequence[b-a] = self.random.choice(self.valid_aa_choices)
             yield "".join(sequence)
     
