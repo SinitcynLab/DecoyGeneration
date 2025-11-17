@@ -67,6 +67,7 @@ class SmartMaskingEsmGenerator(EsmGenerator):
                         min_diff = diff
                         min_pos = pos
                         token_choice_at_min = token_choice
+                    print(pos)
                 # save position and token choice for this peptide:
                 pos_and_token_choice.append((min_pos, token_choice_at_min))
 

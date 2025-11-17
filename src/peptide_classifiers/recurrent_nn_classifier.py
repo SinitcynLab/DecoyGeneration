@@ -6,7 +6,7 @@ from src.peptide_classifiers.nn_classifier import NNClassifier
 from src.encoders.peptide_encoder import PeptideEncoder
 from typing import Iterable
 
-class RecurrentNNClassifier(NNClassifier, torch.nn.Module):
+class RecurrentNNClassifier(NNClassifier):
     def __init__(self, rnn : torch.nn.RNN, network : torch.nn.Sequential, encoder : PeptideEncoder, device : torch.device):
         NNClassifier.__init__(self, network, encoder, device)
         self.rnn = rnn

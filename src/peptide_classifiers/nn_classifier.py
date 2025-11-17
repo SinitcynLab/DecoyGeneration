@@ -5,6 +5,7 @@ import numpy as np
 from typing import Iterable, Union
 from src.peptide_classifiers.peptide_classifier import PeptideClassifier
 from src.encoders.peptide_encoder import PeptideEncoder
+from sklearn.model_selection import KFold
 
 class NNClassifier(PeptideClassifier, torch.nn.Module):
     def __init__(self, network : torch.nn.Sequential, encoder : PeptideEncoder, device : torch.device):
@@ -64,6 +65,64 @@ def set_up_nn_training(nn : NNClassifier, X_train, y_train, X_val, y_val):
 
     return X_train, y_train, X_val, y_val, loss_fn, best_acc, best_weights
 
+def cross_validate(nn: NNClassifier, sequences: Iterable[str], labels: Iterable[str], 
+                   n_epochs: int, batch_size: int, 
+                   optimizer: torch.optim.Optimizer, n_folds: int = 5) -> float:
+    data: torch.Tensor = nn.encoder(sequences)
+    labels: torch.Tensor = torch.FloatTensor(list(labels)).to(nn.device)
+
+    loss_fn: torch.Module = torch.nn.BCELoss()
+    mean_best_acc: int = 0
+
+    kfold = KFold(n=n_folds, shuffle=True)
+    for fold, (train_ids, val_ids) in enumerate(kfold.split(data)):
+        best_acc: float = - np.inf
+        train_data: torch.Tensor = data[train_ids]
+        val_data: torch.Tensor = data[val_ids]
+        train_labels: torch.Tensor = labels[train_ids]
+        val_labels: torch.Tensor = labels[val_ids]
+
+        for epoch in range(n_epochs):
+            _, val_acc = train_val_iteration(nn, train_data, train_labels, val_data, val_labels,
+                                loss_fn, optimizer, batch_size)
+            if val_acc > best_acc:
+                best_acc = val_acc
+
+        print(f"Best accuracy of {nn} on fold {fold}: {best_acc:.3f}.")
+        mean_best_acc += best_acc / n_folds
+
+    print(f"Mean best accuracy of {nn} on all {n_folds} folds: {mean_best_acc:.3f}.")
+    return mean_best_acc
+
+def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: torch.Tensor, 
+                        train_labels: torch.Tensor, val_labels: torch.Tensor, loss: torch.Module, 
+                        optimizer:torch.optim.Optimizer, batch_size: int):
+    # train:
+    N: int = len(train_data)
+    train_acc: float = 0
+    nn.train()
+    batch_starts: torch.Tensor = torch.arange(0, N, batch_size)
+    for batch_start in batch_starts:
+        batch_end: int = min(batch_start + batch_size, N)
+        batch_data: torch.Tensor = train_data[batch_start:batch_end]
+        batch_labels: torch.Tensor = train_labels[batch_start:batch_end]
+        acc = nn.train_on_batch(batch_data, batch_labels, loss, optimizer)
+        train_acc += (batch_end - batch_start) / N * acc
+    
+    # validate:
+    M: int = len(val_data)
+    val_acc: float = 0
+    nn.eval()
+    batch_starts: torch.Tensor = torch.arange(0, M, batch_size)
+    for batch_start in batch_starts:
+        batch_end: int = min(batch_start + batch_size, M)
+        batch_data: torch.Tensor = val_data[batch_start:batch_end]
+        batch_labels: torch.Tensor = val_labels[batch_start:batch_end]
+        acc = nn.evaluate_on_batch(batch_data, batch_labels)
+        val_acc += (batch_end - batch_start) / M * acc
+
+    return train_acc, val_acc
+
 def train_nn(nn : NNClassifier, X_train : Iterable[str], y_train : Iterable[bool], X_val : Iterable[str], 
               y_val : Iterable[str], n_epochs : int, batch_size : int, optimizer : torch.optim.Optimizer):
     X_train = nn.encoder(X_train)
@@ -73,32 +132,16 @@ def train_nn(nn : NNClassifier, X_train : Iterable[str], y_train : Iterable[bool
     
     loss_fn = torch.nn.BCELoss()
 
-    best_acc = - np.inf
+    best_val_acc = - np.inf
     best_weights = None
 
     N = len(X_train)
     M = len(X_val)
     for epoch in range(n_epochs):
-        nn.train()
-        batch_starts = torch.arange(0, N, batch_size)
-        tot_acc = 0
-        for batch_start in batch_starts:
-            batch_end = min(batch_start+batch_size, N)
-            X_batch = X_train[batch_start:batch_end]
-            y_batch = y_train[batch_start:batch_end]
-            acc = nn.train_on_batch(X_batch, y_batch, loss_fn, optimizer)
-            tot_acc += (batch_end - batch_start) / N * acc
-        nn.eval()
-        batch_starts = torch.arange(0, M, batch_size)
-        tot_acc = 0
-        for batch_start in batch_starts:
-            batch_end = min(batch_start+batch_size, M)
-            X_batch = X_val[batch_start:batch_end]
-            y_batch = y_val[batch_start:batch_end]
-            _, acc = nn.evaluate_on_batch(X_batch, y_batch)
-            tot_acc += (batch_end - batch_start) / M * acc
-        if tot_acc > best_acc:
-            best_acc = tot_acc
+        _, val_acc = train_val_iteration(nn, X_train, y_train, X_val, y_val, loss_fn, optimizer, batch_size)
+        if val_acc > best_val_acc:
+            best_val_acc = val_acc
             best_weights = copy.deepcopy(nn.state_dict())
+
     nn.load_state_dict(best_weights) # restore best weights
-    return best_acc  
+    return best_val_acc # return best validation accuracy
