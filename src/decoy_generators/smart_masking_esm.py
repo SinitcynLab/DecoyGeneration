@@ -41,18 +41,18 @@ class SmartMaskingEsmGenerator(EsmGenerator):
         k: int = 2 + len(self.special_amino_acids)  # why 2 - aa itself and I/L dillema
 
         for sequence in target_batch:
-            pos_and_token_choice: List[Tuple[int, NamedTuple[Tensor, Tensor]]] = []
+            min_pos_and_choices: List[Tuple[int, NamedTuple[Tensor, Tensor]]] = []
             # Tokenize sequence:
             input = self.tokenizer(sequence, return_tensors="pt", padding=True)
             input.to(self.device)
             # Save original input ids:
-            og_input_ids = torch.clone(input["input_ids"])
+            modified_input_ids = torch.clone(input["input_ids"])
             for peptide in self.__get_all_peptides(sequence):
                 min_diff: float = torch.inf
-                min_pos: int = 0
+                min_pos_and_choices: int = 0
                 token_choice_at_min = None
                 for pos in peptide:
-                    input["input_ids"] = torch.clone(og_input_ids)
+                    input["input_ids"] = torch.clone(modified_input_ids)
                     # Mask out  position in the peptide:
                     input["input_ids"][0][pos] = self.tokenizer.mask_token_id
                     # obtain token probabilities:
@@ -61,28 +61,38 @@ class SmartMaskingEsmGenerator(EsmGenerator):
                     probs: Tensor = torch.softmax(outputs.logits, dim=-1)
                     # compute difference between top-2 most likely tokens:
                     token_probs, token_choice = torch.topk(probs[0, pos, aa_ids], k=k, largest=True)
-                    diff = token_probs[0] - token_probs[1]
+                    rel_diff = (token_probs[0] - token_probs[1]) / token_probs[0]
                     # if new smallest found, save position and k most likely tokens:
-                    if diff < min_diff:
-                        min_diff = diff
-                        min_pos = pos
+                    if rel_diff < min_diff:
+                        min_diff = rel_diff
+                        min_pos_and_choices = pos
                         token_choice_at_min = token_choice
-                    print(pos)
                 # save position and token choice for this peptide:
-                pos_and_token_choice.append((min_pos, token_choice_at_min))
+                min_pos_and_choices.append((min_pos_and_choices, token_choice_at_min))
+
+                # we now have the position and token choice for this peptide
+                # we immediately put in the most-easily substituted aa and then proceed to next peptide, 
+                # taking this new aa into account:
+                original_aa: str = sequence[min_pos_and_choices]
+                selected_token_id = self.__select_token(original_aa, token_choice)
+                modified_input_ids[0][min_pos_and_choices] = selected_token_id
 
             new_sequence: List[str] = list(sequence)
-            for mask_position, token_choice in pos_and_token_choice:
+            for mask_position, token_choice in min_pos_and_choices:
                 original_aa: str = sequence[mask_position]
-                for idx in token_choice:
-                    new_aa: str = self.canonical_amino_acids[idx]
-                    if new_aa == original_aa:
-                        continue
-                    if new_aa in self.special_amino_acids:
-                        continue
-                    if (new_aa == 'I' and original_aa == 'L') or (
-                            new_aa == 'L' and original_aa == 'I'):
-                        continue
-                    new_sequence[mask_position] = new_aa
-                    break
+                selected_token_id = self.__select_token(original_aa, token_choice)
+                new_sequence[mask_position] = self.canonical_amino_acids[selected_token_id]
+
             yield "".join(new_sequence)
+
+    def __select_token(self, original_aa: str, token_choice: Tensor):
+        for idx in token_choice:
+            new_aa: str = self.canonical_amino_acids[idx]
+            if new_aa == original_aa:
+                continue
+            if new_aa in self.special_amino_acids:
+                continue
+            if (new_aa == 'I' and original_aa == 'L') or (
+                    new_aa == 'L' and original_aa == 'I'):
+                continue
+            return idx
