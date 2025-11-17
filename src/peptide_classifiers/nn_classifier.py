@@ -173,16 +173,14 @@ def train_nn(nn : NNClassifier, X_train : Iterable[str], y_train : Iterable[bool
     
     loss_fn = torch.nn.BCELoss()
 
-    best_val_acc = - np.inf
+    best_val_auc = - np.inf
     best_weights = None
 
-    N = len(X_train)
-    M = len(X_val)
-    for epoch in range(n_epochs):
-        _, val_acc = train_val_iteration(nn, X_train, y_train, X_val, y_val, loss_fn, optimizer, batch_size)
-        if val_acc > best_val_acc:
-            best_val_acc = val_acc
+    for _ in range(n_epochs):
+        _, val_metrics = train_val_iteration(nn, X_train, y_train, X_val, y_val, loss_fn, optimizer, batch_size)
+        if val_metrics[0] > best_val_auc:
+            best_val_auc = val_metrics[0]
             best_weights = copy.deepcopy(nn.state_dict())
 
     nn.load_state_dict(best_weights) # restore best weights
-    return best_val_acc # return best validation accuracy
+    return best_val_auc # return best validation auc
