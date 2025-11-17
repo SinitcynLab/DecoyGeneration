@@ -9,12 +9,13 @@ from src.decoy_generators.diann_generator import DiannGenerator
 from src.decoy_generators.esm_generator import EsmGenerator, MaskingType, MlGeneratorType
 from src.decoy_generators.reverse_generator import ReverseGenerator
 from src.decoy_generators.shuffle_generator import ShuffleGenerator
+from src.decoy_generators.diann_modifications import DiannRandomAcid, DiannRandomPos
 from src.decoy_generators.ml_generator import MlGenerator
 from src.decoy_generators.smart_masking_esm import SmartMaskingEsmGenerator
 from src.io.fasta import write_fasta_file, read_fasta_file
 
 if __name__ == "__main__":
-    target_filename: str = "data/targets/UP000002311_559292.fasta"
+    target_filename: str = "data/targets/UP000000625_83333.fasta"
     write_batched: bool = True
 
     special_amino_acids: List[str] = ['R', 'K']
@@ -23,14 +24,13 @@ if __name__ == "__main__":
     n: int = 3
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
-        SmartMaskingEsmGenerator(
-            local_path="models/esm2_t6_8M_UR50D",
+        DiannRandomPos(
             random=random,
             special_amino_acids=special_amino_acids,
-            sort_optimization=True,
-            batch_size=1,
-            ml_generator_type=MlGeneratorType.BEST,
-            device=device,
+        ),
+        DiannRandomAcid(
+            random=random,
+            special_amino_acids=special_amino_acids
         )
     ]
     for generator in generators:
