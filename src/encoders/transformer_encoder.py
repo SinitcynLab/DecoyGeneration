@@ -51,6 +51,7 @@ class TransformerEncoder(PeptideEncoder):
                 batch_outputs = self.model(**batch_inputs, output_hidden_states=True)
             batch_hidden_states = self.__extract_hidden_state(batch_outputs)
             output_list.append(batch_hidden_states)
+            torch.cuda.empty_cache()
         # Return output as tensor if we mandate constant length, output list otherwise:
         if self.constant_length or self.cls_only:
             return torch.cat(output_list, axis=0)
