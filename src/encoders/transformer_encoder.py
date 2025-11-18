@@ -1,4 +1,5 @@
 import torch
+import gc
 from typing import Iterable, Union
 
 from transformers import EsmTokenizer, EsmForMaskedLM
@@ -52,6 +53,7 @@ class TransformerEncoder(PeptideEncoder):
             batch_hidden_states = self.__extract_hidden_state(batch_outputs)
             output_list.append(batch_hidden_states)
             torch.cuda.empty_cache()
+            gc.collect()
         # Return output as tensor if we mandate constant length, output list otherwise:
         if self.constant_length or self.cls_only:
             return torch.cat(output_list, axis=0)
