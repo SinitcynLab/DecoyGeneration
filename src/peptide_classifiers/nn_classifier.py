@@ -3,6 +3,7 @@ import copy
 import numpy as np
 
 from typing import Iterable, Union
+from collections.abc import Callable
 from src.peptide_classifiers.peptide_classifier import PeptideClassifier
 from src.encoders.peptide_encoder import PeptideEncoder
 from sklearn.model_selection import StratifiedKFold
@@ -13,7 +14,7 @@ from src.metrics.base_metric import BaseMetric
 from src.metrics.default_metric import DefaultMetric
 
 class NNClassifier(PeptideClassifier, torch.nn.Module):
-    def __init__(self, network : torch.nn.Sequential, encoder : PeptideEncoder, name: str, device : torch.device):
+    def __init__(self, network : torch.nn.Sequential, encoder : PeptideEncoder, name: str, device : torch.device, resetter: Callable = None):
         PeptideClassifier.__init__(self, encoder, name, device)
         torch.nn.Module.__init__(self)
         self.network = network
@@ -23,6 +24,7 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
         self.accuracy = BinaryAccuracy().to(self.device)
         self.precision = BinaryPrecision().to(self.device)
         self.recall = BinaryRecall().to(self.device)
+        self.resetter = resetter
 
     def set_device(self, device : torch.device):
         PeptideClassifier.set_device(device)
@@ -62,7 +64,10 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
         return corr.tolist(), loss.tolist()
     
     def reset(self):
-        self.load_state_dict(copy.deepcopy(self.og_state_dict))
+        if self.resetter == None:
+            raise ValueError("Net setter must be set in order to reset NN classifier.")
+        else:
+            self.network = self.resetter()
 
 def set_up_nn_training(nn : NNClassifier, X_train, y_train, X_val, y_val):
     X_train = nn.encoder(X_train)

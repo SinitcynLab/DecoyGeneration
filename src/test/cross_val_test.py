@@ -6,9 +6,7 @@ from src.encoders.protbert_cls_encoder import ProtBertClsEncoder
 from src.io.fasta import read_fasta_file
 from src.io.utils import split_targets
 
-if __name__ == "__main__":
-    # define MLP classifier
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def get_mlp_net():
     net = torch.nn.Sequential(
         torch.nn.Dropout(p=0.1),
         torch.nn.Linear(1024, 128),
@@ -18,8 +16,13 @@ if __name__ == "__main__":
         torch.nn.Linear(64, 1),
         torch.nn.Sigmoid()
     )
+    return net
+
+if __name__ == "__main__":
+    # define MLP classifier
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     encoder = ProtBertClsEncoder(device=device)
-    classifier = FeedForwardNNClassifier(network=net, encoder=encoder, device=device, name="mlp")
+    classifier = FeedForwardNNClassifier(network=get_mlp_net(), encoder=encoder, device=device, name="mlp", resetter=get_mlp_net)
 
     base = 'UP000002311_559292'
     target_file = f"data/targets/{base}.fasta"
