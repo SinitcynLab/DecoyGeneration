@@ -24,14 +24,20 @@ if __name__ == "__main__":
     n: int = 1
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
-        EsmGenerator(
-            local_path="models/esm2_t6_8M_UR50D",
-            random=random,
-            special_amino_acids=special_amino_acids,
-            mask_percent=0.3,
-            sort_optimization=True,
-            batch_size=64,
-            ml_generator_type=MlGeneratorType.BEST
+        DiannGenerator(
+            special_amino_acids,
+        ),
+        DiannGenerator(
+            special_amino_acids,
+            'N'
+        ),
+        DiannRandomPos(
+            special_amino_acids,
+            random
+        ),
+        DiannRandomAcid(
+            special_amino_acids,
+            random
         )
     ]
     for generator in generators:
@@ -40,8 +46,6 @@ if __name__ == "__main__":
             for i in range(n):
                 filename_out = f"{filename}.{generator}.{i}{extension}"
                 target_records = [record for record in read_fasta_file(target_filename)]
-                print(len(target_records))
-                break
                 batch_starts = np.arange(0, len(target_records), generator.batch_size)
                 for start in batch_starts:
                     end = min(start + generator.batch_size, len(target_records))
