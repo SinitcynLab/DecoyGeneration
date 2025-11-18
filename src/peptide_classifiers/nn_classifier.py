@@ -86,6 +86,7 @@ def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterab
                    n_epochs: int, batch_size: int, learning_grate: float, decoy_id: str, n_folds: int = 5,
                    metric: BaseMetric = DefaultMetric()) -> float:
     print(f"*** *** RESULTS FOR DECOYS={decoy_id} *** ***")
+    torch.cuda.empty_cache()
     metric.to(nn.device)
 
     sequences, labels = shuffle(sequences, labels)
