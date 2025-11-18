@@ -17,6 +17,7 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
         PeptideClassifier.__init__(self, encoder, name, device)
         torch.nn.Module.__init__(self)
         self.network = network
+        self.og_state_dict = copy.deepcopy(self.state_dict())
         network.to(device)
         self.auroc = AUROC(task='binary').to(self.device)
         self.accuracy = BinaryAccuracy().to(self.device)
@@ -59,6 +60,9 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
         loss : torch.Tensor = torch.abs(out - outcomes_tensor.float())
         # return whether predictions correct, and loss measure with each prediction:
         return corr.tolist(), loss.tolist()
+    
+    def reset(self):
+        self.load_state_dict(copy.deepcopy(self.og_state_dict))
 
 def set_up_nn_training(nn : NNClassifier, X_train, y_train, X_val, y_val):
     X_train = nn.encoder(X_train)
@@ -74,7 +78,7 @@ def set_up_nn_training(nn : NNClassifier, X_train, y_train, X_val, y_val):
     return X_train, y_train, X_val, y_val, loss_fn, best_acc, best_weights
 
 def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterable[str], 
-                   n_epochs: int, batch_size: int, optimizer: torch.optim.Optimizer, decoy_id: str, n_folds: int = 5,
+                   n_epochs: int, batch_size: int, learning_grate: float, decoy_id: str, n_folds: int = 5,
                    metric: BaseMetric = DefaultMetric()) -> float:
     print(f"*** *** RESULTS FOR DECOYS={decoy_id} *** ***")
     metric.to(nn.device)
@@ -89,6 +93,9 @@ def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterab
 
     kfold = StratifiedKFold(n_splits=n_folds)
     for fold, (train_ids, val_ids) in enumerate(kfold.split(data.cpu(), labels)):
+        nn.reset()
+        optimizer = torch.optim.Adam(nn.parameters(), lr=learning_grate)
+
         best_val_metrics: np.ndarray = np.ones(4) * (- np.inf) 
         corr_train_metrics: np.ndarray = np.zeros(4)
         train_data: torch.Tensor = data[train_ids].to(nn.device)
