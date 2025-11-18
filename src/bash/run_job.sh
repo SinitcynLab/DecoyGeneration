@@ -10,6 +10,6 @@
 #SBATCH --mem-per-cpu=16G
 #SBATCH --gpus=1                      # This is how to request a GPU
 
-module load PyTorch/2.1.2-foss-2023a
+module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
 python -u src/test/cross_val_test.py
