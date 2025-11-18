@@ -74,8 +74,9 @@ def set_up_nn_training(nn : NNClassifier, X_train, y_train, X_val, y_val):
     return X_train, y_train, X_val, y_val, loss_fn, best_acc, best_weights
 
 def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterable[str], 
-                   n_epochs: int, batch_size: int, optimizer: torch.optim.Optimizer, n_folds: int = 5,
+                   n_epochs: int, batch_size: int, optimizer: torch.optim.Optimizer, decoy_id: str, n_folds: int = 5,
                    metric: BaseMetric = DefaultMetric()) -> float:
+    print(f"*** *** RESULTS FOR DECOYS={decoy_id} *** ***")
     metric.to(nn.device)
 
     sequences, labels = shuffle(sequences, labels)
