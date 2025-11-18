@@ -7,7 +7,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
-#SBATCH --mem-per-cpu=2G
+#SBATCH --mem-per-cpu=16G
 #SBATCH --gpus=1                      # This is how to request a GPU
 
 module load PyTorch/2.1.2-foss-2023a
