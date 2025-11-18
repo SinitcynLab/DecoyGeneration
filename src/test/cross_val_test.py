@@ -11,7 +11,7 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = torch.nn.Sequential(
         torch.nn.Dropout(p=0.1),
-        torch.nn.Linear(320, 128),
+        torch.nn.Linear(1024, 128),
         torch.nn.ReLU(),
         torch.nn.Linear(128, 64),
         torch.nn.ReLU(),
