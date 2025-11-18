@@ -19,7 +19,7 @@ class DiannGenerator(DecoyGenerator):
         self.terminus = terminus
 
     def __str__(self):
-        return "diann"
+        return f"diann_{self.terminus}"
 
     def convert(self, targets: Iterator[str]) -> Iterator[str]:
         for target in targets:
@@ -32,6 +32,6 @@ class DiannGenerator(DecoyGenerator):
                 if self.terminus == 'C':
                     idx = b - 1
                 else:
-                    idx = a + 1
+                    idx = a
                 sequence[idx] = self.translation[sequence[idx]]
             yield "".join(sequence)

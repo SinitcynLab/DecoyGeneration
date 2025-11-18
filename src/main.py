@@ -15,7 +15,7 @@ from src.decoy_generators.smart_masking_esm import SmartMaskingEsmGenerator
 from src.io.fasta import write_fasta_file, read_fasta_file
 
 if __name__ == "__main__":
-    target_filename: str = "data/targets/UP000000625_83333.fasta"
+    target_filename: str = "data/targets/UP000002311_559292.fasta"
     write_batched: bool = True
 
     special_amino_acids: List[str] = ['R', 'K']
@@ -24,11 +24,8 @@ if __name__ == "__main__":
     n: int = 1
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
-        ReverseGenerator(
-            special_amino_acids
-        ),
         DiannGenerator(
-            special_amino_acids
+            special_amino_acids,
         ),
         DiannGenerator(
             special_amino_acids,
@@ -41,10 +38,6 @@ if __name__ == "__main__":
         DiannRandomAcid(
             special_amino_acids,
             random
-        ),
-        ShuffleGenerator(
-            special_amino_acids,
-            random=random
         )
     ]
     for generator in generators:
