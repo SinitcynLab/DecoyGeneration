@@ -4,6 +4,7 @@ from src.decoy_generators.ml_generator import MlGeneratorType, MaskingType
 from src.decoy_generators.esm_generator import EsmGenerator
 from typing import List, Iterator, Tuple, NamedTuple
 
+from time import time
 from random import Random
 from torch import Tensor
 
@@ -45,6 +46,7 @@ class SmartMaskingEsmGenerator(EsmGenerator):
             # Tokenize sequence:
             input = self.tokenizer(sequence, return_tensors="pt", padding=True)
             input.to(self.device)
+            prompt_len = input["input_ids"].shape[1]
             # Save original input ids:
             modified_input_ids = torch.clone(input["input_ids"])
             for peptide in self.__get_all_peptides(sequence):

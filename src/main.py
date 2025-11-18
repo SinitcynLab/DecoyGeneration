@@ -21,16 +21,30 @@ if __name__ == "__main__":
     special_amino_acids: List[str] = ['R', 'K']
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    n: int = 3
+    n: int = 1
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
+        ReverseGenerator(
+            special_amino_acids
+        ),
+        DiannGenerator(
+            special_amino_acids
+        ),
+        DiannGenerator(
+            special_amino_acids,
+            'N'
+        ),
         DiannRandomPos(
-            random=random,
-            special_amino_acids=special_amino_acids,
+            special_amino_acids,
+            random
         ),
         DiannRandomAcid(
-            random=random,
-            special_amino_acids=special_amino_acids
+            special_amino_acids,
+            random
+        ),
+        ShuffleGenerator(
+            special_amino_acids,
+            random=random
         )
     ]
     for generator in generators:

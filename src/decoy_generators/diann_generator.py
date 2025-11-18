@@ -14,6 +14,8 @@ class DiannGenerator(DecoyGenerator):
 
     def __init__(self, special_amino_acids: List[str], terminus: str = 'C'):
         DecoyGenerator.__init__(self, special_amino_acids)
+        if terminus not in ['C', 'N']:
+            raise ValueError("Terminus argument must be 'C' or 'N'.")
         self.terminus = terminus
 
     def __str__(self):

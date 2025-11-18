@@ -109,6 +109,7 @@ class MlGenerator(DecoyGenerator):
         return (probs, mask_positions)
 
     def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
+
         aa_ids = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
 
         k: int = 2 + len(self.special_amino_acids)  # why 2 - aa itself and I/L dillema
