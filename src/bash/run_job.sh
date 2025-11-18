@@ -12,4 +12,4 @@
 
 module load PyTorch/2.1.2-foss-2023a
 
-python src/test/cross_val_test.py
+python -u src/test/cross_val_test.py
