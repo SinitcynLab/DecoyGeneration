@@ -21,6 +21,7 @@ def get_mlp_net():
 if __name__ == "__main__":
     # define MLP classifier
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    torch.set_num_threads(6)
     print(device)
     encoder = ProtBertClsEncoder(device=device)
     classifier = FeedForwardNNClassifier(network=get_mlp_net(), encoder=encoder, device=device, name="mlp", resetter=get_mlp_net)
