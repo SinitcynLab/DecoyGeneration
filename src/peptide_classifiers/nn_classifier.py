@@ -79,21 +79,6 @@ def set_up_nn_training(nn : NNClassifier, X_train, y_train, X_val, y_val):
 
     return X_train, y_train, X_val, y_val, loss_fn, best_acc, best_weights
 
-def get_train_val_data(data: Union[List, torch.Tensor], train_ids, val_ids) -> Tuple[Union[List, torch.Tensor], Union[List, torch.Tensor]]:
-    if isinstance(data, List):
-        train_data = [data[i] for i in train_ids]
-        val_data = [data[i] for i in val_ids]
-    else:
-        train_data = data[train_ids]
-        val_data = data[val_ids]
-    return train_data, val_data
-
-def move_to(data: Union[List, torch.Tensor], device: torch.device) -> Union[List, torch.Tensor]:
-    if isinstance(data, List):
-        return [t.to(device) for t in data]
-    else:
-        return data.to(device)
-
 def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterable[str], 
                    n_epochs: int, batch_size: int, learning_grate: float, decoy_id: str, n_folds: int = 5,
                    metric: BaseMetric = DefaultMetric()) -> float:
@@ -113,7 +98,8 @@ def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterab
 
         best_val_metrics: np.ndarray = np.ones(4) * (- np.inf) 
         corr_train_metrics: np.ndarray = np.zeros(4)
-        train_data, val_data = get_train_val_data(data, train_ids, val_ids)
+        train_data: torch.Tensor = data[train_ids]
+        val_data: torch.Tensor = data[val_ids]
         train_labels: torch.Tensor = labels[train_ids]
         val_labels: torch.Tensor = labels[val_ids]
 

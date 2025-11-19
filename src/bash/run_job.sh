@@ -12,4 +12,4 @@
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/test/cross_val_mlp.py
+python -u src/test/cross_val_cnn.py
