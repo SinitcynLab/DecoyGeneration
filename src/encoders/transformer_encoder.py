@@ -51,6 +51,7 @@ class TransformerEncoder(PeptideEncoder):
             with torch.no_grad():
                 batch_outputs = self.model(**batch_inputs, output_hidden_states=True)
             batch_hidden_states = self.__extract_hidden_state(batch_outputs)
+            batch_hidden_states.cpu()
             output_list.append(batch_hidden_states)
             torch.cuda.empty_cache()
             gc.collect()

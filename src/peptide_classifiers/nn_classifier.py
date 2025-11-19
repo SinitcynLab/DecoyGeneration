@@ -1,6 +1,7 @@
 import torch
 import copy
 import numpy as np
+import gc
 
 from typing import Iterable, Union
 from collections.abc import Callable
@@ -104,10 +105,10 @@ def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterab
 
         best_val_metrics: np.ndarray = np.ones(4) * (- np.inf) 
         corr_train_metrics: np.ndarray = np.zeros(4)
-        train_data: torch.Tensor = data[train_ids].to(nn.device)
-        val_data: torch.Tensor = data[val_ids].to(nn.device)
-        train_labels: torch.Tensor = labels[train_ids].to(nn.device)
-        val_labels: torch.Tensor = labels[val_ids].to(nn.device)
+        train_data: torch.Tensor = data[train_ids]
+        val_data: torch.Tensor = data[val_ids]
+        train_labels: torch.Tensor = labels[train_ids]
+        val_labels: torch.Tensor = labels[val_ids]
 
         for _ in range(n_epochs):
             train_metrics, val_metrics = train_val_iteration(nn, train_data, val_data, train_labels,
@@ -142,10 +143,12 @@ def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: to
     predictions: torch.Tensor = torch.zeros(N).to(nn.device)
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, N)
-        batch_data: torch.Tensor = train_data[batch_start:batch_end]
-        batch_labels: torch.Tensor = train_labels[batch_start:batch_end]
+        batch_data: torch.Tensor = train_data[batch_start:batch_end].to(nn.device)
+        batch_labels: torch.Tensor = train_labels[batch_start:batch_end].to(nn.device)
         y_pred = nn.train_on_batch(batch_data, batch_labels, loss, optimizer)
-        predictions[batch_start:batch_end] = y_pred
+        predictions[batch_start:batch_end] = y_pred.cpu()
+        del batch_data, batch_labels, y_pred
+        gc.collect()
     avg_train_metrics = metric.extract_values(predictions, train_labels)
 
     # validate:
@@ -156,10 +159,12 @@ def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: to
     predictions: torch.Tensor = torch.zeros(M).to(nn.device)
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, M)
-        batch_data: torch.Tensor = val_data[batch_start:batch_end]
-        batch_labels: torch.Tensor = val_labels[batch_start:batch_end]
+        batch_data: torch.Tensor = val_data[batch_start:batch_end].to(nn.device)
+        batch_labels: torch.Tensor = val_labels[batch_start:batch_end].to(nn.device)
         y_pred = nn.evaluate_on_batch(batch_data, batch_labels)
-        predictions[batch_start:batch_end] = y_pred
+        predictions[batch_start:batch_end] = y_pred.cpu()
+        del batch_data, batch_labels, y_pred
+        gc.collect()
     avg_val_metrics = metric.extract_values(predictions, val_labels)
 
     return avg_train_metrics, avg_val_metrics
