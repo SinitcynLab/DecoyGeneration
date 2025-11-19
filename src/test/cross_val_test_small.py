@@ -39,7 +39,7 @@ if __name__ == "__main__":
     decoy_labels = [1 for _ in range(len(decoy_sequences))]
 
     # cross-validate MLP:
-    N = 1000
+    N = 100
     n_epochs = 20
     batch_size = 10
     sequences = target_sequences[0:N//2] + decoy_sequences[0:N//2]

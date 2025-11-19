@@ -113,6 +113,12 @@ def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterab
 
         print(f"Best validation AUC over #{fold + 1}, with other corresponding metrics:")
         metric.print_values(best_val_metrics)
+        print(f"Validation set info on fold #{fold + 1}:")
+        print(f"Size: {torch.numel(val_labels)}.")
+        num_targets: int = (val_labels == 0.).sum(dim=0)
+        num_decoys: int = (val_labels == 1.).sum(dim=0)
+        print(f"N.o. targets: {num_targets}.")
+        print(f"N.o. decoys: {num_decoys}.")
 
         mean_best_val_metrics += best_val_metrics / n_folds
         mean_corr_train_metrics += corr_train_metrics / n_folds
