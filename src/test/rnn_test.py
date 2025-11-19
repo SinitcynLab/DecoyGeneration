@@ -43,7 +43,7 @@ if __name__ == "__main__":
     X_train, X_val, y_train, y_val = train_test_split(sequences, labels, test_size=test_fraction)
     
     # train RNN:
-    N = 300 # 100 each
+    N = 40 # 100 each
     M = round(N * test_fraction)
     optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-3)
     n_epochs = 20

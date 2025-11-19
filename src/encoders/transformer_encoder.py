@@ -1,6 +1,6 @@
 import gc
 import torch
-from typing import Iterable, Union
+from typing import Iterable, Union, List
 
 from transformers import EsmTokenizer, EsmForMaskedLM
 
@@ -53,11 +53,18 @@ class TransformerEncoder(PeptideEncoder):
             batch_hidden_st_gpu = self.__extract_hidden_state(batch_outputs)
             batch_hidden_st_cpu = batch_hidden_st_gpu.cpu()
             output_list.append(batch_hidden_st_cpu)
-            torch.cuda.empty_cache()
             del batch_inputs, batch_outputs, batch_hidden_st_gpu
+            torch.cuda.empty_cache()
             gc.collect()
 
         if self.constant_length or self.cls_only:
             return torch.cat(output_list, axis=0)
         else:
-            return output_list
+            lengths: List[int] = [t.size(dim=1) for t in output_list]
+            lengths = torch.IntTensor(lengths)
+            max_len: int = torch.max(lengths)
+            for i in range(len(output_list)):
+                diff = max_len - output_list[i].size(dim=1)
+                pad = torch.zeros((1, diff, 1024))
+                output_list[i] = torch.cat((output_list[i], pad), axis=1)
+            return torch.cat(output_list, axis=0), torch.IntTensor(lengths)
