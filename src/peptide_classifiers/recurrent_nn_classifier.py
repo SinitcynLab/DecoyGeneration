@@ -3,6 +3,7 @@ import copy
 import numpy as np
 
 from collections.abc import Callable
+from typing import Iterable
 from src.peptide_classifiers.nn_classifier import NNClassifier
 from src.encoders.peptide_encoder import PeptideEncoder
 from typing import Iterable
@@ -13,7 +14,7 @@ class RecurrentNNClassifier(NNClassifier):
         self.rnn = rnn
         self.rnn.to(self.device)
 
-    def forward(self, tensor_list : list[torch.Tensor]) -> torch.Tensor:
+    def forward(self, tensor_list : Iterable[torch.Tensor]) -> torch.Tensor:
         outputs = torch.zeros(len(tensor_list)).to(self.device)
         for i, t in enumerate(tensor_list):
             rnn_out, _ = self.rnn(t)

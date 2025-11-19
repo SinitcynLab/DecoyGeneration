@@ -1,5 +1,6 @@
 import gc
 import torch
+import numpy as np
 from typing import Iterable, Union
 
 from transformers import EsmTokenizer, EsmForMaskedLM

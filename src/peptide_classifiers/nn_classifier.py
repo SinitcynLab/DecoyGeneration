@@ -3,7 +3,7 @@ import copy
 import numpy as np
 import gc
 
-from typing import Iterable, Union
+from typing import Iterable, Union, List, Tuple
 from collections.abc import Callable
 from src.peptide_classifiers.peptide_classifier import PeptideClassifier
 from src.encoders.peptide_encoder import PeptideEncoder
@@ -79,6 +79,21 @@ def set_up_nn_training(nn : NNClassifier, X_train, y_train, X_val, y_val):
 
     return X_train, y_train, X_val, y_val, loss_fn, best_acc, best_weights
 
+def get_train_val_data(data: Union[List, torch.Tensor], train_ids, val_ids) -> Tuple[Union[List, torch.Tensor], Union[List, torch.Tensor]]:
+    if isinstance(data, List):
+        train_data = [data[i] for i in train_ids]
+        val_data = [data[i] for i in val_ids]
+    else:
+        train_data = data[train_ids]
+        val_data = data[val_ids]
+    return train_data, val_data
+
+def move_to(data: Union[List, torch.Tensor], device: torch.device) -> Union[List, torch.Tensor]:
+    if isinstance(data, List):
+        return [t.to(device) for t in data]
+    else:
+        return data.to(device)
+
 def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterable[str], 
                    n_epochs: int, batch_size: int, learning_grate: float, decoy_id: str, n_folds: int = 5,
                    metric: BaseMetric = DefaultMetric()) -> float:
@@ -92,14 +107,13 @@ def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterab
     mean_corr_train_metrics: np.ndarray = np.zeros(4)
 
     kfold = StratifiedKFold(n_splits=n_folds)
-    for fold, (train_ids, val_ids) in enumerate(kfold.split(data.cpu(), labels)):
+    for fold, (train_ids, val_ids) in enumerate(kfold.split(data, labels)):
         nn.reset()
         optimizer = torch.optim.Adam(nn.parameters(), lr=learning_grate)
 
         best_val_metrics: np.ndarray = np.ones(4) * (- np.inf) 
         corr_train_metrics: np.ndarray = np.zeros(4)
-        train_data: torch.Tensor = data[train_ids]
-        val_data: torch.Tensor = data[val_ids]
+        train_data, val_data = get_train_val_data(data, train_ids, val_ids)
         train_labels: torch.Tensor = labels[train_ids]
         val_labels: torch.Tensor = labels[val_ids]
 
@@ -142,7 +156,7 @@ def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: to
     predictions: torch.Tensor = torch.zeros(N)
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, N)
-        batch_data: torch.Tensor = train_data[batch_start:batch_end].to(nn.device)
+        batch_data: torch.Tensor = move_to(train_data[batch_start:batch_end], nn.device)
         batch_labels: torch.Tensor = train_labels[batch_start:batch_end].to(nn.device)
         y_pred = nn.train_on_batch(batch_data, batch_labels, loss, optimizer)
         predictions[batch_start:batch_end] = y_pred.cpu()
@@ -159,7 +173,7 @@ def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: to
     predictions: torch.Tensor = torch.zeros(M)
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, M)
-        batch_data: torch.Tensor = val_data[batch_start:batch_end].to(nn.device)
+        batch_data: torch.Tensor = move_to(train_data[batch_start:batch_end], nn.device)
         batch_labels: torch.Tensor = val_labels[batch_start:batch_end].to(nn.device)
         y_pred = nn.evaluate_on_batch(batch_data, batch_labels)
         predictions[batch_start:batch_end] = y_pred.cpu()
