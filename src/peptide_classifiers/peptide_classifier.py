@@ -7,7 +7,7 @@ class PeptideClassifier(object):
     def __init__(self, encoder : PeptideEncoder, name: str, device : torch.device = 'cpu'):
         object.__init__(self)
         self.encoder = encoder
-        self.device=device
+        self.device = device
         self.name = name
     
     # take sequence and return predicted class (0 = real, 1 = decoy)

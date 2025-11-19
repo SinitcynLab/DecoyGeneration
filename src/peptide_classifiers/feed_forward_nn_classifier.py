@@ -15,4 +15,4 @@ class FeedForwardNNClassifier(NNClassifier):
         return torch.flatten(self.network(x))
     
     def set_device(self, device : torch.device):
-        NNClassifier.set_device(device)
+        NNClassifier.set_device(self, device)

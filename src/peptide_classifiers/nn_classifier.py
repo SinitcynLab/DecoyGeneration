@@ -19,16 +19,11 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
         PeptideClassifier.__init__(self, encoder, name, device)
         torch.nn.Module.__init__(self)
         self.network = network
-        self.og_state_dict = copy.deepcopy(self.state_dict())
-        network.to(device)
-        self.auroc = AUROC(task='binary').to(self.device)
-        self.accuracy = BinaryAccuracy().to(self.device)
-        self.precision = BinaryPrecision().to(self.device)
-        self.recall = BinaryRecall().to(self.device)
+        self.set_device(device)
         self.resetter = resetter
 
     def set_device(self, device : torch.device):
-        PeptideClassifier.set_device(device)
+        PeptideClassifier.set_device(self, device)
         self.network.to(device)
 
     def evaluate_on_batch(self, X_batch, y_batch) -> tuple[torch.Tensor, float]:
@@ -69,6 +64,7 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
             raise ValueError("Net setter must be set in order to reset NN classifier.")
         else:
             self.network = self.resetter()
+            self.set_device(self.device)
 
 def set_up_nn_training(nn : NNClassifier, X_train, y_train, X_val, y_val):
     X_train = nn.encoder(X_train)
@@ -87,9 +83,6 @@ def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterab
                    n_epochs: int, batch_size: int, learning_grate: float, decoy_id: str, n_folds: int = 5,
                    metric: BaseMetric = DefaultMetric()) -> float:
     print(f"*** *** RESULTS FOR DECOYS={decoy_id} *** ***")
-    torch.cuda.empty_cache()
-    metric.to(nn.device)
-
     sequences, labels = shuffle(sequences, labels)
     data: torch.Tensor = nn.encoder(sequences)
     labels: torch.Tensor = torch.FloatTensor(list(labels))
@@ -140,15 +133,13 @@ def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: to
     N: int = len(train_data)
     nn.train()
     batch_starts: np.ndarray = np.arange(0, N, batch_size)
-    predictions: torch.Tensor = torch.zeros(N).to(nn.device)
+    predictions: torch.Tensor = torch.zeros(N)
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, N)
         batch_data: torch.Tensor = train_data[batch_start:batch_end].to(nn.device)
         batch_labels: torch.Tensor = train_labels[batch_start:batch_end].to(nn.device)
         y_pred = nn.train_on_batch(batch_data, batch_labels, loss, optimizer)
         predictions[batch_start:batch_end] = y_pred.cpu()
-        del batch_data, batch_labels, y_pred
-        gc.collect()
     avg_train_metrics = metric.extract_values(predictions, train_labels)
 
     # validate:
@@ -156,15 +147,13 @@ def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: to
     avg_val_metrics: np.ndarray = np.zeros(4)
     nn.eval()
     batch_starts: np.ndarray = np.arange(0, M, batch_size)
-    predictions: torch.Tensor = torch.zeros(M).to(nn.device)
+    predictions: torch.Tensor = torch.zeros(M)
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, M)
         batch_data: torch.Tensor = val_data[batch_start:batch_end].to(nn.device)
         batch_labels: torch.Tensor = val_labels[batch_start:batch_end].to(nn.device)
         y_pred = nn.evaluate_on_batch(batch_data, batch_labels)
         predictions[batch_start:batch_end] = y_pred.cpu()
-        del batch_data, batch_labels, y_pred
-        gc.collect()
     avg_val_metrics = metric.extract_values(predictions, val_labels)
 
     return avg_train_metrics, avg_val_metrics
