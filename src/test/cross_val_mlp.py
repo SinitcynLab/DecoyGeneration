@@ -31,8 +31,7 @@ if __name__ == "__main__":
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
 
-    decoy_files = ['target', f'data/decoys/{base}.shuffle.0.fasta', f'data/decoys/{base}.reverse.fasta',
-                   f'data/decoys{base}.diann_C.fasta', f'data/decoys{base}.diann_random_pos.fasta',f'data/decoys{base}.diann_N.fasta']
+    decoy_files = [f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.diann_random_pos.fasta',f'data/decoys/{base}.diann_N.fasta']
     decoy_ids = ['target', 'shuffle', 'reverse', 'diann_C', 'diann_random_pos', 'diann_N']
     
     for i, decoy_file in enumerate(decoy_files):

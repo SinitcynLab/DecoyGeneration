@@ -146,6 +146,9 @@ def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: to
         batch_labels: torch.Tensor = train_labels[batch_start:batch_end].to(nn.device)
         y_pred = nn.train_on_batch(batch_data, batch_labels, loss, optimizer)
         predictions[batch_start:batch_end] = y_pred.cpu()
+        torch.cuda.empty_cache()
+        del batch_data, batch_labels
+        gc.collect()
     avg_train_metrics = metric.extract_values(predictions, train_labels)
 
     # validate:
@@ -160,6 +163,9 @@ def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: to
         batch_labels: torch.Tensor = val_labels[batch_start:batch_end].to(nn.device)
         y_pred = nn.evaluate_on_batch(batch_data, batch_labels)
         predictions[batch_start:batch_end] = y_pred.cpu()
+        torch.cuda.empty_cache()
+        del batch_data, batch_labels
+        gc.collect()
     avg_val_metrics = metric.extract_values(predictions, val_labels)
 
     return avg_train_metrics, avg_val_metrics
