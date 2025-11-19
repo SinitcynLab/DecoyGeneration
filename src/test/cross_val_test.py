@@ -1,30 +1,26 @@
 import torch
 
 from src.peptide_classifiers.nn_classifier import cross_validate_nn
-from src.peptide_classifiers.feed_forward_nn_classifier import FeedForwardNNClassifier
-from src.encoders.protbert_cls_encoder import ProtBertClsEncoder
+from src.peptide_classifiers.recurrent_nn_classifier import RecurrentNNClassifier
+from src.encoders.protbert_encoder import ProtBertEncoder
 from src.io.fasta import read_fasta_file
 from src.io.utils import split_targets
 
-def get_mlp_net():
-    net = torch.nn.Sequential(
-        torch.nn.Dropout(p=0.1),
-        torch.nn.Linear(1024, 128),
-        torch.nn.ReLU(),
-        torch.nn.Linear(128, 64),
-        torch.nn.ReLU(),
-        torch.nn.Linear(64, 1),
+def get_rnn_net():
+    out_size = 2048
+    rnn = torch.nn.RNN(1024, out_size, bidirectional=False)
+    net = torch.nn.Sequential( # each character (amino acid) is encoded using 1024 numbers
+        torch.nn.Linear(out_size, 1),
         torch.nn.Sigmoid()
     )
-    return net
+    return net, rnn
 
 if __name__ == "__main__":
     # define MLP classifier
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    torch.set_num_threads(6)
-    print(device)
-    encoder = ProtBertClsEncoder(device=device)
-    classifier = FeedForwardNNClassifier(network=get_mlp_net(), encoder=encoder, device=device, name="mlp", resetter=get_mlp_net)
+    encoder = ProtBertEncoder(device=device, constant_length=False, flatten=False)
+    net, rnn = get_rnn_net()
+    classifier = RecurrentNNClassifier(rnn=rnn, network=net, encoder=encoder, device=device, name="rnn", resetter=get_rnn_net)
 
     base = 'UP000002311_559292'
     target_file = f"data/targets/{base}.fasta"
