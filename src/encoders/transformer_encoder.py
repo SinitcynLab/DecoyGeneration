@@ -1,6 +1,5 @@
 import gc
 import torch
-import numpy as np
 from typing import Iterable, Union
 
 from transformers import EsmTokenizer, EsmForMaskedLM
@@ -58,7 +57,6 @@ class TransformerEncoder(PeptideEncoder):
             del batch_inputs, batch_outputs, batch_hidden_st_gpu
             gc.collect()
 
-        # Return output as tensor if we mandate constant length, output list otherwise:
         if self.constant_length or self.cls_only:
             return torch.cat(output_list, axis=0)
         else:

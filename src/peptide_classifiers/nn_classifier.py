@@ -142,7 +142,7 @@ def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: to
     predictions: torch.Tensor = torch.zeros(N)
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, N)
-        batch_data: torch.Tensor = move_to(train_data[batch_start:batch_end], nn.device)
+        batch_data: torch.Tensor = train_data[batch_start:batch_end].to(nn.device)
         batch_labels: torch.Tensor = train_labels[batch_start:batch_end].to(nn.device)
         y_pred = nn.train_on_batch(batch_data, batch_labels, loss, optimizer)
         predictions[batch_start:batch_end] = y_pred.cpu()
@@ -159,7 +159,7 @@ def train_val_iteration(nn: NNClassifier, train_data: torch.Tensor, val_data: to
     predictions: torch.Tensor = torch.zeros(M)
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, M)
-        batch_data: torch.Tensor = move_to(train_data[batch_start:batch_end], nn.device)
+        batch_data: torch.Tensor = train_data[batch_start:batch_end].to(nn.device)
         batch_labels: torch.Tensor = val_labels[batch_start:batch_end].to(nn.device)
         y_pred = nn.evaluate_on_batch(batch_data, batch_labels)
         predictions[batch_start:batch_end] = y_pred.cpu()
