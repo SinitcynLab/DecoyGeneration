@@ -47,7 +47,6 @@ if __name__ == "__main__":
         # cross-validate RNN:
         n_epochs = 20
         batch_size = 10
-        N = 500
-        sequences = target_sequences[0:N] + decoy_sequences[0:N]
-        labels = target_labels[0:N] + decoy_labels[0:N]
+        sequences = target_sequences + decoy_sequences
+        labels = target_labels + decoy_labels
         cross_validate_rnn(classifier, sequences, labels, n_epochs, batch_size, 1e-3, n_folds=5, decoy_id=decoy_ids[i])
