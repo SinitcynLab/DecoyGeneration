@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=my_job
 #SBATCH --output=cv_rnn_%j.txt
-#SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
+#SBATCH --partition=tue.gpu1.q         # Choose a partition that has GPUs
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
