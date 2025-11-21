@@ -60,6 +60,7 @@ class TransformerEncoder(PeptideEncoder):
         if self.constant_length or self.cls_only:
             return torch.cat(output_list, axis=0)
         else:
+            # pad output to all get same length s.t. we can pass it around as a tensor:
             lengths: List[int] = [t.size(dim=1) for t in output_list]
             lengths = torch.IntTensor(lengths)
             max_len: int = torch.max(lengths)
@@ -67,4 +68,4 @@ class TransformerEncoder(PeptideEncoder):
                 diff = max_len - output_list[i].size(dim=1)
                 pad = torch.zeros((1, diff, 1024))
                 output_list[i] = torch.cat((output_list[i], pad), axis=1)
-            return torch.cat(output_list, axis=0), torch.IntTensor(lengths)
+            return torch.cat(output_list, axis=0), lengths
