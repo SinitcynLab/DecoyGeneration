@@ -11,6 +11,7 @@ from src.metrics.base_metric import BaseMetric
 from src.metrics.default_metric import DefaultMetric
 from sklearn.utils import shuffle
 from src.io.data_set import RecurrentDataSet
+from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence
 
 class RecurrentNNClassifier(NNClassifier):
     def __init__(self, rnn : torch.nn.RNN, network : torch.nn.Sequential, encoder : PeptideEncoder, name: str, device : torch.device, resetter: Callable = None):
@@ -19,10 +20,13 @@ class RecurrentNNClassifier(NNClassifier):
         self.rnn.to(self.device)
 
     def forward(self, data: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
-        packed_seqs = torch.nn.utils.rnn.pack_padded_sequence(data, lengths, batch_first=True)
-        rnn_out, _ = self.rnn(packed_seqs)
-        output = self.network(rnn_out[:, -1, :]) # take output at final step
-        return output
+        N = len(lengths)
+        net_inputs = torch.zeros(N, self.rnn.hidden_size).to(self.device)
+        for i in range(N):
+            rnn_in = data[i, 0:lengths[i], :]
+            rnn_out, _ = self.rnn(rnn_in)
+            net_inputs[i] = rnn_out[-1, :] # use final output as input for the net
+        return torch.flatten(self.network(net_inputs))
     
     def classify(self, sequences : Iterable[str]) -> list[bool]:
         # get inputs:
@@ -44,6 +48,13 @@ class RecurrentNNClassifier(NNClassifier):
         loss : torch.Tensor = torch.abs(out - outcomes_tensor.float())
         # return whether predictions correct, and loss measure with each prediction:
         return corr.tolist(), loss.tolist()
+    
+    def evaluate_on_data(self, dataset: RecurrentDataSet):
+        dataset.to(self.device)
+        X, _, l = dataset.get_tensors()
+        y_pred = self(X, l)
+        dataset.to('cpu')
+        return y_pred
     
     def train_on_data(self, dataset: RecurrentDataSet, loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
         dataset.to(self.device)

@@ -1,7 +1,6 @@
 import torch
 
-from src.peptide_classifiers.nn_classifier import cross_validate_nn
-from src.peptide_classifiers.recurrent_nn_classifier import RecurrentNNClassifier
+from src.peptide_classifiers.recurrent_nn_classifier import RecurrentNNClassifier, cross_validate_rnn
 from src.encoders.protbert_encoder import ProtBertEncoder
 from src.io.fasta import read_fasta_file
 from src.io.utils import split_targets
@@ -43,9 +42,9 @@ if __name__ == "__main__":
         target_labels = [0 for _ in range(len(target_sequences))]
         decoy_labels = [1 for _ in range(len(decoy_sequences))]
 
-        # cross-validate MLP:
+        # cross-validate RNN:
         n_epochs = 20
         batch_size = 10
         sequences = target_sequences + decoy_sequences
         labels = target_labels + decoy_labels
-        cross_validate_nn(classifier, sequences, labels, n_epochs, batch_size, 1e-3, n_folds=5, decoy_id=decoy_ids[i])
+        cross_validate_rnn(classifier, sequences, labels, n_epochs, batch_size, 1e-3, n_folds=5, decoy_id=decoy_ids[i])

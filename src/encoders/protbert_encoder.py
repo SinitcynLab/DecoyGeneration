@@ -17,7 +17,10 @@ class ProtBertEncoder(TransformerEncoder):
 
     def __call__(self, sequences: Iterable[str]) -> torch.Tensor:
         sequences = [" ".join(sequence) for sequence in sequences]
-        embeddings = self._embed_batched(sequences, batch_size = 1) # [Batch, max_tokenized_length, 1024]
+        if self.constant_length:
+            embeddings = self._embed_batched_constant_length(sequences, batch_size = 1) # [Batch, max_tokenized_length, 1024]
+        else:
+            embeddings = self._embed_batched_varied_length(sequences)
         if self.flatten:
             embeddings = embeddings.flatten(start_dim=1, end_dim=2) # [Batch, max_tokenized_length * 1024]
         return embeddings

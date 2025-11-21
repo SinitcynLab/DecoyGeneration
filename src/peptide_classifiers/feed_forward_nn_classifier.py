@@ -8,7 +8,7 @@ from src.encoders.peptide_encoder import PeptideEncoder
 from typing import Iterable
 from src.metrics.base_metric import BaseMetric
 from src.metrics.default_metric import DefaultMetric
-from io.data_set import DataSet
+from src.io.data_set import DataSet
 from sklearn.utils import shuffle
 
 class FeedForwardNNClassifier(NNClassifier):
@@ -41,6 +41,13 @@ class FeedForwardNNClassifier(NNClassifier):
     
     def set_device(self, device : torch.device):
         NNClassifier.set_device(self, device)
+
+    def evaluate_on_data(self, dataset: DataSet):
+        dataset.to(self.device)
+        X, _ = dataset.get_tensors()
+        y_pred = self(X)
+        dataset.to('cpu')
+        return y_pred
 
     def train_on_data(self, dataset: DataSet, loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
         dataset.to(self.device)

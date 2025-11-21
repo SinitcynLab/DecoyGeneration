@@ -9,8 +9,8 @@ class DataSet(object):
         self.labels = labels
 
     def to(self, device: torch.device):
-        self.data.to(device)
-        self.labels.to(device)
+        self.data = self.data.to(device)
+        self.labels = self.labels.to(device)
     
     def get_tensors(self):
         return self.data, self.labels
@@ -40,7 +40,6 @@ class RecurrentDataSet(DataSet):
 
     def to(self, device: torch.device):
         DataSet.to(self, device)
-        self.lengths.to(device)
 
     def get_tensors(self):
         return self.data, self.labels, self.lengths

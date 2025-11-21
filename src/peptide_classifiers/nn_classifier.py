@@ -27,11 +27,7 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
         self.network.to(device)
 
     def evaluate_on_data(self, dataset: DataSet):
-        X = dataset.get_data()
-        X.to(self.device)
-        y_pred = self(X)
-        X.to('cpu')
-        return y_pred
+        return NotImplementedError()
 
     def train_on_data(self, dataset: DataSet, loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
         raise NotImplementedError()

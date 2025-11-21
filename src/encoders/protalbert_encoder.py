@@ -19,7 +19,7 @@ class ProtAlbertEncoder(TransformerEncoder):
     def __call__(self, sequences : Iterable[str]) -> torch.Tensor:
         sequences = [re.sub(r"[UZOB]", "X", sequence) for sequence in sequences] # Remove unwanted characters
         sequences = [" ".join(sequence) for sequence in sequences] # Add white spaces between characters
-        output_list = self._embed_batched(sequences, batch_size = 1)  # get outputs of model for each batch
+        output_list = self._embed_batched_constant_length(sequences, batch_size = 1)  # get outputs of model for each batch
         embedding_list = [output.last_hidden_layer for output in output_list] # extract hidden layers from each output
         embeddings = torch.cat(embedding_list, dim=0) # Stack each of the batch hidden layers on top of each other, current dim is [Batch, max_tokenized_length, 1024]
         embeddings = embeddings.flatten(start_dim=1, end_dim=2) # Flatten last two dimensions, current dim is [Batch, max_tokenized_length * 1024]

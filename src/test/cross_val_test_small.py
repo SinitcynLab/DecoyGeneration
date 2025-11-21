@@ -1,7 +1,6 @@
 import torch
 
-from src.peptide_classifiers.nn_classifier import cross_validate_nn
-from src.peptide_classifiers.feed_forward_nn_classifier import FeedForwardNNClassifier
+from src.peptide_classifiers.feed_forward_nn_classifier import FeedForwardNNClassifier, cross_validate_ff_nn
 from src.encoders.esm_cls_encoder import ESMCLSEncoder
 from src.io.fasta import read_fasta_file
 
@@ -44,4 +43,4 @@ if __name__ == "__main__":
     batch_size = 10
     sequences = target_sequences[0:N//2] + decoy_sequences[0:N//2]
     labels = target_labels[0:N//2] + decoy_labels[0:N//2]
-    cross_validate_nn(classifier, sequences, labels, n_epochs, batch_size, 1e-3, n_folds=5, decoy_id='esm8')
+    cross_validate_ff_nn(classifier, sequences, labels, n_epochs, batch_size, 1e-3, n_folds=5, decoy_id='esm8')
