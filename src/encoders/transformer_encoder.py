@@ -34,10 +34,11 @@ class TransformerEncoder(PeptideEncoder):
             return hidden_states
         
     def __extract_cls_token(self, hidden_states: torch.Tensor) -> torch.Tensor:
-        hidden_states = hidden_states[0][0] # [1, num_tokens, 1024], first token is CLS token
-        return hidden_states.unsqueeze(0) # add dimension to get each sample as a row
+        hidden_states = hidden_states[:,0,:] # [batch_size, num_tokens, 1024], first token is CLS token
+        return hidden_states # add dimension to get each sample as a row
     
     def __embed_batch_inputs(self, batch_inputs: torch.Tensor) -> torch.Tensor:
+        batch_inputs.to(self.device)
         with torch.no_grad():
             batch_outputs = self.model(**batch_inputs, output_hidden_states=True)
         batch_hidden_st_gpu = self.__extract_hidden_state(batch_outputs)
@@ -52,7 +53,6 @@ class TransformerEncoder(PeptideEncoder):
         for i in range(len(sequences)):
             batch_sequences = sequences[i:i+1]
             batch_inputs = self.tokenizer(batch_sequences, return_tensors="pt")
-            batch_inputs.to(self.device)
             output_list.append(self.__embed_batch_inputs(batch_inputs))
         
         # pad output to all get same length s.t. we can pass it around as a tensor:
@@ -73,7 +73,6 @@ class TransformerEncoder(PeptideEncoder):
             batch_sequences = sequences[batch_start:batch_end]
             # Truncate/pad sequences if we mandate constant length, do not otherwise:
             batch_inputs = self.tokenizer(batch_sequences, return_tensors="pt", padding='max_length', max_length=self.max_tokenized_length, truncation=True)
-            batch_inputs.to(self.device)
             output_list.append(self.__embed_batch_inputs(batch_inputs))
 
         return torch.cat(output_list, axis=0)
