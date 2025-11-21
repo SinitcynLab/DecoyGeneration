@@ -17,6 +17,8 @@ def get_rnn_net():
 if __name__ == "__main__":
     # define MLP classifier
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(device)
+    print(torch.get_num_threads())
     encoder = ProtBertEncoder(device=device, constant_length=False, flatten=False)
     net, rnn = get_rnn_net()
     classifier = RecurrentNNClassifier(rnn=rnn, network=net, encoder=encoder, device=device, name="rnn", resetter=get_rnn_net)
