@@ -44,16 +44,16 @@ def cross_validate_nn(nn: NNClassifier, main_dataset: DataSet,
                    metric: BaseMetric = DefaultMetric()) -> float:
     print(f"*** *** RESULTS FOR DECOYS={decoy_id} *** ***")
     loss_fn = torch.nn.BCELoss()
-    mean_best_val_metrics: np.ndarray = np.zeros(4) # [auc, acc, prec, rec]
-    mean_corr_train_metrics: np.ndarray = np.zeros(4)
+    best_val_metrics: np.ndarray = np.zeros((n_folds, metric.dim)) # [auc, acc, prec, rec], one for each fold
+    corr_train_metrics: np.ndarray = np.zeros((n_folds, metric.dim))
 
     kfold = StratifiedKFold(n_splits=n_folds)
     for fold, (train_ids, val_ids) in enumerate(kfold.split(main_dataset.get_data(), main_dataset.get_labels())):
         nn.reset()
         optimizer = torch.optim.Adam(nn.parameters(), lr=learning_grate)
 
-        best_val_metrics: np.ndarray = np.ones(4) * (- np.inf) 
-        corr_train_metrics: np.ndarray = np.zeros(4)
+        best_val_fold: np.ndarray = np.ones(4) * (- np.inf) 
+        corr_train_fold: np.ndarray = np.zeros(4)
         train_dataset: DataSet = main_dataset.get_subset(train_ids)
         val_dataset: DataSet = main_dataset.get_subset(val_ids)
 
@@ -61,27 +61,27 @@ def cross_validate_nn(nn: NNClassifier, main_dataset: DataSet,
             train_metrics, val_metrics = train_val_iteration(nn, train_dataset, val_dataset,
                                                               loss_fn, optimizer, batch_size, metric)
             # use ROC as criterion:
-            if val_metrics[0] > best_val_metrics[0]: 
-                best_val_metrics = val_metrics
-                corr_train_metrics = train_metrics
+            if val_metrics[0] > best_val_fold[0]: 
+                best_val_fold = val_metrics
+                corr_train_fold = train_metrics
 
         print(f"Best validation AUC over #{fold + 1}, with other corresponding metrics:")
-        metric.print_values(best_val_metrics)
+        metric.print_metric(best_val_fold)
         print(f"Validation set info on fold #{fold + 1}:")
         print(f"Size: {val_dataset.size()}.")
         print(f"N.o. targets: {val_dataset.get_num_targets()}.")
         print(f"N.o. decoys: {val_dataset.get_num_decoys()}.")
 
-        mean_best_val_metrics += best_val_metrics / n_folds
-        mean_corr_train_metrics += corr_train_metrics / n_folds
+        best_val_metrics[fold,:] = best_val_fold
+        corr_train_metrics[fold,:] = corr_train_fold
 
     print(f"")
     print(f"### Average best validation AUC and corresponding validation metrics over all {n_folds} folds: ###")
-    metric.print_values(mean_best_val_metrics)
+    metric.print_metric_series(best_val_metrics)
     print(f"### Average corresponding training metrics over all {n_folds} folds: ###")
-    metric.print_values(mean_corr_train_metrics)
+    metric.print_metric_series(corr_train_metrics)
 
-    return mean_best_val_metrics[0] # return mean recorded 'best' ROC
+    return best_val_metrics[0] # return mean recorded 'best' ROC
 
 def train_nn(nn : NNClassifier, train_dataset: DataSet, val_dataset: DataSet,
             n_epochs : int, batch_size : int, optimizer : torch.optim.Optimizer):

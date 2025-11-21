@@ -19,9 +19,19 @@ class BaseMetric(object):
             out[i] = metric(predictions, targets_int)
         return out
     
-    def print_values(self, value_arr: np.ndarray):
+    def print_metric(self, value_arr: np.ndarray):
+        if value_arr.ndim != 1:
+            raise ValueError("Function 'print_metric' expects a 1D array. Did you mean 'print_metric_series'?")
         for i, name in enumerate(self.metric_names):
             print(f"{name}: {value_arr[i]:.3f}.")
+    
+    def print_metric_series(self, value_arr: np.ndarray):
+        if value_arr.ndim != 2:
+            raise ValueError("Function 'print_metric_series' expects a 2D array. Did you mean 'print_metric'?")
+        for i, name in enumerate(self.metric_names):
+            mean = np.mean(value_arr[:,i])
+            std = np.std(value_arr[:,i])
+            print(f"{name}: {mean:.3f} ± {std:.3f}.")
 
     def to(self, device: torch.device):
         for metric in self.metric_list:
