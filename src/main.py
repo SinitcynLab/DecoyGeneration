@@ -72,7 +72,7 @@ if __name__ == "__main__":
             for i in range(n):
                 filename_out = f"{filename}.{generator}.{i}{extension}"
                 target_records = [record for record in read_fasta_file(target_filename)]
-                target_records = target_records[13400:len(target_records)]
+                target_records = target_records[13401:len(target_records)]
                 batch_starts = np.arange(0, len(target_records), generator.batch_size)
                 for start in batch_starts:
                     end = min(start + generator.batch_size, len(target_records))
