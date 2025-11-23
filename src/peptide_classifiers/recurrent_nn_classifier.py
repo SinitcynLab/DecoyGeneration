@@ -1,6 +1,5 @@
 import torch
-import copy
-import numpy as np
+import gc
 
 from collections.abc import Callable
 from typing import Iterable, Tuple
@@ -10,7 +9,7 @@ from typing import Iterable
 from src.metrics.base_metric import BaseMetric
 from src.metrics.default_metric import DefaultMetric
 from sklearn.utils import shuffle
-from src.io.data_set import RecurrentDataSet
+from src.io.data_set import Dataset
 from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence
 
 class RecurrentNNClassifier(NNClassifier):
@@ -19,14 +18,12 @@ class RecurrentNNClassifier(NNClassifier):
         self.rnn = rnn
         self.rnn.to(self.device)
 
-    def forward(self, data: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
-        N = len(lengths)
-        net_inputs = torch.zeros(N, self.rnn.hidden_size).to(self.device)
-        for i in range(N):
-            rnn_in = data[i, 0:lengths[i], :]
-            rnn_out, _ = self.rnn(rnn_in)
-            net_inputs[i] = rnn_out[-1, :] # use final output as input for the net
-        return torch.flatten(self.network(net_inputs))
+    def forward(self, tensor_list: Iterable[torch.Tensor]) -> torch.Tensor:
+        outputs = torch.zeros(len(tensor_list)).to(self.device)
+        for i, t in enumerate(tensor_list):
+            rnn_out, _ = self.rnn(t)
+            outputs[i] = self.network(rnn_out[:,-1,:]) # use last output as network input
+        return outputs
     
     def classify(self, sequences : Iterable[str]) -> list[bool]:
         # get inputs:
@@ -48,23 +45,19 @@ class RecurrentNNClassifier(NNClassifier):
         loss : torch.Tensor = torch.abs(out - outcomes_tensor.float())
         # return whether predictions correct, and loss measure with each prediction:
         return corr.tolist(), loss.tolist()
-    
-    def evaluate_on_data(self, dataset: RecurrentDataSet):
-        dataset.to(self.device)
-        X, _, l = dataset.get_tensors()
-        y_pred = self(X, l)
-        dataset.to('cpu')
+
+    def evaluate_on_data(self, dataset: Dataset):
+        tensor_list, _ = self.encode_dataset(dataset)
+        y_pred = self(tensor_list)
         return y_pred
     
-    def train_on_data(self, dataset: RecurrentDataSet, loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
-        dataset.to(self.device)
-        X, y, l = dataset.get_tensors()
-        y_pred = self(X, l)
+    def train_on_data(self, dataset: Dataset, loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
+        tensor_list, y = self.encode_dataset(dataset)
+        y_pred = self(tensor_list)
         loss = loss_fn(y_pred, y)
         optimizer.zero_grad()
         loss.backward(retain_graph=True)
         optimizer.step()
-        dataset.to('cpu')
         return y_pred
     
     def set_device(self, device):
@@ -77,23 +70,9 @@ class RecurrentNNClassifier(NNClassifier):
         self.rnn = rnn
         self.set_device(self.device)
 
-def cross_validate_rnn(rnn: RecurrentNNClassifier, sequences: Iterable[str], labels: Iterable[str], 
-                   n_epochs: int, batch_size: int, learning_rate: float, decoy_id: str, n_folds: int = 5,
-                   metric: BaseMetric = DefaultMetric()) -> float:
-    sequences, labels = shuffle(sequences, labels)
-    data, lengths = rnn.encoder(sequences)
-    labels: torch.Tensor = torch.FloatTensor(list(labels))
-    dataset: RecurrentDataSet = RecurrentDataSet(data, labels, lengths)
-    return cross_validate_nn(rnn, dataset, n_epochs, batch_size, learning_rate, decoy_id, n_folds, metric)
-
-def train_rnn(rnn : RecurrentNNClassifier, X_train : Iterable[str], y_train : Iterable[bool], X_val : Iterable[str], 
-              y_val : Iterable[str], n_epochs : int, batch_size : int, optimizer : torch.optim.Optimizer):
-    X_train, len_train = rnn.encoder(X_train)
-    y_train = torch.FloatTensor(list(y_train))
-    X_val, len_val = rnn.encoder(X_val)
-    y_val = torch.FloatTensor(list(y_val))
-    
-    train_dataset = RecurrentDataSet(X_train, y_train, len_train)
-    val_dataset = RecurrentDataSet(X_val, y_val, len_val)
-
-    return train_nn(rnn, train_dataset, val_dataset, n_epochs, batch_size, optimizer)
+    def encode_dataset(self, dataset: Dataset):
+        seqs, y = dataset.get_contents()
+        tensor_list = self.encoder(seqs)
+        for i in range(len(tensor_list)):
+            tensor_list[i] = tensor_list[i].to(self.device)
+        return tensor_list, y.to(self.device)

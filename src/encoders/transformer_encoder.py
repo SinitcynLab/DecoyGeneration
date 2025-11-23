@@ -48,22 +48,14 @@ class TransformerEncoder(PeptideEncoder):
         gc.collect()
         return batch_hidden_st_cpu
 
-    def _embed_batched_varied_length(self, sequences : Iterable[str]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _embed_batched_varied_length(self, sequences : Iterable[str]) -> List[torch.Tensor]:
         output_list = []
         for i in range(len(sequences)):
             batch_sequences = sequences[i:i+1]
             batch_inputs = self.tokenizer(batch_sequences, return_tensors="pt")
             output_list.append(self.__embed_batch_inputs(batch_inputs))
         
-        # pad output to all get same length s.t. we can pass it around as a tensor:
-        lengths: List[int] = [t.size(dim=1) for t in output_list]
-        lengths = torch.IntTensor(lengths)
-        max_len: int = torch.max(lengths)
-        for i in range(len(output_list)):
-            diff = max_len - output_list[i].size(dim=1)
-            pad = torch.zeros((1, diff, 1024))
-            output_list[i] = torch.cat((output_list[i], pad), axis=1)
-        return torch.cat(output_list, axis=0), lengths
+        return output_list
 
     def _embed_batched_constant_length(self, sequences : Iterable[str], batch_size : int = 32) -> torch.Tensor:
         batch_starts = torch.arange(0, len(sequences), batch_size)

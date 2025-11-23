@@ -12,7 +12,8 @@ from torchmetrics import AUROC
 from torchmetrics.classification import BinaryAccuracy, BinaryPrecision, BinaryRecall
 from src.metrics.base_metric import BaseMetric
 from src.metrics.default_metric import DefaultMetric
-from src.io.data_set import DataSet
+from src.io.data_set import Dataset
+from sklearn.utils import shuffle
 
 class NNClassifier(PeptideClassifier, torch.nn.Module):
     def __init__(self, network : torch.nn.Sequential, encoder : PeptideEncoder, name: str, device : torch.device, resetter: Callable = None):
@@ -26,10 +27,10 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
         PeptideClassifier.set_device(self, device)
         self.network.to(device)
 
-    def evaluate_on_data(self, dataset: DataSet):
+    def evaluate_on_data(self, dataset: Dataset):
         return NotImplementedError()
 
-    def train_on_data(self, dataset: DataSet, loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
+    def train_on_data(self, dataset: Dataset, loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
         raise NotImplementedError()
     
     def reset(self):
@@ -39,23 +40,37 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
             self.network = self.resetter()
             self.set_device(self.device)
 
-def cross_validate_nn(nn: NNClassifier, main_dataset: DataSet, 
+    def encode_dataset(self, dataset: Dataset):
+        raise NotImplementedError()
+
+    def gc_tensors(self, tensor_list: List[torch.Tensor]):
+        for t in tensor_list:
+            del t
+        gc.collect()
+        torch.cuda.empty_cache()
+
+def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterable[bool], 
                    n_epochs: int, batch_size: int, learning_grate: float, decoy_id: str, n_folds: int = 5,
                    metric: BaseMetric = DefaultMetric()) -> float:
     print(f"*** *** RESULTS FOR DECOYS={decoy_id} *** ***")
+    sequences = np.array(sequences, dtype=str) # convert to array for indexing folds
+    sequences, labels = shuffle(sequences, labels)
+    labels: torch.Tensor = torch.FloatTensor(list(labels))
+    main_dataset: Dataset = Dataset(sequences, labels)
+
     loss_fn = torch.nn.BCELoss()
     best_val_metrics: np.ndarray = np.zeros((n_folds, metric.dim)) # [auc, acc, prec, rec], one for each fold
     corr_train_metrics: np.ndarray = np.zeros((n_folds, metric.dim))
 
     kfold = StratifiedKFold(n_splits=n_folds)
-    for fold, (train_ids, val_ids) in enumerate(kfold.split(main_dataset.get_data(), main_dataset.get_labels())):
+    for fold, (train_ids, val_ids) in enumerate(kfold.split(main_dataset.get_sequences(), main_dataset.get_labels())):
         nn.reset()
         optimizer = torch.optim.Adam(nn.parameters(), lr=learning_grate)
 
         best_val_fold: np.ndarray = np.ones(4) * (- np.inf) 
         corr_train_fold: np.ndarray = np.zeros(4)
-        train_dataset: DataSet = main_dataset.get_subset(train_ids)
-        val_dataset: DataSet = main_dataset.get_subset(val_ids)
+        train_dataset: Dataset = main_dataset.get_subset(train_ids)
+        val_dataset: Dataset = main_dataset.get_subset(val_ids)
 
         for _ in range(n_epochs):
             train_metrics, val_metrics = train_val_iteration(nn, train_dataset, val_dataset,
@@ -83,8 +98,13 @@ def cross_validate_nn(nn: NNClassifier, main_dataset: DataSet,
 
     return best_val_metrics[0] # return mean recorded 'best' ROC
 
-def train_nn(nn : NNClassifier, train_dataset: DataSet, val_dataset: DataSet,
-            n_epochs : int, batch_size : int, optimizer : torch.optim.Optimizer):
+def train_nn(nn : NNClassifier, X_train : Iterable[str], y_train : Iterable[bool], X_val : Iterable[str], 
+            y_val : Iterable[str], n_epochs : int, batch_size : int, optimizer : torch.optim.Optimizer):
+    y_train = torch.FloatTensor(list(y_train))
+    y_val = torch.FloatTensor(list(y_val))
+    train_dataset = Dataset(X_train, y_train)
+    val_dataset = Dataset(X_val, y_val)
+
     loss_fn = torch.nn.BCELoss()
 
     best_val_auc = - np.inf
@@ -99,7 +119,7 @@ def train_nn(nn : NNClassifier, train_dataset: DataSet, val_dataset: DataSet,
     nn.load_state_dict(best_weights) # restore best weights
     return best_val_auc # return best validation auc
 
-def train_val_iteration(nn: NNClassifier, train_dataset: DataSet, val_dataset: DataSet, loss: torch.nn.Module, 
+def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: Dataset, loss: torch.nn.Module, 
                         optimizer:torch.optim.Optimizer, batch_size: int, metric: BaseMetric = DefaultMetric()):
     # train:
     N: int = train_dataset.size()
