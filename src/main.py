@@ -27,9 +27,6 @@ if __name__ == "__main__":
         ReverseGenerator(
             special_amino_acids
         ),
-        DiannGenerator(
-            special_amino_acids
-        ),
         ShuffleGenerator(
             special_amino_acids,
             random=random
@@ -42,7 +39,7 @@ if __name__ == "__main__":
             masking_type=MaskingType.PERCENT,
             sort_optimization=True,
             batch_size=64,
-            esm_generator_type=MlGeneratorType.BEST
+            ml_generator_type=MlGeneratorType.BEST
         ),
         EsmGenerator(
             local_path="models/esm2_t6_8M_UR50D",
@@ -52,7 +49,7 @@ if __name__ == "__main__":
             masking_type=MaskingType.COUNT,
             sort_optimization=True,
             batch_size=64,
-            esm_generator_type=MlGeneratorType.BEST
+            ml_generator_type=MlGeneratorType.BEST
         ),
         EsmGenerator(
             local_path="models/esm2_t33_650M_UR50D",
@@ -62,7 +59,7 @@ if __name__ == "__main__":
             masking_type=MaskingType.PERCENT,
             sort_optimization=True,
             batch_size=4,
-            esm_generator_type=MlGeneratorType.BEST
+            ml_generator_type=MlGeneratorType.BEST
         ),
         EsmGenerator(
             local_path="models/esm2_t33_650M_UR50D",
@@ -72,7 +69,7 @@ if __name__ == "__main__":
             masking_type=MaskingType.COUNT,
             sort_optimization=True,
             batch_size=4,
-            esm_generator_type=MlGeneratorType.BEST
+            ml_generator_type=MlGeneratorType.BEST
         )
     ]
     for generator in generators:
