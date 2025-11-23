@@ -32,7 +32,7 @@ if __name__ == "__main__":
             mask_percent=0.3,
             masking_type=MaskingType.PERCENT,
             sort_optimization=True,
-            batch_size=8,
+            batch_size=1,
             ml_generator_type=MlGeneratorType.BEST
         ),
         EsmGenerator(
@@ -42,7 +42,7 @@ if __name__ == "__main__":
             mask_count=1,
             masking_type=MaskingType.COUNT,
             sort_optimization=True,
-            batch_size=8,
+            batch_size=1,
             ml_generator_type=MlGeneratorType.BEST
         ),
         EsmGenerator(
@@ -52,7 +52,7 @@ if __name__ == "__main__":
             mask_percent=0.3,
             masking_type=MaskingType.PERCENT,
             sort_optimization=True,
-            batch_size=4,
+            batch_size=1,
             ml_generator_type=MlGeneratorType.BEST
         ),
         EsmGenerator(
@@ -62,7 +62,7 @@ if __name__ == "__main__":
             mask_count=1,
             masking_type=MaskingType.COUNT,
             sort_optimization=True,
-            batch_size=4,
+            batch_size=1,
             ml_generator_type=MlGeneratorType.BEST
         )
     ]
