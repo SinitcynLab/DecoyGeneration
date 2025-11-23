@@ -90,12 +90,12 @@ def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterab
         best_val_metrics[fold,:] = best_val_fold
         corr_train_metrics[fold,:] = corr_train_fold
 
-    print(f"")
     print(f"### Average best validation AUC and corresponding validation metrics over all {n_folds} folds: ###")
     metric.print_metric_series(best_val_metrics)
     print(f"### Average corresponding training metrics over all {n_folds} folds: ###")
     metric.print_metric_series(corr_train_metrics)
 
+    print(f"")
     return best_val_metrics[0] # return mean recorded 'best' ROC
 
 def train_nn(nn : NNClassifier, X_train : Iterable[str], y_train : Iterable[bool], X_val : Iterable[str], 

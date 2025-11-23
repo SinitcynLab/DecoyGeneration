@@ -13,6 +13,7 @@ from src.decoy_generators.diann_modifications import DiannRandomAcid, DiannRando
 from src.decoy_generators.ml_generator import MlGenerator
 from src.decoy_generators.smart_masking_esm import SmartMaskingEsmGenerator
 from src.io.fasta import write_fasta_file, read_fasta_file
+from src.io.utils import remove_long_sequences
 
 if __name__ == "__main__":
     target_filename: str = "data/targets/human_and_crap.fasta"
@@ -72,7 +73,7 @@ if __name__ == "__main__":
             for i in range(n):
                 filename_out = f"{filename}.{generator}.{i}{extension}"
                 target_records = [record for record in read_fasta_file(target_filename)]
-                target_records = target_records[13401:len(target_records)]
+                target_records = remove_long_sequences(target_records, cap_length=10_000)
                 batch_starts = np.arange(0, len(target_records), generator.batch_size)
                 for start in batch_starts:
                     end = min(start + generator.batch_size, len(target_records))

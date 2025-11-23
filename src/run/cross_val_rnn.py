@@ -35,6 +35,7 @@ if __name__ == "__main__":
                    f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.diann_random_pos.fasta',f'data/decoys/{base}.diann_N.fasta']
     decoy_ids = ['target', 'shuffle', 'reverse', 'diann_C', 'diann_random_pos', 'diann_N']
     
+    print("Cross validation of the RNN:")
     for i, decoy_file in enumerate(decoy_files):
         if decoy_file == 'target':
             target_sequences, decoy_sequences = split_targets(target_sequences)
