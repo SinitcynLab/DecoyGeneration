@@ -7,8 +7,8 @@ class DiannGenerator(DecoyGenerator):
     translation: dict[str, str] = {
         a: b
         for a, b in zip(
-            list('GAVLIFMPWSCTYHKRQEND'),
-            list('LLLVVLLLLTSSSSLLNDQE')
+            list('GAVLIFMPWSCTYHKRQENDU'),
+            list('LLLVVLLLLTSSSSLLNDQES')
         )
     }
 
