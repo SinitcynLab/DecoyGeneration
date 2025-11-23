@@ -88,8 +88,6 @@ class MlGenerator(DecoyGenerator):
                 ]
                 for idx, record in zip(sort_idx[i: i + self.batch_size], tmp):
                     target_out_list.append((idx, record))
-                gc.collect()
-                torch.cuda.empty_cache()
             target_out_list.sort()
             for idx, record in target_out_list:
                 yield record
