@@ -20,6 +20,7 @@ if __name__ == "__main__":
 
     special_amino_acids: List[str] = ['R', 'K']
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(device)
 
     n: int = 1
     random: Random = Random(42)
