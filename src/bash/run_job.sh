@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=my_job
-#SBATCH --output=gen_%j.txt
+#SBATCH --output=cv_rnn_%j.txt
 #SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
 #SBATCH --time=16:00:00
 #SBATCH --nodes=1
