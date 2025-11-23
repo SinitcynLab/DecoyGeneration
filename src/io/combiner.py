@@ -9,6 +9,6 @@ class Combiner(object):
     def combine(in_file_names: Iterable[str], out_file_name: str):
         all_records: List[FastaRecord] = []
         for file_name in in_file_names:
-            file_records = read_fasta_file(file_name)
+            file_records = [record for record in read_fasta_file(file_name)]
             all_records += file_records
-        write_fasta_file(all_records, out_file_name)
+        write_fasta_file(out_file_name, all_records)

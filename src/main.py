@@ -15,7 +15,7 @@ from src.decoy_generators.smart_masking_esm import SmartMaskingEsmGenerator
 from src.io.fasta import write_fasta_file, read_fasta_file
 
 if __name__ == "__main__":
-    target_filename: str = "data/targets/UP000002311_559292.fasta"
+    target_filename: str = "data/targets/human_and_crap.fasta"
     write_batched: bool = True
 
     special_amino_acids: List[str] = ['R', 'K']
@@ -24,20 +24,53 @@ if __name__ == "__main__":
     n: int = 1
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
-        DiannGenerator(
-            special_amino_acids,
+        ReverseGenerator(
+            special_amino_acids
         ),
         DiannGenerator(
-            special_amino_acids,
-            'N'
+            special_amino_acids
         ),
-        DiannRandomPos(
+        ShuffleGenerator(
             special_amino_acids,
-            random
+            random=random
         ),
-        DiannRandomAcid(
-            special_amino_acids,
-            random
+        EsmGenerator(
+            local_path="models/esm2_t6_8M_UR50D",
+            random=random,
+            special_amino_acids=special_amino_acids,
+            mask_percent=0.3,
+            sort_optimization=True,
+            batch_size=64,
+            esm_generator_type=MlGeneratorType.BEST
+        ),
+        EsmGenerator(
+            local_path="models/esm2_t6_8M_UR50D",
+            random=random,
+            special_amino_acids=special_amino_acids,
+            mask_count=1,
+            masking_type=MaskingType.PERCENT,
+            sort_optimization=True,
+            batch_size=64,
+            esm_generator_type=MlGeneratorType.BEST
+        ),
+        EsmGenerator(
+            local_path="models/esm2_t33_650M_UR50D",
+            random=random,
+            special_amino_acids=special_amino_acids,
+            mask_percent=0.3,
+            sort_optimization=True,
+            batch_size=64,
+            esm_generator_type=MlGeneratorType.BEST
+        ),
+        EsmGenerator(
+            local_path="models/esm2_t33_650M_UR50D",
+            random=random,
+            special_amino_acids=special_amino_acids,
+            mask_count=1,
+            masking_type=MaskingType.PERCENT,
+            sort_optimization=True,
+            batch_size=64,
+            esm_generator_type=MlGeneratorType.BEST
         )
     ]
     for generator in generators:
