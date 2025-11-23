@@ -24,13 +24,6 @@ if __name__ == "__main__":
     n: int = 1
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
-        ReverseGenerator(
-            special_amino_acids
-        ),
-        ShuffleGenerator(
-            special_amino_acids,
-            random=random
-        ),
         EsmGenerator(
             local_path="models/esm2_t6_8M_UR50D",
             random=random,
