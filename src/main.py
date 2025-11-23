@@ -30,16 +30,6 @@ if __name__ == "__main__":
             local_path="models/esm2_t6_8M_UR50D",
             random=random,
             special_amino_acids=special_amino_acids,
-            mask_percent=0.3,
-            masking_type=MaskingType.PERCENT,
-            sort_optimization=True,
-            batch_size=1,
-            ml_generator_type=MlGeneratorType.BEST
-        ),
-        EsmGenerator(
-            local_path="models/esm2_t6_8M_UR50D",
-            random=random,
-            special_amino_acids=special_amino_acids,
             mask_count=1,
             masking_type=MaskingType.COUNT,
             sort_optimization=True,
