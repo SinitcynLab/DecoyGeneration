@@ -3,6 +3,7 @@ import torch
 from typing import Iterable, Tuple, List
 
 from transformers import EsmTokenizer, EsmForMaskedLM
+from torch.cuda import memory_usage
 
 from src.encoders.peptide_encoder import PeptideEncoder
 
@@ -43,6 +44,9 @@ class TransformerEncoder(PeptideEncoder):
             batch_outputs = self.model(**batch_inputs, output_hidden_states=True)
         batch_hidden_st_gpu = self.__extract_hidden_state(batch_outputs)
         batch_hidden_st_cpu = batch_hidden_st_gpu.cpu()
+        free, total = torch.cuda.mem_get_info(self.device)
+        mem_used_MB = (total - free) / 1024 ** 2
+        print(mem_used_MB)
         return batch_hidden_st_cpu
 
     def _embed_batched_varied_length(self, sequences : Iterable[str]) -> Tuple[torch.Tensor, torch.Tensor]:
