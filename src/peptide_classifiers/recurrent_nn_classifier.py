@@ -18,12 +18,14 @@ class RecurrentNNClassifier(NNClassifier):
         self.rnn = rnn
         self.rnn.to(self.device)
 
-    def forward(self, tensor_list: Iterable[torch.Tensor]) -> torch.Tensor:
-        outputs = torch.zeros(len(tensor_list)).to(self.device)
-        for i, t in enumerate(tensor_list):
-            rnn_out, _ = self.rnn(t)
-            outputs[i] = self.network(rnn_out[:,-1,:]) # use last output as network input
-        return outputs
+    def forward(self, data: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
+        N = len(lengths)
+        net_inputs = torch.zeros(N, self.rnn.hidden_size).to(self.device)
+        for i in range(N):
+            rnn_in = data[i, 0:lengths[i], :]
+            rnn_out, _ = self.rnn(rnn_in)
+            net_inputs[i] = rnn_out[-1, :] # use final output as input for the net
+        return torch.flatten(self.network(net_inputs))
     
     def classify(self, sequences : Iterable[str]) -> list[bool]:
         # get inputs:
@@ -47,20 +49,21 @@ class RecurrentNNClassifier(NNClassifier):
         return corr.tolist(), loss.tolist()
 
     def evaluate_on_data(self, dataset: Dataset):
-        tensor_list, _ = self.encode_dataset(dataset)
-        y_pred = self(tensor_list)
-        self.gc_tensors(tensor_list)
+        X, l, y = self.encode_dataset(dataset)
+        y_pred = self(X, l)
+        del X, l, y
+        torch.cuda.empty_cache()
         return y_pred
     
     def train_on_data(self, dataset: Dataset, loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
-        tensor_list, y = self.encode_dataset(dataset)
-        y_pred = self(tensor_list)
+        X, l, y = self.encode_dataset(dataset)
+        y_pred = self(X, l)
         loss = loss_fn(y_pred, y)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        self.gc_tensors(tensor_list)
-        del loss, y
+        del X, l, y, loss
+        torch.cuda.empty_cache()
         return y_pred
     
     def set_device(self, device):
@@ -75,7 +78,5 @@ class RecurrentNNClassifier(NNClassifier):
 
     def encode_dataset(self, dataset: Dataset):
         seqs, y = dataset.get_contents()
-        tensor_list = self.encoder(seqs)
-        for i in range(len(tensor_list)):
-            tensor_list[i] = tensor_list[i].to(self.device)
-        return tensor_list, y.to(self.device)
+        X, l = self.encoder(seqs)
+        return X.to(self.device), l.to(self.device), y.to(self.device)
