@@ -43,13 +43,6 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
     def encode_dataset(self, dataset: Dataset):
         raise NotImplementedError()
 
-    def gc_tensors(self, tensor_list: List[torch.Tensor]):
-        for t in tensor_list:
-            del t
-        del tensor_list
-        gc.collect()
-        torch.cuda.empty_cache()
-
 def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterable[bool], 
                    n_epochs: int, batch_size: int, learning_grate: float, decoy_id: str, n_folds: int = 5,
                    metric: BaseMetric = DefaultMetric()) -> float:
@@ -133,9 +126,6 @@ def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: D
         batch_dataset = train_dataset.get_subset(range(batch_start, batch_end))
         y_pred = nn.train_on_data(batch_dataset, loss_fn, optimizer)
         predictions[batch_start:batch_end] = y_pred.cpu()
-        del batch_dataset, y_pred
-        torch.cuda.empty_cache()
-        gc.collect()
     avg_train_metrics = metric.extract_values(predictions, train_dataset.get_labels())
 
     # validate:
@@ -149,9 +139,6 @@ def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: D
         batch_dataset = val_dataset.get_subset(range(batch_start, batch_end))
         y_pred = nn.evaluate_on_data(batch_dataset)
         predictions[batch_start:batch_end] = y_pred.cpu()
-        del batch_dataset, y_pred
-        torch.cuda.empty_cache()
-        gc.collect()
     avg_val_metrics = metric.extract_values(predictions, val_dataset.get_labels())
 
     return avg_train_metrics, avg_val_metrics

@@ -51,8 +51,6 @@ class RecurrentNNClassifier(NNClassifier):
     def evaluate_on_data(self, dataset: Dataset):
         X, l, y = self.encode_dataset(dataset)
         y_pred = self(X, l)
-        del X, l, y
-        torch.cuda.empty_cache()
         return y_pred
     
     def train_on_data(self, dataset: Dataset, loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
@@ -62,8 +60,6 @@ class RecurrentNNClassifier(NNClassifier):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        del X, l, y, loss
-        torch.cuda.empty_cache()
         return y_pred
     
     def set_device(self, device):
