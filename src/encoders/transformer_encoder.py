@@ -20,7 +20,7 @@ class TransformerEncoder(PeptideEncoder):
         tokenizer = EsmTokenizer.from_pretrained(path, local_files_only=True)
         tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
         model.eval()
-        #model.to(self.device)
+        model.to(self.device)
         return model, tokenizer
     
     def __extract_hidden_state(self, output_object) -> torch.Tensor:
