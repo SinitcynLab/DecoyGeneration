@@ -16,11 +16,11 @@ class RecurrentNNClassifier(NNClassifier):
     def __init__(self, rnn : torch.nn.RNN, network : torch.nn.Sequential, encoder : PeptideEncoder, name: str, device : torch.device, resetter: Callable = None):
         NNClassifier.__init__(self, network, encoder, name, device, resetter)
         self.rnn = rnn
-        #self.rnn.to(self.device)
+        self.rnn.to(self.device)
 
     def forward(self, data: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
         N = len(lengths)
-        net_inputs = torch.zeros(N, self.rnn.hidden_size)
+        net_inputs = torch.zeros(N, self.rnn.hidden_size).to(self.device)
         for i in range(N):
             rnn_in = data[i, 0:lengths[i], :]
             rnn_out, _ = self.rnn(rnn_in)
@@ -60,6 +60,8 @@ class RecurrentNNClassifier(NNClassifier):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        del X, l, y, loss
+        torch.cuda.empty_cache()
         return y_pred
     
     def set_device(self, device):
@@ -70,9 +72,9 @@ class RecurrentNNClassifier(NNClassifier):
         net, rnn = self.resetter()
         self.network = net
         self.rnn = rnn
-        #self.set_device(self.device)
+        self.set_device(self.device)
 
     def encode_dataset(self, dataset: Dataset):
         seqs, y = dataset.get_contents()
         X, l = self.encoder(seqs)
-        return X, l, y
+        return X.to(self.device), l.to(self.device), y.to(self.device)

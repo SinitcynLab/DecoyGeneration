@@ -20,7 +20,7 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
         PeptideClassifier.__init__(self, encoder, name, device)
         torch.nn.Module.__init__(self)
         self.network = network
-        #self.network.to(device)
+        self.network.to(device)
         self.resetter = resetter
 
     def set_device(self, device : torch.device):
@@ -38,7 +38,7 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
             raise ValueError("Net setter must be set in order to reset NN classifier.")
         else:
             self.network = self.resetter()
-            #self.set_device(self.device)
+            self.set_device(self.device)
 
     def encode_dataset(self, dataset: Dataset):
         raise NotImplementedError()
@@ -126,6 +126,8 @@ def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: D
         batch_dataset = train_dataset.get_subset(range(batch_start, batch_end))
         y_pred = nn.train_on_data(batch_dataset, loss_fn, optimizer)
         predictions[batch_start:batch_end] = y_pred.cpu()
+        del y_pred, batch_dataset
+        torch.cuda.empty_cache()
     avg_train_metrics = metric.extract_values(predictions, train_dataset.get_labels())
 
     # validate:
