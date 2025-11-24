@@ -48,7 +48,7 @@ class TransformerEncoder(PeptideEncoder):
         mem_used_MB = (total - free) / 1024 ** 2
         print(mem_used_MB)
         del batch_inputs, batch_hidden_st_gpu
-        torch.cuda.clear_cache()
+        torch.cuda.empty_cache()
         return batch_hidden_st_cpu
 
     def _embed_batched_varied_length(self, sequences : Iterable[str]) -> Tuple[torch.Tensor, torch.Tensor]:
