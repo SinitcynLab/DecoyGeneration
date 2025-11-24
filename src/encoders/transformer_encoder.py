@@ -53,7 +53,6 @@ class TransformerEncoder(PeptideEncoder):
         for i in range(len(sequences)):
             batch_sequences = sequences[i:i+1]
             batch_inputs = self.tokenizer(batch_sequences, return_tensors="pt")
-            batch_inputs.to(self.device)
             output_list.append(self.__embed_batch_inputs(batch_inputs))
         
         # pad output to all get same length s.t. we can pass it around as a tensor:
