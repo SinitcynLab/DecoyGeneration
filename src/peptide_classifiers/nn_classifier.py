@@ -38,7 +38,7 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
             raise ValueError("Net setter must be set in order to reset NN classifier.")
         else:
             self.network = self.resetter()
-            self.set_device(self.device)
+            #self.set_device(self.device)
 
     def encode_dataset(self, dataset: Dataset):
         raise NotImplementedError()

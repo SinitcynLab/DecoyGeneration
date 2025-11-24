@@ -20,7 +20,7 @@ class RecurrentNNClassifier(NNClassifier):
 
     def forward(self, data: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
         N = len(lengths)
-        net_inputs = torch.zeros(N, self.rnn.hidden_size).to(self.device)
+        net_inputs = torch.zeros(N, self.rnn.hidden_size)
         for i in range(N):
             rnn_in = data[i, 0:lengths[i], :]
             rnn_out, _ = self.rnn(rnn_in)
@@ -49,7 +49,7 @@ class RecurrentNNClassifier(NNClassifier):
         return corr.tolist(), loss.tolist()
 
     def evaluate_on_data(self, dataset: Dataset):
-        X, l, y = self.encode_dataset(dataset)
+        X, l, _ = self.encode_dataset(dataset)
         y_pred = self(X, l)
         return y_pred
     
@@ -70,7 +70,7 @@ class RecurrentNNClassifier(NNClassifier):
         net, rnn = self.resetter()
         self.network = net
         self.rnn = rnn
-        self.set_device(self.device)
+        #self.set_device(self.device)
 
     def encode_dataset(self, dataset: Dataset):
         seqs, y = dataset.get_contents()
