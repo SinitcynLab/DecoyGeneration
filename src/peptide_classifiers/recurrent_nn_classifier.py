@@ -49,7 +49,7 @@ class RecurrentNNClassifier(NNClassifier):
     def evaluate_on_data(self, dataset: Dataset):
         tensor_list, _ = self.encode_dataset(dataset)
         y_pred = self(tensor_list)
-        del tensor_list
+        self.gc_tensors(tensor_list)
         return y_pred
     
     def train_on_data(self, dataset: Dataset, loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
@@ -59,7 +59,7 @@ class RecurrentNNClassifier(NNClassifier):
         optimizer.zero_grad()
         loss.backward(retain_graph=True)
         optimizer.step()
-        del tensor_list
+        self.gc_tensors(tensor_list)
         return y_pred
     
     def set_device(self, device):

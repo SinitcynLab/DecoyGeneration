@@ -46,6 +46,7 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
     def gc_tensors(self, tensor_list: List[torch.Tensor]):
         for t in tensor_list:
             del t
+        del tensor_list
         gc.collect()
         torch.cuda.empty_cache()
 
