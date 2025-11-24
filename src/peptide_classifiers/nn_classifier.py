@@ -121,7 +121,7 @@ def train_nn(nn : NNClassifier, X_train : Iterable[str], y_train : Iterable[bool
     nn.load_state_dict(best_weights) # restore best weights
     return best_val_auc # return best validation auc
 
-def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: Dataset, loss: torch.nn.Module, 
+def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: Dataset, loss_fn: torch.nn.Module, 
                         optimizer:torch.optim.Optimizer, batch_size: int, metric: BaseMetric = DefaultMetric()):
     # train:
     N: int = train_dataset.size()
@@ -131,7 +131,7 @@ def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: D
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, N)
         batch_dataset = train_dataset.get_subset(range(batch_start, batch_end))
-        y_pred = nn.train_on_data(batch_dataset, loss, optimizer)
+        y_pred = nn.train_on_data(batch_dataset, loss_fn, optimizer)
         predictions[batch_start:batch_end] = y_pred.cpu()
         del batch_dataset, y_pred
         torch.cuda.empty_cache()

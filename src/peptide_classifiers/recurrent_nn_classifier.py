@@ -60,7 +60,7 @@ class RecurrentNNClassifier(NNClassifier):
         loss.backward()
         optimizer.step()
         self.gc_tensors(tensor_list)
-        del loss
+        del loss, y
         return y_pred
     
     def set_device(self, device):
