@@ -134,6 +134,7 @@ def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: D
     predictions: torch.Tensor = torch.zeros(N)
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, N)
+        print(f"{batch_end}/{N}")
         batch_dataset = train_dataset.get_subset(range(batch_start, batch_end))
         y_pred = nn.train_on_data(batch_dataset, loss, optimizer)
         predictions[batch_start:batch_end] = y_pred.cpu()
