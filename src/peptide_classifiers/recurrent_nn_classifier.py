@@ -75,4 +75,4 @@ class RecurrentNNClassifier(NNClassifier):
     def encode_dataset(self, dataset: Dataset):
         seqs, y = dataset.get_contents()
         X, l = self.encoder(seqs)
-        return X.to(self.device), l.to(self.device), y.to(self.device)
+        return X, l, y

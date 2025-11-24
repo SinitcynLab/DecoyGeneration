@@ -20,7 +20,7 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
         PeptideClassifier.__init__(self, encoder, name, device)
         torch.nn.Module.__init__(self)
         self.network = network
-        self.network.to(device)
+        #self.network.to(device)
         self.resetter = resetter
 
     def set_device(self, device : torch.device):

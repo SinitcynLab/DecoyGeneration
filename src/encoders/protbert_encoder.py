@@ -12,7 +12,7 @@ class ProtBertEncoder(TransformerEncoder):
         self.tokenizer = BertTokenizer.from_pretrained(LOCAL_PATH, local_files_only=True)
         self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
         self.model.eval()
-        #self.model.to(self.device)
+        self.model.to(self.device)
         self.flatten = flatten
 
     def __call__(self, sequences: Iterable[str]) -> torch.Tensor:
