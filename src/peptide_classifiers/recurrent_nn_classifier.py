@@ -57,9 +57,10 @@ class RecurrentNNClassifier(NNClassifier):
         y_pred = self(tensor_list)
         loss = loss_fn(y_pred, y)
         optimizer.zero_grad()
-        loss.backward(retain_graph=True)
+        loss.backward()
         optimizer.step()
         self.gc_tensors(tensor_list)
+        del loss
         return y_pred
     
     def set_device(self, device):
