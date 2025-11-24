@@ -20,7 +20,7 @@ class TransformerEncoder(PeptideEncoder):
         tokenizer = EsmTokenizer.from_pretrained(path, local_files_only=True)
         tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
         model.eval()
-        model.to(self.device)
+        #model.to(self.device)
         return model, tokenizer
     
     def __extract_hidden_state(self, output_object) -> torch.Tensor:
@@ -38,7 +38,7 @@ class TransformerEncoder(PeptideEncoder):
         return hidden_states # add dimension to get each sample as a row
     
     def __embed_batch_inputs(self, batch_inputs: torch.Tensor) -> torch.Tensor:
-        batch_inputs = batch_inputs.to(self.device)
+        #batch_inputs = batch_inputs.to(self.device)
         with torch.no_grad():
             batch_outputs = self.model(**batch_inputs, output_hidden_states=True)
         batch_hidden_st_gpu = self.__extract_hidden_state(batch_outputs)
