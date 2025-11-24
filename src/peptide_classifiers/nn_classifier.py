@@ -49,6 +49,12 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
         gc.collect()
         torch.cuda.empty_cache()
 
+    def gc_tensors(self, tensor_list: Iterable[torch.Tensor]):
+        for t in tensor_list:
+            del t
+        torch.cuda.empty_cache()
+        gc.collect()
+
 def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterable[bool], 
                    n_epochs: int, batch_size: int, learning_grate: float, decoy_id: str, n_folds: int = 5,
                    metric: BaseMetric = DefaultMetric()) -> float:
