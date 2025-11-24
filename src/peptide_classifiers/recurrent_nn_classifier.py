@@ -16,7 +16,7 @@ class RecurrentNNClassifier(NNClassifier):
     def __init__(self, rnn : torch.nn.RNN, network : torch.nn.Sequential, encoder : PeptideEncoder, name: str, device : torch.device, resetter: Callable = None):
         NNClassifier.__init__(self, network, encoder, name, device, resetter)
         self.rnn = rnn
-        self.rnn.to(self.device)
+        #self.rnn.to(self.device)
 
     def forward(self, data: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
         N = len(lengths)
