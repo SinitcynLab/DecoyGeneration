@@ -105,11 +105,12 @@ def train_nn(nn : NNClassifier, X_train : Iterable[str], y_train : Iterable[bool
     best_val_auc = - np.inf
     best_weights = None
 
-    for _ in range(n_epochs):
+    for epoch in range(n_epochs):
         _, val_metrics = train_val_iteration(nn, train_dataset, val_dataset, loss_fn, optimizer, batch_size)
         if val_metrics[0] > best_val_auc:
             best_val_auc = val_metrics[0]
             best_weights = copy.deepcopy(nn.state_dict())
+        print(f"epoch: {epoch+1}/{n_epochs}")
 
     nn.load_state_dict(best_weights) # restore best weights
     return best_val_auc # return best validation auc
@@ -117,26 +118,19 @@ def train_nn(nn : NNClassifier, X_train : Iterable[str], y_train : Iterable[bool
 def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: Dataset, loss_fn: torch.nn.Module, 
                         optimizer:torch.optim.Optimizer, batch_size: int, metric: BaseMetric = DefaultMetric()):
     # train:
-    if False:
-        N: int = train_dataset.size()
-        nn.train()
-        batch_starts: np.ndarray = np.arange(0, N, batch_size)
-        predictions: torch.Tensor = torch.zeros(N)
-        print("Start training...")
-        for batch_start in batch_starts:
-            batch_end: int = min(batch_start + batch_size, N)
-
-            print(f"{batch_end}/{N}")
-            free, total = torch.cuda.mem_get_info(torch.device('cuda:0'))
-            mem_used_MB = (total - free) / 1024 ** 2
-            print(mem_used_MB)
-            
-            batch_dataset = train_dataset.get_subset(range(batch_start, batch_end))
-            y_pred = nn.train_on_data(batch_dataset, loss_fn, optimizer)
-            predictions[batch_start:batch_end] = y_pred.cpu()
-            del y_pred, batch_dataset
-            torch.cuda.empty_cache()
-        avg_train_metrics = metric.extract_values(predictions, train_dataset.get_labels())
+    N: int = train_dataset.size()
+    nn.train()
+    batch_starts: np.ndarray = np.arange(0, N, batch_size)
+    predictions: torch.Tensor = torch.zeros(N)
+    print("Start training...")
+    for batch_start in batch_starts:
+        batch_end: int = min(batch_start + batch_size, N)        
+        batch_dataset = train_dataset.get_subset(range(batch_start, batch_end))
+        y_pred = nn.train_on_data(batch_dataset, loss_fn, optimizer)
+        predictions[batch_start:batch_end] = y_pred.cpu()
+        del y_pred, batch_dataset
+        torch.cuda.empty_cache()
+    avg_train_metrics = metric.extract_values(predictions, train_dataset.get_labels())
 
     # validate:
     M: int = val_dataset.size()
@@ -146,13 +140,7 @@ def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: D
     predictions: torch.Tensor = torch.zeros(M)
     print("Start validation...")
     for batch_start in batch_starts:
-        batch_end: int = min(batch_start + batch_size, M)
-
-        print(f"{batch_end}/{M}")
-        free, total = torch.cuda.mem_get_info(torch.device('cuda:0'))
-        mem_used_MB = (total - free) / 1024 ** 2
-        print(mem_used_MB)
-        
+        batch_end: int = min(batch_start + batch_size, M)        
         batch_dataset = val_dataset.get_subset(range(batch_start, batch_end))
         y_pred = nn.evaluate_on_data(batch_dataset)
         predictions[batch_start:batch_end] = y_pred.cpu()
