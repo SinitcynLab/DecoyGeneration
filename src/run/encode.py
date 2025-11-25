@@ -9,7 +9,7 @@ def collect_args():
     parser.add_argument("-i", "--input_file", help="File with proteins to encode.")
     parser.add_argument("-e", "--encoder", help="Encoder to use")
     parser.add_argument("-l", "--length", help="Length of encoding to use.")
-    parser.add_argument("-o", "--output_file", help="File to which tensors must be written")
+    parser.add_argument("-o", "--output_directory", help="Directory to which tensors must be written")
 
     return parser.parse_args()
 
@@ -21,15 +21,13 @@ def main():
     fasta_records = read_fasta_file(i_file_name)
     sequences = [record.sequence for record in fasta_records]
 
-    o_file_name = args.output_file
-
     if args.encoder == 'recurrent':
         encoder = ProtBertEncoder(device=device, constant_length=False, flatten=False)
-        data = encoder(sequences)
+        for i, seq in enumerate(sequences):
+            encoding = encoder(seq)[0]
+            torch.save(encoding, f"{args.output_directory}/tensor_{i}.pt")
     else:
         raise ValueError("Specify a valid encoder.")
-
-    torch.save(data, file=o_file_name)
 
 if __name__=="__main__":
     main()
