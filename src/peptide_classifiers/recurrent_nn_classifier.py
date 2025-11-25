@@ -49,7 +49,7 @@ class RecurrentNNClassifier(NNClassifier):
         return corr.tolist(), loss.tolist()
 
     def evaluate_on_data(self, dataset: Dataset):
-        with torch.no_grad:
+        with torch.no_grad():
             X, l, y = self.encode_dataset(dataset)
             y_pred = self(X, l)
             del X, l, y
