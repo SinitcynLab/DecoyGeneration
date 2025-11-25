@@ -49,11 +49,8 @@ class RecurrentNNClassifier(NNClassifier):
         return corr.tolist(), loss.tolist()
 
     def evaluate_on_data(self, dataset: Dataset):
-        X, l, y = self.encode_dataset(dataset)
+        X, l, y = self.encode_dataset(dataset, 'cpu')
         y_pred = self(X, l)
-        X = X.cpu()
-        y = y.cpu()
-        l = l.cpu()
         del X, l, y
         torch.cuda.empty_cache()
         return y_pred
@@ -79,8 +76,10 @@ class RecurrentNNClassifier(NNClassifier):
         self.rnn = rnn
         self.set_device(self.device)
 
-    def encode_dataset(self, dataset: Dataset):
+    def encode_dataset(self, dataset: Dataset, device: torch.device=None):
+        if device == None:
+            device = self.device
         seqs, y = dataset.get_contents()
         X, l = self.encoder(seqs)
         print(X.shape)
-        return X.to(self.device), l.to(self.device), y.to(self.device)
+        return X.to(device), l.to(device), y.to(device)
