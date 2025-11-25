@@ -10,12 +10,12 @@ if __name__ == "__main__":
     # define CNN classifier
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = torch.nn.Sequential(
-        torch.nn.Conv2d(1, 4, kernel_size=3),
+        torch.nn.Conv2d(1, 4, kernel_size=(3,1)),
         torch.nn.MaxPool2d(kernel_size=2),
-        torch.nn.Conv2d(4, 16, kernel_size=4),
+        torch.nn.Conv2d(4, 16, kernel_size=(3,1)),
         torch.nn.MaxPool2d(kernel_size=2),
         torch.nn.Flatten(),
-        torch.nn.Linear(16*62*254, 128),
+        torch.nn.Linear(16*64*254, 128),
         torch.nn.ReLU(),
         torch.nn.Linear(128, 32),
         torch.nn.ReLU(),
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     X_train, X_val, y_train, y_val = train_test_split(sequences, labels, test_size=test_fraction)
     
     # train CNN:
-    N = 500 # 100 each
+    N = 500 # 500 each
     M = round(N * test_fraction)
     optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-3)
     n_epochs = 20

@@ -66,9 +66,10 @@ def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterab
         train_dataset: Dataset = main_dataset.get_subset(train_ids)
         val_dataset: Dataset = main_dataset.get_subset(val_ids)
 
-        for _ in range(n_epochs):
+        for epoch in range(n_epochs):
             train_metrics, val_metrics = train_val_iteration(nn, train_dataset, val_dataset,
                                                               loss_fn, optimizer, batch_size, metric)
+            print(f"epoch: {epoch+1}/{n_epochs}")
             # use ROC as criterion:
             if val_metrics[0] > best_val_fold[0]: 
                 best_val_fold = val_metrics
@@ -95,6 +96,8 @@ def cross_validate_nn(nn: NNClassifier, sequences: Iterable[str], labels: Iterab
 
 def train_nn(nn : NNClassifier, X_train : Iterable[str], y_train : Iterable[bool], X_val : Iterable[str], 
             y_val : Iterable[str], n_epochs : int, batch_size : int, optimizer : torch.optim.Optimizer):
+    X_train = np.array(X_train, dtype=str) # convert to array for indexing
+    X_val = np.array(X_val, dtype=str) # convert to array for indexing
     y_train = torch.FloatTensor(list(y_train))
     y_val = torch.FloatTensor(list(y_val))
     train_dataset = Dataset(X_train, y_train)
@@ -110,7 +113,6 @@ def train_nn(nn : NNClassifier, X_train : Iterable[str], y_train : Iterable[bool
         if val_metrics[0] > best_val_auc:
             best_val_auc = val_metrics[0]
             best_weights = copy.deepcopy(nn.state_dict())
-        print(f"epoch: {epoch+1}/{n_epochs}")
 
     nn.load_state_dict(best_weights) # restore best weights
     return best_val_auc # return best validation auc
@@ -122,7 +124,6 @@ def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: D
     nn.train()
     batch_starts: np.ndarray = np.arange(0, N, batch_size)
     predictions: torch.Tensor = torch.zeros(N)
-    print("Start training...")
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, N)        
         batch_dataset = train_dataset.get_subset(range(batch_start, batch_end))
@@ -138,7 +139,6 @@ def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: D
     nn.eval()
     batch_starts: np.ndarray = np.arange(0, M, batch_size)
     predictions: torch.Tensor = torch.zeros(M)
-    print("Start validation...")
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, M)        
         batch_dataset = val_dataset.get_subset(range(batch_start, batch_end))

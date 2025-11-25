@@ -39,6 +39,7 @@ if __name__ == "__main__":
                    f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.diann_random_pos.fasta',f'data/decoys/{base}.diann_N.fasta']
     decoy_ids = ['target', 'shuffle', 'reverse', 'diann_C', 'diann_random_pos', 'diann_N']
     
+    print("Cross validation results for the CNN")
     for i, decoy_file in enumerate(decoy_files):
         if decoy_file == 'target':
             target_sequences, decoy_sequences = split_targets(target_sequences)
@@ -52,6 +53,7 @@ if __name__ == "__main__":
         # cross-validate MLP:
         n_epochs = 20
         batch_size = 10
-        sequences = target_sequences + decoy_sequences
-        labels = target_labels + decoy_labels
+        N = 100 #len(target_labels) + len(decoy_labels)
+        sequences = target_sequences[0:N] + decoy_sequences[0:N]
+        labels = target_labels[0:N] + decoy_labels[0:N]
         cross_validate_nn(classifier, sequences, labels, n_epochs, batch_size, 1e-3, n_folds=5, decoy_id=decoy_ids[i])

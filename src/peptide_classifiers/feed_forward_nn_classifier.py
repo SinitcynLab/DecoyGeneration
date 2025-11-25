@@ -43,9 +43,12 @@ class FeedForwardNNClassifier(NNClassifier):
         NNClassifier.set_device(self, device)
 
     def evaluate_on_data(self, dataset: Dataset):
-        X, _ = self.encode_dataset(dataset)
-        y_pred = self(X)
-        return y_pred
+        with torch.no_grad():
+            X, y = self.encode_dataset(dataset)
+            y_pred = self(X)
+            del X, y
+            torch.cuda.empty_cache()
+            return y_pred
 
     def train_on_data(self, dataset: Dataset, loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
         X, y = self.encode_dataset(dataset)
@@ -54,6 +57,8 @@ class FeedForwardNNClassifier(NNClassifier):
         optimizer.zero_grad()
         loss.backward(retain_graph=True)
         optimizer.step()
+        del X, y, loss
+        torch.cuda.empty_cache()
         return y_pred
     
     def encode_dataset(self, dataset: Dataset):
