@@ -81,4 +81,4 @@ class RecurrentNNClassifier(NNClassifier):
         seqs, y = dataset.get_contents()
         X, l = self.encoder(seqs)
         print(X.shape)
-        return X.to(device), l.to(device), y.to(device)
+        return X.to(self.device), l.to(self.device), y.to(self.device)
