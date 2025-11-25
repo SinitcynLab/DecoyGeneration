@@ -117,25 +117,26 @@ def train_nn(nn : NNClassifier, X_train : Iterable[str], y_train : Iterable[bool
 def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: Dataset, loss_fn: torch.nn.Module, 
                         optimizer:torch.optim.Optimizer, batch_size: int, metric: BaseMetric = DefaultMetric()):
     # train:
-    N: int = train_dataset.size()
-    nn.train()
-    batch_starts: np.ndarray = np.arange(0, N, batch_size)
-    predictions: torch.Tensor = torch.zeros(N)
-    print("Start training...")
-    for batch_start in batch_starts:
-        batch_end: int = min(batch_start + batch_size, N)
+    if False:
+        N: int = train_dataset.size()
+        nn.train()
+        batch_starts: np.ndarray = np.arange(0, N, batch_size)
+        predictions: torch.Tensor = torch.zeros(N)
+        print("Start training...")
+        for batch_start in batch_starts:
+            batch_end: int = min(batch_start + batch_size, N)
 
-        print(f"{batch_end}/{N}")
-        free, total = torch.cuda.mem_get_info(torch.device('cuda:0'))
-        mem_used_MB = (total - free) / 1024 ** 2
-        print(mem_used_MB)
-        
-        batch_dataset = train_dataset.get_subset(range(batch_start, batch_end))
-        y_pred = nn.train_on_data(batch_dataset, loss_fn, optimizer)
-        predictions[batch_start:batch_end] = y_pred.cpu()
-        del y_pred, batch_dataset
-        torch.cuda.empty_cache()
-    avg_train_metrics = metric.extract_values(predictions, train_dataset.get_labels())
+            print(f"{batch_end}/{N}")
+            free, total = torch.cuda.mem_get_info(torch.device('cuda:0'))
+            mem_used_MB = (total - free) / 1024 ** 2
+            print(mem_used_MB)
+            
+            batch_dataset = train_dataset.get_subset(range(batch_start, batch_end))
+            y_pred = nn.train_on_data(batch_dataset, loss_fn, optimizer)
+            predictions[batch_start:batch_end] = y_pred.cpu()
+            del y_pred, batch_dataset
+            torch.cuda.empty_cache()
+        avg_train_metrics = metric.extract_values(predictions, train_dataset.get_labels())
 
     # validate:
     M: int = val_dataset.size()
