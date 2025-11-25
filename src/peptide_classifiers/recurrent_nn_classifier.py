@@ -51,6 +51,9 @@ class RecurrentNNClassifier(NNClassifier):
     def evaluate_on_data(self, dataset: Dataset):
         X, l, y = self.encode_dataset(dataset)
         y_pred = self(X, l)
+        X.cpu()
+        y.cpu()
+        l.cpu()
         del X, l, y
         torch.cuda.empty_cache()
         return y_pred
