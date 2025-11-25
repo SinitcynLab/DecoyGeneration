@@ -44,9 +44,6 @@ class TransformerEncoder(PeptideEncoder):
             batch_outputs = self.model(**batch_inputs, output_hidden_states=True)
         batch_hidden_st_gpu = self.__extract_hidden_state(batch_outputs)
         batch_hidden_st_cpu = batch_hidden_st_gpu.cpu()
-        free, total = torch.cuda.mem_get_info(torch.device('cuda:0'))
-        mem_used_MB = (total - free) / 1024 ** 2
-        print(mem_used_MB)
         del batch_inputs, batch_hidden_st_gpu
         torch.cuda.empty_cache()
         return batch_hidden_st_cpu
