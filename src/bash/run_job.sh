@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=my_job
 #SBATCH --output=encode_%j.txt
-#SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
+#SBATCH --partition=tue.gpu.q         # Choose a partition that has GPUs
 #SBATCH --time=16:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -12,4 +12,4 @@
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/run/encode.py -i data/targets/UP000002311_559292.fasta -o data/encodings/recurrent_559292 -e recurrent
+python -u src/main.py
