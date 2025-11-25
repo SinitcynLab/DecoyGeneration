@@ -154,9 +154,9 @@ def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: D
         
         batch_dataset = val_dataset.get_subset(range(batch_start, batch_end))
         y_pred = nn.evaluate_on_data(batch_dataset)
+        predictions[batch_start:batch_end] = y_pred.cpu()
         del y_pred, batch_dataset
         torch.cuda.empty_cache()
-        predictions[batch_start:batch_end] = y_pred.cpu()
     avg_val_metrics = metric.extract_values(predictions, val_dataset.get_labels())
 
     return avg_train_metrics, avg_val_metrics
