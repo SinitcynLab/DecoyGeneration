@@ -125,7 +125,7 @@ def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: D
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, N)
 
-        print(f"{batch_start}/{batch_end}")
+        print(f"{batch_end}/{N}")
         free, total = torch.cuda.mem_get_info(torch.device('cuda:0'))
         mem_used_MB = (total - free) / 1024 ** 2
         print(mem_used_MB)
@@ -147,7 +147,7 @@ def train_val_iteration(nn: NNClassifier, train_dataset: Dataset, val_dataset: D
     for batch_start in batch_starts:
         batch_end: int = min(batch_start + batch_size, M)
 
-        print(f"{batch_start}/{batch_end}")
+        print(f"{batch_end}/{M}")
         free, total = torch.cuda.mem_get_info(torch.device('cuda:0'))
         mem_used_MB = (total - free) / 1024 ** 2
         print(mem_used_MB)
