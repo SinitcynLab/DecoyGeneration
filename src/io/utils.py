@@ -8,7 +8,4 @@ def split_targets(target_sequences: List[str]):
     return targets, pretend_decoys
 
 def remove_long_sequences(sequences: List[str], cap_length: int = 10_000) -> List[str]:
-    for i, _ in enumerate(sequences):
-        if len(sequences[i]) > cap_length:
-            del sequences[i]
-    return sequences
+    return [seq for seq in sequences if len(seq) <= cap_length]
