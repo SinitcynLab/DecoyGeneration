@@ -12,4 +12,4 @@
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/io/encode.py -i data/targets/UP000002311_559292.fasta -o data/encodings/UP000002311_559292.recurrent.lmdb -e recurrent
+python -u src/main.py
