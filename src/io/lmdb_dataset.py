@@ -45,7 +45,6 @@ class LMDBDataset(object):
             env_idx = [i for i in idx if cumulative_size <= i < cumulative_size + env_size]
             with env.begin() as txn:
                 for j in env_idx:
-                    print(j - cumulative_size)
                     key = f"{j - cumulative_size}".encode() # subtract cumulative size (sum of previous lmdbs) to get local index from global index
                     byte_data = txn.get(key)
                     encodings[pos_map[j]] = pickle.loads(byte_data)

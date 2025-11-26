@@ -34,9 +34,9 @@ if __name__ == "__main__":
     # target data:
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
-    N = len(target_sequences)
+    N = 4000
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
-    encode_seqs_to_lmdb(target_sequences, encoder, target_lmdb_path)
+    encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
 
     decoy_files = ['target', f'data/decoys/{base}.shuffle.0.fasta', f'data/decoys/{base}.reverse.fasta',
                    f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.diann_random_pos.fasta',f'data/decoys/{base}.diann_N.fasta']
@@ -51,8 +51,8 @@ if __name__ == "__main__":
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
-            encode_seqs_to_lmdb(decoy_sequences, encoder, decoy_lmdb_path)
-            M = len(decoy_sequences)
+            M = 4000
+            encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
 
@@ -60,5 +60,6 @@ if __name__ == "__main__":
         n_epochs = 10
         batch_size = 10
         cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i])
-        shutil.rmtree(decoy_lmdb_path) # clear temporary data
+        if decoy_ids[i] != 'target':
+            shutil.rmtree(decoy_lmdb_path) # clear temporary data
     shutil.rmtree(target_lmdb_path)
