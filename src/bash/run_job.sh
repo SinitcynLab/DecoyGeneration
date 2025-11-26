@@ -10,10 +10,5 @@
 #SBATCH --mem-per-cpu=16G
 #SBATCH --gpus=1
 
-module load Python/3.11.3-GCCcore-12.3.0 
-module load Anaconda3/2023.09-0
-eval "$(conda shell.bash activate)"
-source activate decoy_gen
-
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 python -u src/io/encode.py -i data/targets/UP000002311_559292.fasta -o data/encodings/UP000002311_559292.recurrent.lmdb -e recurrent
