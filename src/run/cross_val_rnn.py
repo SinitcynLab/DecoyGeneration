@@ -57,7 +57,7 @@ if __name__ == "__main__":
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
 
         # cross-validate RNN:
-        n_epochs = 20
+        n_epochs = 10
         batch_size = 10
         cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i])
         shutil.rmtree(decoy_lmdb_path) # clear temporary data
