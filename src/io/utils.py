@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing import Iterator, List
 from src.io.fasta import FastaRecord
 
 def split_targets(target_sequences: List[str]):
