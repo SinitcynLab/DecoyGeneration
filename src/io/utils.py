@@ -1,4 +1,5 @@
-from typing import List
+from typing import Iterator
+from src.io.fasta import FastaRecord
 
 def split_targets(target_sequences: List[str]):
     N = len(target_sequences)//2
@@ -7,5 +8,5 @@ def split_targets(target_sequences: List[str]):
 
     return targets, pretend_decoys
 
-def remove_long_sequences(sequences: List[str], cap_length: int = 10_000) -> List[str]:
-    return [seq for seq in sequences if len(seq) <= cap_length]
+def remove_long_sequences(records: Iterator[FastaRecord], cap_length: int = 10_000) -> Iterator[FastaRecord]:
+    return [rec for rec in records if len(rec.sequence) <= cap_length]
