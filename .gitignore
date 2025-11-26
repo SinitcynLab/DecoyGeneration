@@ -7,3 +7,4 @@ _pycache__/
 pyproject.toml
 models/
 src/bash/run_job.sh
+data/encodings/*
