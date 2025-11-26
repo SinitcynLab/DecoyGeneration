@@ -56,14 +56,7 @@ class TransformerEncoder(PeptideEncoder):
             output_list.append(self.__embed_batch_inputs(batch_inputs))
         
         # pad output to all get same length s.t. we can pass it around as a tensor:
-        lengths: List[int] = [t.size(dim=1) for t in output_list]
-        lengths = torch.IntTensor(lengths)
-        max_len: int = torch.max(lengths)
-        for i in range(len(output_list)):
-            diff = max_len - output_list[i].size(dim=1)
-            pad = torch.zeros((1, diff, 1024))
-            output_list[i] = torch.cat((output_list[i], pad), axis=1)
-        return torch.cat(output_list, axis=0), lengths
+        return pad_tensor_list(output_list)
 
     def _embed_batched_constant_length(self, sequences : Iterable[str], batch_size : int = 32) -> torch.Tensor:
         batch_starts = torch.arange(0, len(sequences), batch_size)
@@ -76,3 +69,13 @@ class TransformerEncoder(PeptideEncoder):
             output_list.append(self.__embed_batch_inputs(batch_inputs))
 
         return torch.cat(output_list, axis=0)
+
+def pad_tensor_list(tensor_list: Iterable[torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
+    lengths: List[int] = [t.size(dim=1) for t in tensor_list]
+    lengths = torch.IntTensor(lengths)
+    max_len: int = torch.max(lengths)
+    for i in range(len(tensor_list)):
+        diff = max_len - tensor_list[i].size(dim=1)
+        pad = torch.zeros((1, diff, 1024))
+        tensor_list[i] = torch.cat((tensor_list[i], pad), axis=1)
+    return torch.cat(tensor_list, axis=0), lengths
