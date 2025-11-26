@@ -16,7 +16,7 @@ from src.io.fasta import write_fasta_file, read_fasta_file
 from src.io.utils import remove_long_sequences
 
 if __name__ == "__main__":
-    target_filename: str = "data/targets/human_and_crap.fasta"
+    target_filename: str = "data/targets/crap.fasta"
     write_batched: bool = True
 
     special_amino_acids: List[str] = ['R', 'K']
@@ -26,35 +26,15 @@ if __name__ == "__main__":
     n: int = 1
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
-        EsmGenerator(
-            local_path="models/esm2_t6_8M_UR50D",
-            random=random,
-            special_amino_acids=special_amino_acids,
-            mask_count=1,
-            masking_type=MaskingType.COUNT,
-            sort_optimization=True,
-            batch_size=1,
-            ml_generator_type=MlGeneratorType.BEST
+        ReverseGenerator(
+            special_amino_acids
         ),
-        EsmGenerator(
-            local_path="models/esm2_t33_650M_UR50D",
-            random=random,
-            special_amino_acids=special_amino_acids,
-            mask_percent=0.3,
-            masking_type=MaskingType.PERCENT,
-            sort_optimization=True,
-            batch_size=1,
-            ml_generator_type=MlGeneratorType.BEST
+        DiannGenerator(
+            special_amino_acids
         ),
-        EsmGenerator(
-            local_path="models/esm2_t33_650M_UR50D",
-            random=random,
-            special_amino_acids=special_amino_acids,
-            mask_count=1,
-            masking_type=MaskingType.COUNT,
-            sort_optimization=True,
-            batch_size=1,
-            ml_generator_type=MlGeneratorType.BEST
+        ShuffleGenerator(
+            special_amino_acids,
+            random=random
         )
     ]
     for generator in generators:
@@ -67,12 +47,12 @@ if __name__ == "__main__":
                 batch_starts = np.arange(0, len(target_records), generator.batch_size)
                 for start in batch_starts:
                     end = min(start + generator.batch_size, len(target_records))
-                    write_fasta_file(filename_out, generator.convert_fasta(target_records[start:end]), 60, 'a', str(generator))
+                    write_fasta_file(filename_out, generator.convert_fasta(target_records[start:end]), 60, 'a', prefix=str(generator))
                     print(f"{end}/{len(target_records)}")
         elif generator.decoy_generation_type == DecoyGeneratorType.ONE2ONE:
             filename_out = f"{filename}.{generator}{extension}"
-            write_fasta_file(filename_out, generator.convert_fasta(read_fasta_file(target_filename)), str(generator))
+            write_fasta_file(filename_out, generator.convert_fasta(read_fasta_file(target_filename)), prefix=str(generator))
         elif generator.decoy_generation_type == DecoyGeneratorType.ONE2MANY:
             for i in range(n):
                 filename_out = f"{filename}.{generator}.{i}{extension}"
-                write_fasta_file(filename_out, generator.convert_fasta(read_fasta_file(target_filename)), str(generator))
+                write_fasta_file(filename_out, generator.convert_fasta(read_fasta_file(target_filename)), prefix=str(generator))
