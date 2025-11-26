@@ -56,7 +56,7 @@ class TransformerEncoder(PeptideEncoder):
             output_list.append(self.__embed_batch_inputs(batch_inputs))
         
         # pad output to all get same length s.t. we can pass it around as a tensor:
-        return pad_tensor_list(output_list)
+        return output_list
 
     def _embed_batched_constant_length(self, sequences : Iterable[str], batch_size : int = 32) -> torch.Tensor:
         batch_starts = torch.arange(0, len(sequences), batch_size)

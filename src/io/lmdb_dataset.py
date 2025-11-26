@@ -8,12 +8,13 @@ from typing import Iterable, Tuple
 class LMDBDataset(object):
     def __init__(self, lmdb_paths: Iterable[str], labels: Tensor):
         self.envs: Iterable[Tuple[lmdb.Environment, int]] = []
+        self.length = 0
         for path in lmdb_paths:
             env = lmdb.open(path, readonly=True, lock=False)
             with env.begin() as txn:
                 env_length = txn.stat()['entries']
                 self.length += env_length
-            self.envs.append[(env, env_length)]
+            self.envs.append((env, env_length))
         if len(labels) != self.length:
             raise ValueError("Ensure that there are as many labels as sequences in the given lmdb directories.")
         self.labels = labels
@@ -22,14 +23,14 @@ class LMDBDataset(object):
         return self.length
     
     def get_num_targets(self, idx: Iterable[int] = None):
-        if idx == None:
+        if idx is None:
             idx = range(self.size())
-        return (self.labels == 0.).sum(dim=0)
+        return (self.labels[idx] == 0.).sum(dim=0)
     
-    def get_num_decoys(self, idx: Iterable[int] = None):
-        if idx == None:
+    def get_num_decoys(self, idx: Iterable[int]):
+        if idx is None:
             idx = range(self.size())
-        return (self.labels == 1.).sum(dim=0)
+        return (self.labels[idx] == 1.).sum(dim=0)
 
     # if you e.g. feed it indices [123, 203, 24]
     # it would return [tensor_corr_to_123, tensor_corr_to_203, tensor_corr_to_24], [label_of_123, label_of_203, label_of_24]
@@ -50,5 +51,7 @@ class LMDBDataset(object):
             cumulative_size += env_size
         return encodings, labels
     
-    def get_labels(self, idx: Iterable[int]):
+    def get_labels(self, idx: Iterable[int] = None):
+        if idx is None:
+            idx = range(self.size())        
         return self.labels[idx]

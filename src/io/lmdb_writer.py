@@ -3,6 +3,8 @@ import torch
 import lmdb
 import pickle
 import numpy as np
+import os
+import shutil
 
 from typing import Iterable
 
@@ -36,12 +38,12 @@ def main():
     for i_file, o_file in zip(file_pairs):
         fasta_records = read_fasta_file(i_file)
         sequences = [record.sequence for record in fasta_records]
-        if args.encoding_type == 'recurrent':
-            encode_seqs_to_lmdb(encoder, sequences, o_file, device)
-        else:
-            raise ValueError("Specify a valid encoder.")
+        encode_seqs_to_lmdb(sequences, encoder, o_file, device)
 
-def encode_seqs_to_lmdb(encoder: PeptideEncoder, sequences: Iterable[str], o_file_name: str):
+def encode_seqs_to_lmdb(sequences: Iterable[str], encoder: PeptideEncoder, o_file_name: str):
+    if os.path.exists(o_file_name) and os.path.isdir(o_file_name):
+        shutil.rmtree(o_file_name)
+    os.makedirs(o_file_name)
     BATCH_SIZE = 32
     batch_starts = np.arange(0, len(sequences), BATCH_SIZE)
     for batch_start in batch_starts:
@@ -50,7 +52,7 @@ def encode_seqs_to_lmdb(encoder: PeptideEncoder, sequences: Iterable[str], o_fil
         append_tensors_to_lmbdb(batch_encodings, range(batch_start, batch_end), o_file_name)
 
 def append_tensors_to_lmbdb(tensors: Iterable[torch.Tensor], indices: Iterable[int], out_file: str):
-    env = lmdb.open(out_file)
+    env = lmdb.open(out_file, map_size=1024**4)
     pairs = zip(indices, tensors) # note that this will iterate over list of tensors/first dim of tensor containing batch
     with env.begin(write=True) as txn:
         for (i, t) in pairs:

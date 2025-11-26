@@ -41,20 +41,19 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
             self.set_device(self.device)
 
 def cross_validate_nn(nn: NNClassifier, main_dataset: LMDBDataset, 
-                   n_epochs: int, batch_size: int, learning_grate: float, decoy_id: str, n_folds: int = 5,
+                   n_epochs: int, batch_size: int, learning_rate: float, decoy_id: str, n_folds: int = 5,
                    metric: BaseMetric = DefaultMetric()) -> float:
     print(f"*** *** RESULTS FOR DECOYS={decoy_id} *** ***")
-    indices = np.arange(main_dataset.size())
-    indices = shuffle(indices)
+    N = main_dataset.size()
 
     loss_fn = torch.nn.BCELoss()
     best_val_metrics: np.ndarray = np.zeros((n_folds, metric.dim)) # [auc, acc, prec, rec], one for each fold
     corr_train_metrics: np.ndarray = np.zeros((n_folds, metric.dim))
 
-    kfold = StratifiedKFold(n_splits=n_folds)
-    for fold, (train_ids, val_ids) in enumerate(kfold.split(indices, indices)):
+    kfold = StratifiedKFold(n_splits=n_folds, shuffle=True)
+    for fold, (train_ids, val_ids) in enumerate(kfold.split(torch.zeros(N), main_dataset.get_labels())):
         nn.reset()
-        optimizer = torch.optim.Adam(nn.parameters(), lr=learning_grate)
+        optimizer = torch.optim.Adam(nn.parameters(), lr=learning_rate)
 
         best_val_fold: np.ndarray = np.ones(4) * (- np.inf) 
         corr_train_fold: np.ndarray = np.zeros(4)
@@ -134,6 +133,6 @@ def train_val_iteration(nn: NNClassifier, dataset: LMDBDataset, train_ids: Itera
         predictions[batch_start:batch_end] = y_pred.cpu()
         del y_pred, t_list, y
         torch.cuda.empty_cache()
-    avg_val_metrics = metric.extract_values(predictions, dataset.get_labels(train_ids))
+    avg_val_metrics = metric.extract_values(predictions, dataset.get_labels(val_ids))
 
     return avg_train_metrics, avg_val_metrics

@@ -50,7 +50,8 @@ class RecurrentNNClassifier(NNClassifier):
 
     def evaluate_on_data(self, tensor_list: Iterable[torch.Tensor], y: torch.Tensor):
         with torch.no_grad():
-            X, l, y = pad_tensor_list(tensor_list).to(self.device), y.to(self.device)
+            X, l = pad_tensor_list(tensor_list)
+            X, l, y = X.to(self.device), l.to(self.device), y.to(self.device)
             y_pred = self(X, l)
             del X, l, y
             torch.cuda.empty_cache()
@@ -58,7 +59,8 @@ class RecurrentNNClassifier(NNClassifier):
     
     def train_on_data(self, tensor_list: Iterable[torch.Tensor], y: torch.Tensor, 
                     loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
-        X, l, y = pad_tensor_list(tensor_list).to(self.device), y.to(self.device)
+        X, l = pad_tensor_list(tensor_list)
+        X, l, y = X.to(self.device), l.to(self.device), y.to(self.device)
         y_pred = self(X, l)
         loss = loss_fn(y_pred, y)
         optimizer.zero_grad()
