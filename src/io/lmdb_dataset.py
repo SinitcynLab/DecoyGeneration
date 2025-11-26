@@ -28,6 +28,8 @@ class LMDBDataset(object):
     def get_num_decoys(self):
         return (self.labels == 1.).sum(dim=0)
 
+    # if you e.g. feed it indices [123, 203, 24]
+    # it would return [tensor_corr_to_123, tensor_corr_to_203, tensor_corr_to_24], [label_of_123, label_of_203, label_of_24]
     def _get_sample_list(self, idx: Iterable[int]):
         pos_map = {x: i for i, x in enumerate(idx)} # note that the values in idx are all unique
         encodings: Iterable[Tensor] = [torch.zeros(1)] * len(idx)
@@ -49,7 +51,7 @@ class LMDBDataset(object):
         encodings, labels = self._get_sample_list(idx)
         return torch.cat(encodings, dim = 0), labels
     
-class LMDBDataset(LMDBDataset):
+class RecurrentLMDBDataset(LMDBDataset):
     def __init__(self, lmdb_paths, labels):
         LMDBDataset.__init__(self, lmdb_paths, labels)
 
