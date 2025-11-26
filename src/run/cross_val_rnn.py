@@ -27,7 +27,7 @@ if __name__ == "__main__":
     net, rnn = get_rnn_net()
     classifier = RecurrentNNClassifier(rnn=rnn, network=net, encoder=encoder, device=device, name="rnn", resetter=get_rnn_net)
 
-    base = 'crap'
+    base = 'UP000002311_559292'
     target_file = f"data/targets/{base}.fasta"
     temp_encoding_dir = f"data/encodings/temp"
 
