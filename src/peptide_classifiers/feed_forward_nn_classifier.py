@@ -8,7 +8,6 @@ from src.encoders.peptide_encoder import PeptideEncoder
 from typing import Iterable
 from src.metrics.base_metric import BaseMetric
 from src.metrics.default_metric import DefaultMetric
-from src.io.data_set import Dataset
 from sklearn.utils import shuffle
 
 class FeedForwardNNClassifier(NNClassifier):
@@ -42,16 +41,17 @@ class FeedForwardNNClassifier(NNClassifier):
     def set_device(self, device : torch.device):
         NNClassifier.set_device(self, device)
 
-    def evaluate_on_data(self, dataset: Dataset):
+    def evaluate_on_data(self, tensor_list: Iterable[torch.Tensor], y: torch.Tensor):
         with torch.no_grad():
-            X, y = self.encode_dataset(dataset)
+            X, y = torch.cat(tensor_list, dim=0).to(self.device), y.to(self.device)
             y_pred = self(X)
             del X, y
             torch.cuda.empty_cache()
             return y_pred
 
-    def train_on_data(self, dataset: Dataset, loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
-        X, y = self.encode_dataset(dataset)
+    def train_on_data(self, tensor_list: Iterable[torch.Tensor], y: torch.Tensor, 
+                    loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
+        X, y = torch.cat(tensor_list, dim=0).to(self.device), y.to(self.device)
         y_pred = self(X)
         loss = loss_fn(y_pred, y)
         optimizer.zero_grad()
@@ -60,8 +60,3 @@ class FeedForwardNNClassifier(NNClassifier):
         del X, y, loss
         torch.cuda.empty_cache()
         return y_pred
-    
-    def encode_dataset(self, dataset: Dataset):
-        seq, y = dataset.get_contents()
-        X: torch.Tensor = self.encoder(seq)
-        return X.to(self.device), y.to(self.device)

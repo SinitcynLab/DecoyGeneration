@@ -8,11 +8,12 @@ from typing import Iterable
 
 from src.io.fasta import read_fasta_file
 from src.encoders.protbert_encoder import ProtBertEncoder
+from src.encoders.peptide_encoder import PeptideEncoder
 
 def collect_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input_files", nargs="+", help="Files with proteins to encode. If you specify multiple, then they must be separated by spaces (e.g. a b c).")
-    parser.add_argument("-e", "--encoder", help="Encoder to use")
+    parser.add_argument("-e", "--encoding_type", help="Encoder to use")
     parser.add_argument("-l", "--length", help="Length of encoding to use.")
     parser.add_argument("-o", "--output_files", nargs="+", help="Files to which you write the encoded input files. This command encodes input to output files respectively. Filenames must be separated by spaces (e.g. a b c).")
 
@@ -27,17 +28,20 @@ def main():
     if len(i_file_names) != len(o_file_names):
         raise ValueError("Encode only accepts input and output lists of equal length, and encodes input to output files respectively.")
     file_pairs = zip(i_file_names, o_file_names)
+    if args.encoding_type == 'recurrent':
+        encoder = ProtBertEncoder(device=device, constant_length=False, flatten=False)
+    else:
+        raise ValueError("Specify a valid encoder.")
 
     for i_file, o_file in zip(file_pairs):
         fasta_records = read_fasta_file(i_file)
         sequences = [record.sequence for record in fasta_records]
-        encoder = ProtBertEncoder(device=device, constant_length=False, flatten=False)
-        if args.encoder == 'recurrent':
-            recurrent_seqs_to_lmdb(encoder, sequences, device, o_file)
+        if args.encoding_type == 'recurrent':
+            encode_seqs_to_lmdb(encoder, sequences, o_file, device)
         else:
             raise ValueError("Specify a valid encoder.")
 
-def recurrent_seqs_to_lmdb(encoder: ProtBertEncoder, sequences: Iterable[str], device: torch.device, o_file_name: str):
+def encode_seqs_to_lmdb(encoder: PeptideEncoder, sequences: Iterable[str], o_file_name: str):
     BATCH_SIZE = 32
     batch_starts = np.arange(0, len(sequences), BATCH_SIZE)
     for batch_start in batch_starts:
@@ -47,7 +51,7 @@ def recurrent_seqs_to_lmdb(encoder: ProtBertEncoder, sequences: Iterable[str], d
 
 def append_tensors_to_lmbdb(tensors: Iterable[torch.Tensor], indices: Iterable[int], out_file: str):
     env = lmdb.open(out_file)
-    pairs = zip(indices, tensors)
+    pairs = zip(indices, tensors) # note that this will iterate over list of tensors/first dim of tensor containing batch
     with env.begin(write=True) as txn:
         for (i, t) in pairs:
             key = f"{i}".encode()

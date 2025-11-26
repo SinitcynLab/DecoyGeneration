@@ -9,7 +9,7 @@ from typing import Iterable
 from src.metrics.base_metric import BaseMetric
 from src.metrics.default_metric import DefaultMetric
 from sklearn.utils import shuffle
-from src.io.data_set import Dataset
+from src.encoders.transformer_encoder import pad_tensor_list
 from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence
 
 class RecurrentNNClassifier(NNClassifier):
@@ -48,16 +48,17 @@ class RecurrentNNClassifier(NNClassifier):
         # return whether predictions correct, and loss measure with each prediction:
         return corr.tolist(), loss.tolist()
 
-    def evaluate_on_data(self, dataset: Dataset):
+    def evaluate_on_data(self, tensor_list: Iterable[torch.Tensor], y: torch.Tensor):
         with torch.no_grad():
-            X, l, y = self.encode_dataset(dataset)
+            X, l, y = pad_tensor_list(tensor_list).to(self.device), y.to(self.device)
             y_pred = self(X, l)
             del X, l, y
             torch.cuda.empty_cache()
             return y_pred
     
-    def train_on_data(self, dataset: Dataset, loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
-        X, l, y = self.encode_dataset(dataset)
+    def train_on_data(self, tensor_list: Iterable[torch.Tensor], y: torch.Tensor, 
+                    loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> float:
+        X, l, y = pad_tensor_list(tensor_list).to(self.device), y.to(self.device)
         y_pred = self(X, l)
         loss = loss_fn(y_pred, y)
         optimizer.zero_grad()
@@ -76,8 +77,3 @@ class RecurrentNNClassifier(NNClassifier):
         self.network = net
         self.rnn = rnn
         self.set_device(self.device)
-
-    def encode_dataset(self, dataset: Dataset):
-        seqs, y = dataset.get_contents()
-        X, l = self.encoder(seqs)
-        return X.to(self.device), l.to(self.device), y.to(self.device)

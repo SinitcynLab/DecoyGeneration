@@ -4,7 +4,6 @@ import torch
 
 from torch import Tensor
 from typing import Iterable, Tuple
-from src.encoders.transformer_encoder import pad_tensor_list
 
 class LMDBDataset(object):
     def __init__(self, lmdb_paths: Iterable[str], labels: Tensor):
@@ -22,15 +21,19 @@ class LMDBDataset(object):
     def size(self):
         return self.length
     
-    def get_num_targets(self):
+    def get_num_targets(self, idx: Iterable[int] = None):
+        if idx == None:
+            idx = range(self.size())
         return (self.labels == 0.).sum(dim=0)
     
-    def get_num_decoys(self):
+    def get_num_decoys(self, idx: Iterable[int] = None):
+        if idx == None:
+            idx = range(self.size())
         return (self.labels == 1.).sum(dim=0)
 
     # if you e.g. feed it indices [123, 203, 24]
     # it would return [tensor_corr_to_123, tensor_corr_to_203, tensor_corr_to_24], [label_of_123, label_of_203, label_of_24]
-    def _get_sample_list(self, idx: Iterable[int]):
+    def get_pairs(self, idx: Iterable[int]):
         pos_map = {x: i for i, x in enumerate(idx)} # note that the values in idx are all unique
         encodings: Iterable[Tensor] = [torch.zeros(1)] * len(idx)
         labels: Tensor = torch.zeros(len(idx))
@@ -47,15 +50,5 @@ class LMDBDataset(object):
             cumulative_size += env_size
         return encodings, labels
     
-    def get_samples(self, idx: Iterable[int]):
-        encodings, labels = self._get_sample_list(idx)
-        return torch.cat(encodings, dim = 0), labels
-    
-class RecurrentLMDBDataset(LMDBDataset):
-    def __init__(self, lmdb_paths, labels):
-        LMDBDataset.__init__(self, lmdb_paths, labels)
-
-    def get_samples(self, idx):
-        encodings, labels = self._get_sample_list(idx)
-        X, l = pad_tensor_list(encodings)
-        return X, l, labels
+    def get_labels(self, idx: Iterable[int]):
+        return self.labels[idx]
