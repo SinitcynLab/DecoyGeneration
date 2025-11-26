@@ -39,12 +39,14 @@ class LMDBDataset(object):
         encodings: Iterable[Tensor] = [torch.zeros(1)] * len(idx)
         labels: Tensor = torch.zeros(len(idx))
         
+        # below, the global indices over all lmdb directories are mapped to indices local to each lmdb directory:
         cumulative_size: int = 0
         for (env, env_size) in self.envs:
-            env_idx = [i for i in idx if i < cumulative_size + env_size]
+            env_idx = [i for i in idx if cumulative_size <= i < cumulative_size + env_size]
             with env.begin() as txn:
                 for j in env_idx:
-                    key = f"{j}".encode()
+                    print(j - cumulative_size)
+                    key = f"{j - cumulative_size}".encode() # subtract cumulative size (sum of previous lmdbs) to get local index from global index
                     byte_data = txn.get(key)
                     encodings[pos_map[j]] = pickle.loads(byte_data)
                     labels[pos_map[j]] = self.labels[j]
