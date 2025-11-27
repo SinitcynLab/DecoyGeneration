@@ -4,7 +4,8 @@ from src.peptide_classifiers.nn_classifier import cross_validate_nn
 from src.peptide_classifiers.feed_forward_nn_classifier import FeedForwardNNClassifier
 from src.encoders.image_encoder import ImageEncoder
 from src.io.fasta import read_fasta_file
-from src.io.utils import split_targets
+from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
+from src.io.lmdb_dataset import LMDBDataset
 
 def get_cnn_net():
     net = torch.nn.Sequential(
@@ -23,37 +24,43 @@ def get_cnn_net():
     return net
 
 if __name__ == "__main__":
-    # define MLP classifier
+    # define CNN classifier
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     encoder = ImageEncoder(image_height=256, device=device)
     classifier = FeedForwardNNClassifier(network=get_cnn_net(), encoder=encoder, device=device, name="cnn", resetter=get_cnn_net)
 
-    base = 'UP000002311_559292'
+    # define data
+    base = 'UP000000625_83333'
     target_file = f"data/targets/{base}.fasta"
+    temp_encoding_dir = f"data/encodings/temp"
 
-    # load data:
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
+    target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
+    encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
 
     decoy_files = ['target', f'data/decoys/{base}.shuffle.0.fasta', f'data/decoys/{base}.reverse.fasta',
-                   f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.diann_random_pos.fasta',f'data/decoys/{base}.diann_N.fasta']
-    decoy_ids = ['target', 'shuffle', 'reverse', 'diann_C', 'diann_random_pos', 'diann_N']
+                   f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.esm8M.best.[0.05].0.fasta']
+    decoy_ids = ['target', 'shuffle', 'reverse', 'diann', 'esm8M[0.05]']
     
-    print("Cross validation results for the CNN")
+    print("Cross validation of the MLP:")
     for i, decoy_file in enumerate(decoy_files):
         if decoy_file == 'target':
-            target_sequences, decoy_sequences = split_targets(target_sequences)
+            labels = torch.cat((torch.zeros(N//2), torch.ones(N - N//2)))
+            dataset = LMDBDataset([target_lmdb_path], labels)
         else:
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
-
-        target_labels = [0 for _ in range(len(target_sequences))]
-        decoy_labels = [1 for _ in range(len(decoy_sequences))]
+            M = 100
+            decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
+            encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path)
+            labels = torch.cat((torch.zeros(N), torch.ones(M)))
+            dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
 
         # cross-validate MLP:
-        n_epochs = 20
+        n_epochs = 10
         batch_size = 10
-        N = 100 #len(target_labels) + len(decoy_labels)
-        sequences = target_sequences[0:N] + decoy_sequences[0:N]
-        labels = target_labels[0:N] + decoy_labels[0:N]
-        cross_validate_nn(classifier, sequences, labels, n_epochs, batch_size, 1e-3, n_folds=5, decoy_id=decoy_ids[i])
+        cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i])
+        if decoy_file != 'target':
+            delete_lmdb(decoy_lmdb_path) # clear temporary data
+    delete_lmdb(target_lmdb_path)
