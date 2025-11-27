@@ -8,6 +8,8 @@ from src.io.utils import split_targets
 from src.io.lmdb_writer import encode_seqs_to_lmdb
 from src.io.lmdb_dataset import LMDBDataset
 import shutil
+import datetime
+import time
 
 def get_rnn_net():
     out_size = 2048
@@ -29,7 +31,8 @@ if __name__ == "__main__":
 
     base = 'UP000002311_559292'
     target_file = f"data/targets/{base}.fasta"
-    temp_encoding_dir = f"data/encodings/temp_rnn"
+    timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
+    temp_encoding_dir = f"data/encodings/temp_rnn_{timestamp}"
 
     # target data:
     target_records = read_fasta_file(target_file)
