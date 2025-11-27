@@ -6,7 +6,7 @@ class Relabler(object):
     def __init__(self):
         object.__init__(self)
 
-    def relable(label:str, in_file_name: str, out_file_name: str):
+    def relabel(label:str, in_file_name: str, out_file_name: str):
         in_records: List[FastaRecord] = read_fasta_file(in_file_name)
         out_records: List[FastaRecord] = []
         for in_record in in_records:
