@@ -30,7 +30,7 @@ if __name__ == "__main__":
     classifier = FeedForwardNNClassifier(network=get_cnn_net(), encoder=encoder, device=device, name="cnn", resetter=get_cnn_net)
 
     # define data
-    base = 'UP000000625_83333'
+    base = 'UP000002311_559292'
     target_file = f"data/targets/{base}.fasta"
     temp_encoding_dir = f"data/encodings/temp"
 
