@@ -32,7 +32,7 @@ if __name__ == "__main__":
     # define data
     base = 'UP000002311_559292'
     target_file = f"data/targets/{base}.fasta"
-    temp_encoding_dir = f"data/encodings/temp"
+    temp_encoding_dir = f"data/encodings/temp_cnn"
 
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]

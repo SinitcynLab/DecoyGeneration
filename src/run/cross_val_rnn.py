@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     base = 'UP000002311_559292'
     target_file = f"data/targets/{base}.fasta"
-    temp_encoding_dir = f"data/encodings/temp"
+    temp_encoding_dir = f"data/encodings/temp_rnn"
 
     # target data:
     target_records = read_fasta_file(target_file)
