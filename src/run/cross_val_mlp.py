@@ -31,7 +31,7 @@ if __name__ == "__main__":
     # define MLP classifier
     base = 'UP000000625_83333'
     target_file = f"data/targets/{base}.fasta"
-    temp_encoding_dir = f"data/encodings/temp"
+    temp_encoding_dir = f"data/encodings/temp_mlp"
 
     # target data:
     target_records = read_fasta_file(target_file)

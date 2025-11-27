@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=my_job
-#SBATCH --output=lmdb_cv_cnn_%j.txt
+#SBATCH --output=mcs_lmdb_cv_rnn_%j.txt
 #SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
 #SBATCH --time=16:00:00
 #SBATCH --nodes=1
@@ -12,4 +12,4 @@
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/run/cross_val_cnn.py
+python -u src/run/cross_val_rnn.py
