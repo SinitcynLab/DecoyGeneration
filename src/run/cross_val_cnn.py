@@ -43,7 +43,7 @@ if __name__ == "__main__":
                    f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.esm8M.best.[0.05].0.fasta']
     decoy_ids = ['target', 'shuffle', 'reverse', 'diann', 'esm8M[0.05]']
     
-    print("Cross validation of the MLP:")
+    print("Cross validation of the CNN:")
     for i, decoy_file in enumerate(decoy_files):
         if decoy_file == 'target':
             labels = torch.cat((torch.zeros(N//2), torch.ones(N - N//2)))
@@ -57,7 +57,7 @@ if __name__ == "__main__":
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
 
-        # cross-validate MLP:
+        # cross-validate CNN:
         n_epochs = 10
         batch_size = 10
         cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i])
