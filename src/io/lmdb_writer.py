@@ -61,5 +61,15 @@ def append_tensors_to_lmdb(tensors: Iterable[torch.Tensor], indices: Iterable[in
             key = f"{i}".encode()
             txn.put(key, pickle.dumps(t))
 
+def delete_lmdb(path: str):
+    for name in os.listdir(path):
+        full = os.path.join(path, name)
+        if os.path.isfile(full) or os.path.islink(full):
+            os.remove(full)
+        elif os.path.isdir(full):
+            shutil.rmtree(full)
+    if os.path.isdir(path) and not os.listdir(path):  # empty directory
+                os.rmdir(path)
+
 if __name__=="__main__":
     main()

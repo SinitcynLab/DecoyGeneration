@@ -5,7 +5,7 @@ from src.peptide_classifiers.nn_classifier import cross_validate_nn
 from src.peptide_classifiers.feed_forward_nn_classifier import FeedForwardNNClassifier
 from src.encoders.protbert_cls_encoder import ProtBertClsEncoder
 from src.io.fasta import read_fasta_file
-from src.io.lmdb_writer import encode_seqs_to_lmdb
+from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
 from src.io.lmdb_dataset import LMDBDataset
 
 def get_mlp_net():
@@ -44,7 +44,7 @@ if __name__ == "__main__":
                    f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.diann_random_pos.fasta',f'data/decoys/{base}.diann_N.fasta']
     decoy_ids = ['target', 'shuffle', 'reverse', 'diann_C', 'diann_random_pos', 'diann_N']
     
-    print("Cross validation of the RNN:")
+    print("Cross validation of the MLP:")
     for i, decoy_file in enumerate(decoy_files):
         if decoy_file == 'target':
             labels = torch.cat((torch.zeros(N//2), torch.ones(N - N//2)))
@@ -63,5 +63,5 @@ if __name__ == "__main__":
         batch_size = 10
         cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i])
         if decoy_file != 'target':
-            shutil.rmtree(decoy_lmdb_path) # clear temporary data
-    shutil.rmtree(target_lmdb_path)
+            delete_lmdb(decoy_lmdb_path) # clear temporary data
+    delete_lmdb(target_lmdb_path)
