@@ -34,12 +34,12 @@ if __name__ == "__main__":
     # target data:
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
-    N = 4000
+    N = len(target_sequences)
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
 
-    decoy_files = [f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.esm8M.best.[0.05].0.fasta']
-    decoy_ids = ['diann', 'esm8M[0.05]']
+    decoy_files = ['target', f'data/decoys/{base}.shuffle.0.fasta', f'data/decoys/{base}.reverse.fasta']
+    decoy_ids = ['target', 'shuffle', 'reverse']
     
     print("Cross validation of the RNN:")
     for i, decoy_file in enumerate(decoy_files):
@@ -50,7 +50,7 @@ if __name__ == "__main__":
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
-            M = 4000
+            M = len(decoy_sequences)
             encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
