@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH --job-name=rnn_s_r_all_data
+#SBATCH --job-name=rnn_d_e_all_data
 #SBATCH --output=rnn_e_all_data_%j.txt
-#SBATCH --partition=tue.gpu.q         # Choose a partition that has GPUs
+#SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
