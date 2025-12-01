@@ -5,7 +5,7 @@ from src.peptide_classifiers.nn_classifier import cross_validate_nn
 from src.encoders.protbert_encoder import ProtBertEncoder
 from src.io.fasta import read_fasta_file
 from src.io.utils import split_targets
-from src.io.lmdb_writer import encode_seqs_to_lmdb
+from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
 from src.io.lmdb_dataset import LMDBDataset
 import shutil
 import datetime
@@ -41,8 +41,8 @@ if __name__ == "__main__":
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
 
-    decoy_files = [f'data/decoys/{base}.esm8M.best.[0.05].0.fasta']
-    decoy_ids = ['esm8M[0.05]']
+    decoy_files = [f'data/decoys/{base}.shuffle.0.fasta']
+    decoy_ids = ['shuffle']
     
     print("Cross validation of the RNN:")
     for i, decoy_file in enumerate(decoy_files):
@@ -63,5 +63,5 @@ if __name__ == "__main__":
         batch_size = 10
         cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i])
         if decoy_ids[i] != 'target':
-            shutil.rmtree(decoy_lmdb_path) # clear temporary data
-    shutil.rmtree(target_lmdb_path)
+            delete_lmdb(decoy_lmdb_path) # clear temporary data
+    delete_lmdb(target_lmdb_path)
