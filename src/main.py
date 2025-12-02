@@ -46,12 +46,12 @@ if __name__ == "__main__":
                 batch_starts = np.arange(0, len(target_records), generator.batch_size)
                 for start in batch_starts:
                     end = min(start + generator.batch_size, len(target_records))
-                    write_fasta_file(filename_out, generator.convert_fasta(target_records[start:end]), 60, 'a', prefix=str(generator))
+                    write_fasta_file(filename_out, generator.convert_fasta(target_records[start:end]), 60, 'a')
                     print(f"{end}/{len(target_records)}")
         elif generator.decoy_generation_type == DecoyGeneratorType.ONE2ONE:
             filename_out = f"{filename}.{generator}{extension}"
-            write_fasta_file(filename_out, generator.convert_fasta(read_fasta_file(target_filename)), prefix=str(generator))
+            write_fasta_file(filename_out, generator.convert_fasta(read_fasta_file(target_filename)))
         elif generator.decoy_generation_type == DecoyGeneratorType.ONE2MANY:
             for i in range(n):
                 filename_out = f"{filename}.{generator}.{i}{extension}"
-                write_fasta_file(filename_out, generator.convert_fasta(read_fasta_file(target_filename)), prefix=str(generator))
+                write_fasta_file(filename_out, generator.convert_fasta(read_fasta_file(target_filename)))
