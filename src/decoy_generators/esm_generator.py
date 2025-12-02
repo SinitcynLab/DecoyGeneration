@@ -46,6 +46,6 @@ class EsmGenerator(MlGenerator):
     def __str__(self):
         param_count = self.local_path.split('/')[-1].split('_')[2]
         if self.masking_type == MaskingType.PERCENT:
-            return f"esm{param_count}.{self.ml_generator_type.name.lower()}.[{self.mask_percent}]"
+            return f"esm{param_count}.{self.ml_generator_type.name.lower()}._p{self.mask_percent}_"
         elif self.masking_type == MaskingType.COUNT:
-            return f"esm{param_count}.{self.ml_generator_type.name.lower()}.[{self.mask_count}]"
+            return f"esm{param_count}.{self.ml_generator_type.name.lower()}._c{self.mask_count}"

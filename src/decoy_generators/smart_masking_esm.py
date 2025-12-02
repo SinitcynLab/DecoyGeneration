@@ -27,7 +27,7 @@ class SmartMaskingEsmGenerator(EsmGenerator):
         
     def __str__(self):
         param_count = self.local_path.split('/')[-1].split('_')[2]
-        return f"smart_masking_esm_{param_count}.[{self.mask_percent}]"
+        return f"smart_masking_esm_{param_count}"
             
     def __get_all_peptides(self, sequence: str):
         positions: List[int] = list(self.get_positions_special_aas(sequence))

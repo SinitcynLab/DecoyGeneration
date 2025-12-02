@@ -14,7 +14,7 @@ class ShuffleGenerator(DecoyGenerator):
         super().__init__(special_amino_acids)
 
     def __str__(self):
-        return f"shuffle.[{self.skip_prob}]"
+        return f"shuffle._s{self.skip_prob}_"
 
     def convert(self, targets: Iterator[str]) -> Iterator[str]:
         for target in targets:
