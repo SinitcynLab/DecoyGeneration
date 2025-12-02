@@ -22,7 +22,7 @@ class SmartMaskingEsmGenerator(EsmGenerator):
         EsmGenerator.__init__(self, local_path, random, special_amino_acids, sort_optimization,
                              batch_size, ml_generator_type, device, MaskingType.COUNT, 0, 1)
         special_aa_ids = self.tokenizer.convert_tokens_to_ids(self.special_amino_acids)
-        self.canonical_aa_ids = self.tokenizer(self.canonical_amino_acids)
+        self.canonical_aa_ids = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
         self.valid_aa_ids = [idx for idx in self.canonical_aa_ids if idx not in special_aa_ids]
         
     def __str__(self):
