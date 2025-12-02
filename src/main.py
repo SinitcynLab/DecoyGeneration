@@ -44,7 +44,7 @@ if __name__ == "__main__":
             for i in range(n):
                 filename_out = f"{filename}.{generator}.{i}{extension}"
                 target_records = [record for record in read_fasta_file(target_filename)]
-                target_records = remove_long_sequences(target_records, cap_length=10_000)
+                target_records = remove_long_sequences(target_records, cap_length=5000)
                 batch_starts = np.arange(0, len(target_records), generator.batch_size)
                 for start in batch_starts:
                     end = min(start + generator.batch_size, len(target_records))
