@@ -44,9 +44,10 @@ class SmartMaskingEsmGenerator(EsmGenerator):
         og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
         og_prob = probs[0, position, og_aa_id]# get all 'valid' aa's that could fill the spot (exclude special aas and the original aa):
         # remove current original aa from valid aa's:
-        possible_aa_ids = list(self.valid_aa_ids).remove(og_aa_id)
+        current_valid_aa_ids = self.valid_aa_ids
+        if og_aa_id in current_valid_aa_ids: current_valid_aa_ids.remove(og_aa_id)
         # find the top probability of valid aa's:
-        token_prob, token_choice = torch.topk(probs[0, position, possible_aa_ids], k=1, largest=True)
+        token_prob, token_choice = torch.topk(probs[0, position, current_valid_aa_ids], k=1, largest=True)
         rel_diff = (og_prob - token_prob[0]) / og_prob
         return rel_diff, token_choice[0]
         
