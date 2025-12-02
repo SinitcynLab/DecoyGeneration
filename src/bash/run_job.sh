@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=rnn_s_all_data
-#SBATCH --output=rnn_s_all_data_%j.txt
-#SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
-#SBATCH --time=16:00:00
+#SBATCH --job-name=gen
+#SBATCH --output=gen_%j.txt
+#SBATCH --partition=tue.gpu.q         # Choose a partition that has GPUs
+#SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/run/cross_val_rnn.py
+python -u src/main.py

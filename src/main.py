@@ -26,15 +26,16 @@ if __name__ == "__main__":
     n: int = 1
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
-        ReverseGenerator(
-            special_amino_acids
-        ),
-        DiannGenerator(
-            special_amino_acids
-        ),
-        ShuffleGenerator(
-            special_amino_acids,
-            random=random
+        EsmGenerator(
+            local_path='models/esm2_t33_650M_UR50D',
+            random=random,
+            special_amino_acids=special_amino_acids,
+            sort_optimization=True,
+            batch_size=1,
+            ml_generator_type=MlGeneratorType.BEST,
+            device=device,
+            masking_type=MaskingType.COUNT,
+            mask_count=1
         )
     ]
     for generator in generators:
