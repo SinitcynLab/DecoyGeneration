@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=gen_bigger
-#SBATCH --output=rnn_e650_all_data_%j.txt
+#SBATCH --output=gen_bigger_%j.txt
 #SBATCH --partition=tue.gpu.q         # Choose a partition that has GPUs
 #SBATCH --time=20:00:00
 #SBATCH --nodes=1
