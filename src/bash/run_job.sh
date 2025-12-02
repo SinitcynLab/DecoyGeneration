@@ -2,8 +2,8 @@
 
 #SBATCH --job-name=rnn_s_all_data
 #SBATCH --output=rnn_s_all_data_%j.txt
-#SBATCH --partition=tue.gpu.q         # Choose a partition that has GPUs
-#SBATCH --time=42:00:00
+#SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
+#SBATCH --time=16:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
