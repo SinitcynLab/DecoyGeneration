@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=gen_bigger
-#SBATCH --output=gen_bigger_%j.txt
+#SBATCH --job-name=gen_smart
+#SBATCH --output=gen_smart_%j.txt
 #SBATCH --partition=tue.gpu.q         # Choose a partition that has GPUs
-#SBATCH --time=20:00:00
+#SBATCH --time=23:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
