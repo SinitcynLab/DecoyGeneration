@@ -7,3 +7,4 @@ torch-pca~=1.1.0
 matplotlib
 lmdb
 pickle
+seaborn

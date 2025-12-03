@@ -14,6 +14,7 @@ from src.metrics.base_metric import BaseMetric
 from src.metrics.default_metric import DefaultMetric
 from src.io.lmdb_dataset import LMDBDataset
 from sklearn.utils import shuffle
+from src.visualization.score_distribution import save_scores
 
 class NNClassifier(PeptideClassifier, torch.nn.Module):
     def __init__(self, network : torch.nn.Sequential, encoder : PeptideEncoder, name: str, device : torch.device, resetter: Callable = None):
@@ -63,7 +64,7 @@ def cross_validate_nn(nn: NNClassifier, main_dataset: LMDBDataset,
 
         for epoch in range(n_epochs):
             train_metrics, val_metrics = train_val_iteration(nn, main_dataset, train_ids, val_ids,
-                                                              loss_fn, optimizer, batch_size, metric)
+                                                              loss_fn, optimizer, batch_size, metric, epoch)
             print(f"epoch: {epoch+1}/{n_epochs}")
             # use ROC as criterion:
             if val_metrics[0] > best_val_fold[0]: 
@@ -106,7 +107,7 @@ def train_nn(nn : NNClassifier, dataset: LMDBDataset, train_ids: Iterable[int], 
     return best_val_auc # return best validation auc
 
 def train_val_iteration(nn: NNClassifier, dataset: LMDBDataset, train_ids: Iterable[int], val_ids: Iterable[int], loss_fn: torch.nn.Module, 
-                        optimizer:torch.optim.Optimizer, batch_size: int, metric: BaseMetric = DefaultMetric()):
+                        optimizer:torch.optim.Optimizer, batch_size: int, metric: BaseMetric = DefaultMetric(), epoch: int = 0):
     # train:
     N: int = len(train_ids)
     nn.train()
@@ -137,5 +138,6 @@ def train_val_iteration(nn: NNClassifier, dataset: LMDBDataset, train_ids: Itera
         del y_pred, t_list, y
         torch.cuda.empty_cache()
     avg_val_metrics = metric.extract_values(predictions, dataset.get_labels(val_ids))
+    save_scores(scores=predictions, epoch=epoch)
 
     return avg_train_metrics, avg_val_metrics

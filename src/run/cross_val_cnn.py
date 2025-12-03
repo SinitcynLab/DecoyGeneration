@@ -1,4 +1,6 @@
 import torch
+import datetime
+import time
 
 from src.peptide_classifiers.nn_classifier import cross_validate_nn
 from src.peptide_classifiers.feed_forward_nn_classifier import FeedForwardNNClassifier
@@ -32,7 +34,8 @@ if __name__ == "__main__":
     # define data
     base = 'UP000000625_83333'
     target_file = f"data/targets/{base}.fasta"
-    temp_encoding_dir = f"data/encodings/temp_cnn"
+    timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
+    temp_encoding_dir = f"data/encodings/temp_rnn_{timestamp}"
 
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
