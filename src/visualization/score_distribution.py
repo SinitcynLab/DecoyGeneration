@@ -15,7 +15,7 @@ def graph_score_file(file_name: str, epoch: int, save_name: str, lims: Tuple[flo
     plt.figure()
     sns.histplot(scores_array, bins=25)
     plot = sns.kdeplot(scores_array)
-    plot.set(title=f"Scores on epoch {epoch+1}", xlabel='Score', ylabel='Density estimate', xlim=lims)
+    plot.set(title=f"Histogram of scores on epoch {epoch+1}", xlabel='Score', ylabel='Frequency', xlim=lims)
     fig = plot.get_figure()
     fig.savefig(f"{save_name}_{epoch+1}.png")
 
