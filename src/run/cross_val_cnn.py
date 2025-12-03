@@ -32,7 +32,7 @@ if __name__ == "__main__":
     classifier = FeedForwardNNClassifier(network=get_cnn_net(), encoder=encoder, device=device, name="cnn", resetter=get_cnn_net)
 
     # define data
-    base = 'UP000000625_83333'
+    base = 'UP000002311_559292'
     target_file = f"data/targets/{base}.fasta"
     timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
     temp_encoding_dir = f"data/encodings/temp_rnn_{timestamp}"
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
-    N = 400 #len(target_sequences)
+    N = len(target_sequences)
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
 
     decoy_files = ['target', f'data/decoys/{base}.shuffle.0.fasta', f'data/decoys/{base}.reverse.fasta',
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         else:
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
-            M = 400 #len(decoy_sequences)
+            M = len(decoy_sequences)
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
             encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
