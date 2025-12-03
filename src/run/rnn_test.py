@@ -6,6 +6,10 @@ from src.peptide_classifiers.recurrent_nn_classifier import RecurrentNNClassifie
 from src.peptide_classifiers.nn_classifier import train_nn
 from src.encoders.protbert_encoder import ProtBertEncoder
 from src.io.fasta import read_fasta_file
+from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
+from src.io.lmdb_dataset import LMDBDataset
+import datetime
+import time
 
 if __name__ == "__main__":
     # define RNN classifier
@@ -20,33 +24,38 @@ if __name__ == "__main__":
     classifier = RecurrentNNClassifier(rnn=rnn, network=net, encoder=encoder, device=device, name="rnn")
 
     base = 'UP000002311_559292'
-    target_path = f"data/targets/{base}.fasta"
-    decoy_path = f"data/decoys/{base}.shuffle.[0.75].0.fasta"
 
-    # load data:
-    target_records = read_fasta_file(target_path)
-    decoy_records = read_fasta_file(decoy_path)
-    
-    #K = 2190
+    target_file = f"data/targets/{base}.fasta"
+    timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
+    temp_encoding_dir = f"data/encodings/temp_rnn_{timestamp}"
+    decoy_file = f'data/decoys/{base}.shuffle.0.fasta'
+    decoy_id = 'esm650M[count=1]'
+
+    # target data:
+    target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
+    N = len(target_sequences)
+    target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
+    encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
+
+    # decoy data:
+    decoy_records = read_fasta_file(decoy_file)
     decoy_sequences = [record.sequence for record in decoy_records]
-    target_sequences = target_sequences
-    decoy_sequences = decoy_sequences
+    decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_id}.lmdb"
+    M = len(decoy_sequences)
+    encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path)
 
-    target_labels = [0 for _ in range(len(target_sequences))]
-    decoy_labels = [1 for _ in range(len(decoy_sequences))]
+    # overall dataset:
+    labels = torch.cat((torch.zeros(N), torch.ones(M)))
+    dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
 
-    sequences = target_sequences + decoy_sequences
-    labels = target_labels + decoy_labels
-    
+    # train-test split:
     test_fraction = 0.3
-    X_train, X_val, y_train, y_val = train_test_split(sequences, labels, test_size=test_fraction)
-    
-    # train RNN:
-    N = 40 # 100 each
-    M = round(N * test_fraction)
-    optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-3)
+    train_ids, val_ids, _, _ = train_test_split(np.arange(N+M), labels, test_size=test_fraction)
+
+    print("Evaluation of the RNN:")
     n_epochs = 20
     batch_size = 10
-    best_acc = train_nn(classifier, X_train[0:N], y_train[0:N], X_val[0:M], y_val[0:M], n_epochs, batch_size, optimizer)
-    print(f"Best accuracy of RNN on {decoy_path}: {best_acc}")
+    train_nn(classifier, dataset, train_ids, val_ids, n_epochs, batch_size, learning_rate=1e-3)
+    delete_lmdb(target_lmdb_path)
+    delete_lmdb(decoy_lmdb_path)

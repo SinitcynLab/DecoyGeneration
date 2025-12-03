@@ -64,7 +64,7 @@ def cross_validate_nn(nn: NNClassifier, main_dataset: LMDBDataset,
 
         for epoch in range(n_epochs):
             train_metrics, val_metrics = train_val_iteration(nn, main_dataset, train_ids, val_ids,
-                                                              loss_fn, optimizer, batch_size, metric, epoch)
+                                                              loss_fn, optimizer, batch_size, epoch, metric)
             print(f"epoch: {epoch+1}/{n_epochs}")
             # use ROC as criterion:
             if val_metrics[0] > best_val_fold[0]: 
@@ -91,23 +91,25 @@ def cross_validate_nn(nn: NNClassifier, main_dataset: LMDBDataset,
     return best_val_metrics[0] # return mean recorded 'best' ROC
 
 def train_nn(nn : NNClassifier, dataset: LMDBDataset, train_ids: Iterable[int], val_ids: Iterable[int],
-            n_epochs : int, batch_size : int, optimizer : torch.optim.Optimizer):
+            n_epochs : int, batch_size : int, learning_rate : float, metric: BaseMetric = DefaultMetric()):
+    optimizer = torch.optim.Adam(params=nn.parameters(), lr = learning_rate)
     loss_fn = torch.nn.BCELoss()
 
     best_val_auc = - np.inf
     best_weights = None
 
     for epoch in range(n_epochs):
-        _, val_metrics = train_val_iteration(nn, dataset, train_ids, val_ids, loss_fn, optimizer, batch_size)
+        _, val_metrics = train_val_iteration(nn, dataset, train_ids, val_ids, loss_fn, optimizer, batch_size, epoch, metric)
         if val_metrics[0] > best_val_auc:
             best_val_auc = val_metrics[0]
             best_weights = copy.deepcopy(nn.state_dict())
 
     nn.load_state_dict(best_weights) # restore best weights
+    metric.print_metric(val_metrics)
     return best_val_auc # return best validation auc
 
 def train_val_iteration(nn: NNClassifier, dataset: LMDBDataset, train_ids: Iterable[int], val_ids: Iterable[int], loss_fn: torch.nn.Module, 
-                        optimizer:torch.optim.Optimizer, batch_size: int, metric: BaseMetric = DefaultMetric(), epoch: int = 0):
+                        optimizer:torch.optim.Optimizer, batch_size: int, epoch: int = 0, metric: BaseMetric = DefaultMetric()):
     # train:
     N: int = len(train_ids)
     nn.train()
