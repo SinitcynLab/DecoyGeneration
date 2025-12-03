@@ -2,8 +2,8 @@
 
 #SBATCH --job-name=tune_cnn_2d
 #SBATCH --output=tune_cnn_2d_%j.txt
-#SBATCH --partition=tue.gpu.q         # Choose a partition that has GPUs
-#SBATCH --time=23:00:00
+#SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
+#SBATCH --time=8:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
