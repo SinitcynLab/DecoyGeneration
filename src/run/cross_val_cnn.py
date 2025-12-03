@@ -30,19 +30,19 @@ if __name__ == "__main__":
     classifier = FeedForwardNNClassifier(network=get_cnn_net(), encoder=encoder, device=device, name="cnn", resetter=get_cnn_net)
 
     # define data
-    base = 'UP000002311_559292'
+    base = 'UP000000625_83333'
     target_file = f"data/targets/{base}.fasta"
     temp_encoding_dir = f"data/encodings/temp_cnn"
 
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
-    N = len(target_sequences)
+    N = 400 #len(target_sequences)
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
 
     decoy_files = ['target', f'data/decoys/{base}.shuffle.0.fasta', f'data/decoys/{base}.reverse.fasta',
-                   f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.esm8M.best.[0.05].0.fasta']
-    decoy_ids = ['target', 'shuffle', 'reverse', 'diann', 'esm8M[0.05]']
+                   f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.esm8M.best.[0.05].0.fasta', f'data/decoys/{base}.esm650M.best.[1].0.fasta']
+    decoy_ids = ['target', 'shuffle', 'reverse', 'diann', 'esm8M[0.05]', 'esm650M[count=1]']
     
     print("Cross validation of the CNN:")
     for i, decoy_file in enumerate(decoy_files):
@@ -52,7 +52,7 @@ if __name__ == "__main__":
         else:
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
-            M = len(decoy_sequences)
+            M = 400 #len(decoy_sequences)
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
             encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))

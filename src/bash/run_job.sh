@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=gen_smart
-#SBATCH --output=gen_smart_%j.txt
+#SBATCH --job-name=tune_cnn_2d
+#SBATCH --output=tune_cnn_2d_%j.txt
 #SBATCH --partition=tue.gpu.q         # Choose a partition that has GPUs
 #SBATCH --time=23:00:00
 #SBATCH --nodes=1
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/main.py
+python -u src/run/cross_val_cnn.py
