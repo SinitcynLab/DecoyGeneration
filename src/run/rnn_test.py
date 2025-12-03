@@ -38,24 +38,16 @@ if __name__ == "__main__":
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
 
-    # decoy data:
-    decoy_records = read_fasta_file(decoy_file)
-    decoy_sequences = [record.sequence for record in decoy_records]
-    decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_id}.lmdb"
-    M = len(decoy_sequences)
-    encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path)
-
     # overall dataset:
-    labels = torch.cat((torch.zeros(N), torch.ones(M)))
-    dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
+    labels = torch.cat((torch.zeros(N//2), torch.ones(N - N//2)))
+    dataset = LMDBDataset([target_lmdb_path], labels)
 
     # train-test split:
     test_fraction = 0.3
-    train_ids, val_ids, _, _ = train_test_split(np.arange(N+M), labels, test_size=test_fraction)
+    train_ids, val_ids, _, _ = train_test_split(np.arange(N), labels, test_size=test_fraction)
 
     print("Evaluation of the RNN:")
     n_epochs = 20
     batch_size = 10
     train_nn(classifier, dataset, train_ids, val_ids, n_epochs, batch_size, learning_rate=1e-3)
     delete_lmdb(target_lmdb_path)
-    delete_lmdb(decoy_lmdb_path)
