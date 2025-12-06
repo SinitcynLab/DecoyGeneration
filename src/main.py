@@ -33,9 +33,7 @@ if __name__ == "__main__":
             sort_optimization=True,
             batch_size=1,
             ml_generator_type=MlGeneratorType.BEST,
-            device=device,
-            masking_type=MaskingType.COUNT,
-            mask_count=1
+            device=device
         )
     ]
     for generator in generators:
