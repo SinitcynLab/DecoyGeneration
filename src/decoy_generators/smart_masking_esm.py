@@ -19,6 +19,9 @@ class RelDiffMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
         score = - ((og_prob - token_prob[0]) / og_prob) # smaller relative difference means larger score
         return score, token_choice[0]
     
+    def __str__(self):
+        return f"rel_diff_{super().__str__()}"
+    
 class MassMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
     def _get_score_and_token_choice(self, probs: Tensor, position: int, original_aa: str):
         # get the original aa's id and its prob:
@@ -30,3 +33,6 @@ class MassMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
         token_prob, token_choice = torch.topk(probs[0, position, current_valid_aa_ids], k=1, largest=True)
         score = token_prob # the score is the mass of the substitutable aa with largest mass
         return score, token_choice[0]
+    
+    def __str__(self):
+        return f"mass_{super().__str__()}"

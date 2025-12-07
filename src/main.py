@@ -24,6 +24,7 @@ if __name__ == "__main__":
     print(device)
 
     n: int = 1
+    N = 3000
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
         MassMaskingEsmGenerator(
@@ -38,13 +39,12 @@ if __name__ == "__main__":
     ]
     for generator in generators:
         filename, extension = os.path.splitext(target_filename)
-        begin_idx = 5507
         if issubclass(type(generator), MlGenerator):
             for i in range(n):
                 filename_out = f"{filename}.{generator}.{i}{extension}"
                 target_records = [record for record in read_fasta_file(target_filename)]
                 target_records = remove_long_sequences(target_records, cap_length=10_000)
-                batch_starts = np.arange(begin_idx, len(target_records), generator.batch_size)
+                batch_starts = np.arange(0, N, generator.batch_size)
                 for start in batch_starts:
                     end = min(start + generator.batch_size, len(target_records))
                     write_fasta_file(filename_out, generator.convert_fasta(target_records[start:end]), 60, 'a')
