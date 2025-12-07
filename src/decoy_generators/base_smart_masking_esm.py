@@ -63,7 +63,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             # Save original input ids:
             modified_input_ids = torch.clone(input["input_ids"])
             for peptide in self.__get_all_peptides(sequence):
-                max_score: float = torch.inf
+                max_score: float = -torch.inf
                 max_score_pos: int = 0
                 token_choice_at_max = None
                 for pos in peptide:
