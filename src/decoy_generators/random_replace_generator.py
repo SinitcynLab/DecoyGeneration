@@ -1,22 +1,13 @@
+from random import Random
 from typing import Iterator, List
 
 from src.decoy_generators.decoy_generator import DecoyGenerator
 
 
-class DiannGenerator(DecoyGenerator):
-    translation: dict[str, str] = {
-        a: b
-        for a, b in zip(
-            list('GAVLIFMPWSCTYHKRQENDU'),
-            list('LLLVVLLLLTSSSSLLNDQES')
-        )
-    }
-
-    def __init__(self, special_amino_acids: List[str], terminus: str = 'C'):
+class RandomReplaceGenerator(DecoyGenerator):
+    def __init__(self, special_amino_acids: List[str], random: Random):
         DecoyGenerator.__init__(self, special_amino_acids)
-        if terminus not in ['C', 'N']:
-            raise ValueError("Terminus argument must be 'C' or 'N'.")
-        self.terminus = terminus
+        self.random = random
 
     def __str__(self):
         return f"diann_{self.terminus}"
@@ -29,9 +20,6 @@ class DiannGenerator(DecoyGenerator):
                 a: int = positions[idx - 1] + 1
                 b: int = positions[idx]
                 if b - a < 1: continue
-                if self.terminus == 'C':
-                    pos = b - 1
-                else:
-                    pos = a
-                sequence[pos] = self.translation[sequence[idx]]
+                random_pos = self.random.randrange(a, b)
+                sequence[random_pos] = self.random.choice(self.valid_aa_choices)
             yield "".join(sequence)
