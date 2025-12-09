@@ -40,7 +40,10 @@ class DiannRandomAcid(DiannGenerator):
             for idx in range(1, len(positions)):
                 a: int = positions[idx - 1] + 1
                 b: int = positions[idx]
-                if b - a < 1: continue
-                sequence[b-a] = self.random.choice(self.valid_aa_choices)
+                if self.terminus == 'C':
+                    pos = b - 1
+                else:
+                    pos = a
+                sequence[pos] = self.random.choice(self.valid_aa_choices)
             yield "".join(sequence)
     

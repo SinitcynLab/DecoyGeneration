@@ -30,8 +30,8 @@ class DiannGenerator(DecoyGenerator):
                 b: int = positions[idx]
                 if b - a < 1: continue
                 if self.terminus == 'C':
-                    idx = b - 1
+                    pos = b - 1
                 else:
-                    idx = a
-                sequence[idx] = self.translation[sequence[idx]]
+                    pos = a
+                sequence[pos] = self.translation[sequence[idx]]
             yield "".join(sequence)
