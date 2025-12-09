@@ -1,10 +1,11 @@
 from random import Random
 from typing import Iterator, List
 
-from src.decoy_generators.decoy_generator import DecoyGenerator
-
+from src.decoy_generators.decoy_generator import DecoyGenerator, DecoyGeneratorType
 
 class RandomReplaceGenerator(DecoyGenerator):
+    decoy_generation_type: DecoyGeneratorType = DecoyGeneratorType.ONE2MANY
+    
     def __init__(self, special_amino_acids: List[str], random: Random):
         DecoyGenerator.__init__(self, special_amino_acids)
         self.random = random
