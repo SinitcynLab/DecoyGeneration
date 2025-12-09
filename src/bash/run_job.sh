@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=rnn_ms_all_data
-#SBATCH --output=rnn_ms_all_data_%j.txt
+#SBATCH --job-name=gen_rand
+#SBATCH --output=gen_rand_%j.txt
 #SBATCH --partition=tue.default.q         # Choose a partition that has GPUs
 #SBATCH --time=1:00:00
 #SBATCH --nodes=1
