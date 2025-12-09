@@ -1,5 +1,5 @@
 from random import Random
-from typing import Iterator, List
+from typing import Iterator, List, Set
 
 from src.decoy_generators.decoy_generator import DecoyGenerator, DecoyGeneratorType
 
@@ -9,6 +9,8 @@ class RandomReplaceGenerator(DecoyGenerator):
     def __init__(self, special_amino_acids: List[str], random: Random):
         DecoyGenerator.__init__(self, special_amino_acids)
         self.random = random
+        aa_choices_set: Set[str] = set(self.canonical_amino_acids) - set(self.special_amino_acids)
+        self.valid_aa_choices: List[str] = list(aa_choices_set)
 
     def __str__(self):
         return f"random_replace"
