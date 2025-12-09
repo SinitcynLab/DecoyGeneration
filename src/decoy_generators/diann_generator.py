@@ -33,5 +33,5 @@ class DiannGenerator(DecoyGenerator):
                     pos = b - 1
                 else:
                     pos = a
-                sequence[pos] = self.translation[sequence[idx]]
+                sequence[pos] = self.translation[sequence[pos]]
             yield "".join(sequence)
