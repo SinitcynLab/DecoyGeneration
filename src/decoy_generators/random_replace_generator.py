@@ -10,7 +10,7 @@ class RandomReplaceGenerator(DecoyGenerator):
         self.random = random
 
     def __str__(self):
-        return f"diann_{self.terminus}"
+        return f"random_replace"
 
     def convert(self, targets: Iterator[str]) -> Iterator[str]:
         for target in targets:
