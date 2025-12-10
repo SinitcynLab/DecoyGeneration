@@ -8,7 +8,6 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=16G
-#SBATCH --gpus=1
 
 module load Python/3.11.3-GCCcore-12.3.0 
 module load Anaconda3/2023.09-0
