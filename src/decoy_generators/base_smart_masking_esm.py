@@ -75,7 +75,6 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                         max_score_pos = pos
                         token_choice_at_max = token_choice
                 # save position and token choice for this peptide:
-                print((max_score_pos, token_choice_at_max))
                 min_pos_and_choices.append((max_score_pos, token_choice_at_max))
 
                 # we now have the position and token choice for this peptide
