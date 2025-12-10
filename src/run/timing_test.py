@@ -38,6 +38,7 @@ if __name__ == "__main__":
             special_amino_acids=special_amino_acids
         ),
         RandomReplaceGenerator(
+            random=random,
             special_amino_acids=special_amino_acids
         ),
         EsmGenerator(
