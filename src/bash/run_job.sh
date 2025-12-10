@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH --job-name=rnn_rand_all_data
-#SBATCH --output=rnn_rand_all_data_%j.txt
-#SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
+#SBATCH --job-name=timing
+#SBATCH --output=timing_%j.txt
+#SBATCH --partition=tue.default.q         # Choose a partition that has GPUs
 #SBATCH --time=16:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/run/cross_val_rnn.py
+python -u src/run/timing_test.py

@@ -21,9 +21,8 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
     ):
         EsmGenerator.__init__(self, local_path, random, special_amino_acids, sort_optimization,
                              batch_size, ml_generator_type, device, MaskingType.COUNT, 0, 1)
-        special_aa_ids = self.tokenizer.convert_tokens_to_ids(self.special_amino_acids)
-        self.canonical_aa_ids = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
-        self.valid_aa_ids = [idx for idx in self.canonical_aa_ids if idx not in special_aa_ids]
+        self.k: int = len(self.special_amino_acids) + 2
+        self.aa_ids = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
         
     def __str__(self):
         param_count = self.local_path.split('/')[-1].split('_')[2]
@@ -38,12 +37,6 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                 continue
             else:
                 yield range(start, end)
-
-    def _get_og_aa_id_and_prob(self, probs: Tensor, position: int, original_aa: str):
-        # find the id of the originally present aa, and find the probability corresponding to this aa as judged by ESM:
-        og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
-        og_prob = probs[0, position, og_aa_id]
-        return og_aa_id, og_prob
     
     def _get_current_val_aa_ids(self, og_aa_id: int):
         # get all 'valid' aa's that could fill the spot (exclude special aas and the original aa):
@@ -82,6 +75,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                         max_score_pos = pos
                         token_choice_at_max = token_choice
                 # save position and token choice for this peptide:
+                print((max_score_pos, token_choice_at_max))
                 min_pos_and_choices.append((max_score_pos, token_choice_at_max))
 
                 # we now have the position and token choice for this peptide
@@ -96,8 +90,8 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             yield "".join(new_sequence)
 
     # should be in parent class, but kept it here because I'm not 1000% sure of correctness
-    def _select_token(self, original_aa: str, token_choice: Tensor):
-        for idx in token_choice:
+    def _get_first_feasible_index(self, original_aa: str, top_tokens: Tensor):
+        for idx in top_tokens:
             new_aa: str = self.canonical_amino_acids[idx]
             if new_aa == original_aa:
                 continue
@@ -109,3 +103,8 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             return idx
         # if no aa satisfies constraints, default to original (esm gen itself does this too):
         return self.canonical_amino_acids.index(original_aa)
+    
+    def _get_feasible_token_with_max_score(self, original_aa: str, scores: Tensor, tokens: Tensor):
+        sort_idx = torch.argsort(scores, descending=True)
+        token_choice = self._get_first_feasible_index(original_aa, tokens[sort_idx])
+        return scores[torch.where(tokens == token_choice)[0]], token_choice

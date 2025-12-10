@@ -9,30 +9,26 @@ from torch import Tensor
 
 class RelDiffMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
     def _get_score_and_token_choice(self, probs: Tensor, position: int, original_aa: str) -> Tuple[float, Tensor]:
-        # get the original aa's id and its prob:
-        og_aa_id, og_prob = self._get_og_aa_id_and_prob(probs, position, original_aa)
-        # get the list of all valid aa id's in this context:
-        current_valid_aa_ids = self._get_current_val_aa_ids(og_aa_id)
+        # get the original aa's prob:
+        # find the id of the originally present aa, and find the probability corresponding to this aa as judged by ESM:
+        og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
+        og_prob = probs[0, position, og_aa_id]
         
-        # find the top probability of valid aa's:
-        token_prob, token_choice = torch.topk(probs[0, position, current_valid_aa_ids], k=1, largest=True)
-        score = - ((og_prob - token_prob[0]) / og_prob) # smaller relative difference means larger score
-        return score, token_choice[0]
+        # find the top probability of aa's:
+        tokens_prob, tokens = torch.topk(probs[0, position, self.aa_ids], k=self.k, largest=True)
+        scores = tokens_prob.clone()
+        for i, _ in enumerate(tokens_prob):
+            scores[i] = - ((og_prob - tokens_prob[i])) / og_prob # multiply by -1 because find the max score
+        return self._get_feasible_token_with_max_score(original_aa, scores, tokens)
     
     def __str__(self):
         return f"rel_diff_{super().__str__()}"
     
 class MassMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
     def _get_score_and_token_choice(self, probs: Tensor, position: int, original_aa: str):
-        # get the original aa's id and its prob:
-        og_aa_id, _ = self._get_og_aa_id_and_prob(probs, position, original_aa)
-        # get the list of all valid aa id's in this context:
-        current_valid_aa_ids = self._get_current_val_aa_ids(og_aa_id)
-
-        # find the top probability of valid aa's:
-        token_prob, token_choice = torch.topk(probs[0, position, current_valid_aa_ids], k=1, largest=True)
-        score = token_prob # the score is the mass of the substitutable aa with largest mass
-        return score, token_choice[0]
+        # find the top probability of aa's:
+        token_prob, tokens = torch.topk(probs[0, position, self.aa_ids], k=self.k, largest=True)
+        return self._get_feasible_token_with_max_score(original_aa, token_prob, tokens) # the mass is the score in this case
     
     def __str__(self):
         return f"mass_{super().__str__()}"
@@ -59,18 +55,12 @@ class FreqMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
                           'W': 0.010402964221810071, 'C': 0.012695442822165755} # calculated based on UP000002311_559292.fasta
 
     def _get_score_and_token_choice(self, probs: Tensor, position: int, original_aa: str):
-        # get the original aa's id and its prob:
-        og_aa_id, _ = self._get_og_aa_id_and_prob(probs, position, original_aa)
-        # get the list of all valid aa id's in this context:
-        current_valid_aa_ids = self._get_current_val_aa_ids(og_aa_id)
-
         # find the top probability of valid aa's:
-        token_prob, token_choice = torch.topk(probs[0, position, current_valid_aa_ids], k=len(current_valid_aa_ids), largest=True)
+        token_prob, tokens = torch.topk(probs[0, position, self.aa_ids], k=self.k, largest=True)
         scores = token_prob.clone()
-        for i in enumerate(scores):
-            scores[i] = scores[i] / self.freq_dict[self.canonical_amino_acids[token_choice]] # the score is the frequency-normalized probability mass
-        choice_idx = torch.argmax(scores)
-        return scores[choice_idx], token_choice[choice_idx]
+        for i, _ in enumerate(scores):
+            scores[i] = scores[i] / self.freq_dict[self.canonical_amino_acids[tokens[i]]] # the score is the frequency-normalized probability mass
+        return self._get_feasible_token_with_max_score(original_aa, scores, tokens)
     
     def __str__(self):
-        return f"mass_{super().__str__()}"
+        return f"freq_{super().__str__()}"
