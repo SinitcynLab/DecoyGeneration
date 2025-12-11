@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=gen_rel_diff_new
-#SBATCH --output=gen_rel_diff_new_%j.txt
+#SBATCH --job-name=rnn_rel_diff_3000.txt
+#SBATCH --output=rnn_rel_diff_3000_%j.txt
 #SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/main.py
+python -u src/run/cross_val_rnn.py
