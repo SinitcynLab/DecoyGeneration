@@ -2,8 +2,8 @@
 
 #SBATCH --job-name=gen_distr_data
 #SBATCH --output=gen_distr_data_%j.txt
-#SBATCH --partition=tue.gpu.q         # Choose a partition that has GPUs
-#SBATCH --time=10:00:00
+#SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
+#SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2

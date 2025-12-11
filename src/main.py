@@ -25,30 +25,10 @@ if __name__ == "__main__":
     print(device)
 
     n: int = 1
-    N = 500
+    N = 300
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
         RelDiffMaskingEsmGenerator(
-            local_path="models/esm2_t6_8M_UR50D",
-            random=random,
-            special_amino_acids=special_amino_acids,
-            sort_optimization=True,
-            batch_size=1,
-            ml_generator_type=MlGeneratorType.BEST,
-            device=device
-        ),
-        EsmGenerator(
-            local_path="models/esm2_t6_8M_UR50D",
-            random=random,
-            special_amino_acids=special_amino_acids,
-            sort_optimization=True,
-            batch_size=1,
-            ml_generator_type=MlGeneratorType.BEST,
-            device=device,
-            masking_type=MaskingType.COUNT,
-            mask_count=1
-        ),
-        MassMaskingEsmGenerator(
             local_path="models/esm2_t6_8M_UR50D",
             random=random,
             special_amino_acids=special_amino_acids,
@@ -62,7 +42,7 @@ if __name__ == "__main__":
         filename, extension = os.path.splitext(target_filename)
         if issubclass(type(generator), MlGenerator):
             for i in range(n):
-                filename_out = f"{filename}.{generator}.{i}{extension}"
+                filename_out = f"UP000002311_559292.{generator}.{i}{extension}"
                 target_records = [record for record in read_fasta_file(target_filename)]
                 target_records = remove_long_sequences(target_records, cap_length=10_000)
                 batch_starts = np.arange(0, N, generator.batch_size)
