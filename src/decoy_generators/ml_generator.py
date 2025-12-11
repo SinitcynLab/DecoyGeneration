@@ -123,10 +123,7 @@ class MlGenerator(DecoyGenerator):
                 top_idx: Tensor = None
                 match self.ml_generator_type:
                     case MlGeneratorType.BEST:
-                        probs, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=True)
-                        with open(f'prob_distr_{self}.txt', 'a') as file:
-                            np.savetxt(file, probs.cpu().numpy())
-                            file.write('\n')
+                        _, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=True)
                     case MlGeneratorType.WORST:
                         _, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=False)
 
@@ -142,6 +139,11 @@ class MlGenerator(DecoyGenerator):
                         continue
                     with open(f'token_choices_{self}.txt', 'a') as file:
                         file.write(f"{idx}\n")
+                    og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
+                    sav_arr = torch.tensor((probs[sequence_idx, mask_position, og_aa_id], probs[sequence_idx, mask_position, idx]))
+                    with open(f'prob_distr_{self}.txt', 'a') as file:
+                        np.savetxt(file, sav_arr.cpu().numpy())
+                        file.write('\n')
                     new_sequence[mask_position] = new_aa
                     break
             yield "".join(new_sequence)
