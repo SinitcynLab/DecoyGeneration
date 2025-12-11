@@ -22,6 +22,7 @@ if __name__ == "__main__":
 
     special_amino_acids: List[str] = ['R', 'K']
     device = "cpu" # on CPU because some approaches (e.g. shuffle) don't leverage GPU, making comparison unfair
+    # note: you used tue.default.q
 
     n: int = 1
     N = 100

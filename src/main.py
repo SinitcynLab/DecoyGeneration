@@ -25,10 +25,30 @@ if __name__ == "__main__":
     print(device)
 
     n: int = 1
-    N = 3000
+    N = 500
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
         RelDiffMaskingEsmGenerator(
+            local_path="models/esm2_t6_8M_UR50D",
+            random=random,
+            special_amino_acids=special_amino_acids,
+            sort_optimization=True,
+            batch_size=1,
+            ml_generator_type=MlGeneratorType.BEST,
+            device=device
+        ),
+        EsmGenerator(
+            local_path="models/esm2_t6_8M_UR50D",
+            random=random,
+            special_amino_acids=special_amino_acids,
+            sort_optimization=True,
+            batch_size=1,
+            ml_generator_type=MlGeneratorType.BEST,
+            device=device,
+            masking_type=MaskingType.COUNT,
+            mask_count=1
+        ),
+        MassMaskingEsmGenerator(
             local_path="models/esm2_t6_8M_UR50D",
             random=random,
             special_amino_acids=special_amino_acids,
