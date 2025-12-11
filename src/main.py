@@ -25,7 +25,7 @@ if __name__ == "__main__":
     print(device)
 
     n: int = 1
-    N = 300
+    N = 3000
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
         RelDiffMaskingEsmGenerator(
