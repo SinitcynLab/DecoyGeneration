@@ -49,7 +49,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
         
     def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
         for sequence in target_batch:
-            min_pos_and_choices: List[Tuple[int, NamedTuple[Tensor, Tensor]]] = []
+            max_pos_and_choices: List[Tuple[int, NamedTuple[Tensor, Tensor]]] = []
             # Tokenize sequence:
             input = self.tokenizer(sequence, return_tensors="pt", padding=True)
             input.to(self.device)
@@ -75,7 +75,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                         max_score_pos = pos
                         token_choice_at_max = token_choice
                 # save position and token choice for this peptide:
-                min_pos_and_choices.append((max_score_pos, token_choice_at_max))
+                max_pos_and_choices.append((max_score_pos, token_choice_at_max))
 
                 # we now have the position and token choice for this peptide
                 # we immediately put in the most-easily substituted aa and then proceed to next peptide, 
@@ -83,8 +83,11 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                 modified_input_ids[0][max_score_pos] = token_choice_at_max
 
             new_sequence: List[str] = list(sequence)
-            for mask_position, token_choice in min_pos_and_choices:
+            for mask_position, token_choice in max_pos_and_choices:
                 new_sequence[mask_position] = self.canonical_amino_acids[token_choice]
+            with open(f'token_choices_{self}.txt', 'a') as file:
+                for _, token_choice in max_pos_and_choices:
+                    file.write(f"{token_choice}\n")
 
             yield "".join(new_sequence)
 

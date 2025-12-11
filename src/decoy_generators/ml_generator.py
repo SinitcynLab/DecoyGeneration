@@ -1,6 +1,6 @@
 import math
 import torch
-import gc
+import numpy as np
 
 from typing import Iterator, List, Tuple
 from random import Random
@@ -123,7 +123,10 @@ class MlGenerator(DecoyGenerator):
                 top_idx: Tensor = None
                 match self.ml_generator_type:
                     case MlGeneratorType.BEST:
-                        _, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=True)
+                        probs, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=True)
+                        with open(f'prob_distr_{self}.txt', 'a') as file:
+                            np.savetxt(file, probs.cpu().numpy())
+                            file.write('\n')
                     case MlGeneratorType.WORST:
                         _, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=False)
 
@@ -137,6 +140,8 @@ class MlGenerator(DecoyGenerator):
                     if (new_aa == 'I' and original_aa == 'L') or (
                             new_aa == 'L' and original_aa == 'I'):
                         continue
+                    with open(f'token_choices_{self}.txt', 'a') as file:
+                        file.write(f"{idx}\n")
                     new_sequence[mask_position] = new_aa
                     break
             yield "".join(new_sequence)

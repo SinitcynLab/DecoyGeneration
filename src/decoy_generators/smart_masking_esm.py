@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 from src.decoy_generators.ml_generator import MlGeneratorType, MaskingType
 from src.decoy_generators.base_smart_masking_esm import BaseSmartMaskingEsmGenerator
@@ -16,6 +17,9 @@ class RelDiffMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
         
         # find the top probability of aa's:
         tokens_prob, tokens = torch.topk(probs[0, position, self.aa_ids], k=self.k, largest=True)
+        with open(f'prob_distr_{self}.txt', 'a') as file:
+            np.savetxt(file, tokens_prob.cpu().numpy())
+            file.write('\n')
         scores = tokens_prob.clone()
         for i, _ in enumerate(tokens_prob):
             scores[i] = - ((og_prob - tokens_prob[i])) / og_prob # multiply by -1 because find the max score
