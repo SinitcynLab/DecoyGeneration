@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=gen_distr_data
-#SBATCH --output=gen_distr_data_%j.txt
+#SBATCH --job-name=gen_rel_diff_new
+#SBATCH --output=gen_rel_diff_new_%j.txt
 #SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
