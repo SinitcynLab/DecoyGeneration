@@ -21,7 +21,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
     ):
         EsmGenerator.__init__(self, local_path, random, special_amino_acids, sort_optimization,
                              batch_size, ml_generator_type, device, MaskingType.COUNT, 0, 1)
-        self.k: int = len(self.special_amino_acids) + 2
+        self.k: int = len(self.canonical_amino_acids) # you want to compute scores over all amino acids
         self.aa_ids = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
         
     def __str__(self):
