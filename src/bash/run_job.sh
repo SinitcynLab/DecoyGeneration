@@ -1,14 +1,13 @@
 #!/bin/bash
 
-#SBATCH --job-name=rnn_rel_diff_3000.txt
-#SBATCH --output=rnn_rel_diff_3000_%j.txt
-#SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
+#SBATCH --job-name=timing_test.txt
+#SBATCH --output=timing_test_%j.txt
+#SBATCH --partition=tue.default.q         # Choose a partition that has GPUs
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=16G
-#SBATCH --gpus=1
 
 module load Python/3.11.3-GCCcore-12.3.0 
 module load Anaconda3/2023.09-0
