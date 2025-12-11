@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=timing_test.txt
-#SBATCH --output=timing_test_%j.txt
+#SBATCH --job-name=coll_distr.txt
+#SBATCH --output=coll_distr_%j.txt
 #SBATCH --partition=tue.gpu.q         # Choose a partition that has GPUs
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
