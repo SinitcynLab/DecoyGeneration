@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 from src.decoy_generators.ml_generator import MlGeneratorType, MaskingType
 from src.decoy_generators.esm_generator import EsmGenerator
@@ -50,6 +51,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
     def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
         for sequence in target_batch:
             max_pos_and_choices: List[Tuple[int, NamedTuple[Tensor, Tensor]]] = []
+            sav_list = []
             # Tokenize sequence:
             input = self.tokenizer(sequence, return_tensors="pt", padding=True)
             input.to(self.device)
@@ -59,6 +61,8 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                 max_score: float = -torch.inf
                 max_score_pos: int = 0
                 token_choice_at_max = None
+                sav_arr_at_max = None
+                og_aa_id_at_max = None
                 for pos in peptide:
                     input["input_ids"] = torch.clone(modified_input_ids)
                     # Mask out  position in the peptide:
@@ -68,14 +72,17 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                         outputs = self.model(**input)
                     probs: Tensor = torch.softmax(outputs.logits, dim=-1)
                     # compute difference between top-2 most likely tokens:
-                    score, token_choice = self._get_score_and_token_choice(probs, pos, sequence[pos])
+                    score, token_choice, sav_arr, og_aa_id = self._get_score_and_token_choice(probs, pos, sequence[pos])
                     # if new smallest found, save position and choice:
                     if score > max_score:
                         max_score = score
                         max_score_pos = pos
                         token_choice_at_max = token_choice
+                        sav_arr_at_max = sav_arr
+                        og_aa_id_at_max = og_aa_id
                 # save position and token choice for this peptide:
                 max_pos_and_choices.append((max_score_pos, token_choice_at_max))
+                sav_list.append((sav_arr_at_max, og_aa_id_at_max))
 
                 # we now have the position and token choice for this peptide
                 # we immediately put in the most-easily substituted aa and then proceed to next peptide, 
@@ -88,6 +95,13 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             with open(f'token_choices_{self}.txt', 'a') as file:
                 for _, token_choice in max_pos_and_choices:
                     file.write(f"{token_choice}\n")
+            with open(f'og_aa_{self}.txt', 'a') as file:
+                for _, og_aa in sav_list:
+                    file.write(f"{og_aa}\n")
+            with open(f'prob_distr_{self}.txt', 'a') as file:
+                for sav_arr, _ in sav_list:
+                    np.savetxt(file, sav_arr_at_max.cpu().numpy())
+                    file.write('\n')
 
             yield "".join(new_sequence)
 

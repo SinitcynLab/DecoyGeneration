@@ -22,10 +22,7 @@ class RelDiffMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
             scores[i] = - ((og_prob - tokens_prob[i])) / og_prob # multiply by -1 because find the max score
         score, token_choice = self._get_feasible_token_with_max_score(original_aa, scores, tokens)
         sav_arr = torch.tensor((og_prob, probs[0, position, token_choice]))
-        with open(f'prob_distr_{self}.txt', 'a') as file:
-            np.savetxt(file, sav_arr.cpu().numpy())
-            file.write('\n')
-        return score, token_choice
+        return score, token_choice, sav_arr, og_aa_id
     
     def __str__(self):
         return f"rel_diff_{super().__str__()}"
@@ -37,10 +34,7 @@ class MassMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
         score, token_choice = self._get_feasible_token_with_max_score(original_aa, token_prob, tokens) # the mass (token_prob) is the score in this case
         og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
         sav_arr = torch.tensor((probs[0, position, og_aa_id], probs[0, position, token_choice]))
-        with open(f'prob_distr_{self}.txt', 'a') as file:
-            np.savetxt(file, sav_arr.cpu().numpy())
-            file.write('\n')
-        return score, token_choice
+        return score, token_choice, sav_arr, og_aa_id
     
     def __str__(self):
         return f"mass_{super().__str__()}"
