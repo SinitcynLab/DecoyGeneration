@@ -27,11 +27,11 @@ class RelDiffMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
     def __str__(self):
         return f"rel_diff_{super().__str__()}"
     
-class MassMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
+class MaxProbMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
     def _get_score_and_token_choice(self, probs: Tensor, position: int, original_aa: str):
         # find the top probability of aa's:
         token_prob, tokens = torch.topk(probs[0, position, self.aa_ids], k=self.k, largest=True)
-        score, token_choice = self._get_feasible_token_with_max_score(original_aa, token_prob, tokens) # the mass (token_prob) is the score in this case
+        score, token_choice = self._get_feasible_token_with_max_score(original_aa, token_prob, tokens) # the token probability is the score in this case
         og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
         sav_arr = torch.tensor((probs[0, position, og_aa_id], probs[0, position, token_choice]))
         return score, token_choice, sav_arr, og_aa_id
