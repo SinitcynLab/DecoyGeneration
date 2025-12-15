@@ -66,7 +66,10 @@ class FreqMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
         scores = token_prob.clone()
         for i, _ in enumerate(scores):
             scores[i] = scores[i] / self.freq_dict[self.canonical_amino_acids[tokens[i]]] # the score is the frequency-normalized probability mass
-        return self._get_feasible_token_with_max_score(original_aa, scores, tokens)
+        score, token_choice = self._get_feasible_token_with_max_score(original_aa, scores, tokens)
+        og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
+        sav_arr = torch.tensor((probs[0, position, og_aa_id], probs[0, position, token_choice]))
+        return score, token_choice, sav_arr, og_aa_id
     
     def __str__(self):
         return f"freq_{super().__str__()}"
