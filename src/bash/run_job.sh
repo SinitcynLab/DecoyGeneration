@@ -3,7 +3,7 @@
 #SBATCH --job-name=get_distr.txt
 #SBATCH --output=get_distr_%j.txt
 #SBATCH --partition=tue.gpu.q         # Choose a partition that has GPUs
-#SBATCH --time=10:00:00
+#SBATCH --time=16:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
