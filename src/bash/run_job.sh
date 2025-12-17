@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=gen_mass_smart_%j
-#SBATCH --output=gen_mass_smart_%j.txt
+#SBATCH --output=gen_mass_smart_(17_12)_%j.txt
 #SBATCH --partition=tue.gpu.q         # Choose a partition that has GPUs
 #SBATCH --time=16:00:00
 #SBATCH --nodes=1
