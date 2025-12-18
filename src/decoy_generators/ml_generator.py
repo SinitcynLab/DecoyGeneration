@@ -121,11 +121,12 @@ class MlGenerator(DecoyGenerator):
             new_sequence: List[str] = list(sequence)
             for mask_position in mask_positions[sequence_idx]:
                 top_idx: Tensor = None
+                top_idx_probs: Tensor = None
                 match self.ml_generator_type:
                     case MlGeneratorType.BEST:
-                        _, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=True)
+                        top_idx_probs, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=True)
                     case MlGeneratorType.WORST:
-                        _, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=False)
+                        top_idx_probs, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=False)
 
                 original_aa: str = sequence[mask_position]
                 for idx in top_idx:
@@ -139,8 +140,10 @@ class MlGenerator(DecoyGenerator):
                         continue
                     with open(f'token_choices_{self}.txt', 'a') as file:
                         file.write(f"{idx}\n")
+                    with open(f'og_aa_{self}.txt', 'a') as file:
+                        file.write(f'{self.canonical_amino_acids.index(original_aa)}\n')
                     og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
-                    sav_arr = torch.tensor((probs[sequence_idx, mask_position, og_aa_id], probs[sequence_idx, mask_position, idx]))
+                    sav_arr = torch.tensor((probs[sequence_idx, mask_position, og_aa_id], top_idx_probs[idx]))
                     with open(f'prob_distr_{self}.txt', 'a') as file:
                         np.savetxt(file, sav_arr.cpu().numpy())
                         file.write('\n')

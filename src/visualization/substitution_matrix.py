@@ -37,4 +37,5 @@ if __name__ == "__main__":
             )
     plt.title("20x20 Matrix showing exact amino acid substitutions")
 
+    plt.savefig(target_file)
     plt.show()

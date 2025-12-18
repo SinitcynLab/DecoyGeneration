@@ -3,8 +3,6 @@ import numpy as np
 from collections import Counter
 from src.decoy_generators.decoy_generator import DecoyGenerator
 
-from src.io.fasta import read_fasta_file
-
 if __name__ == "__main__":
     generator = "esm650M.best.c1"
     data_file = f"data/visualization/distr_generators/token_choices_{generator}.txt"
@@ -33,7 +31,7 @@ if __name__ == "__main__":
     plt.bar_label(bars, fmt="%.2f", padding=5, fontsize=6)
     plt.xlabel("Amino acid")
     plt.ylabel("Relative frequency")
-    plt.title(f"Relative frequency of AAs in output, using {generator}")
+    plt.title(f"Relative frequency of AAs chosen by {generator}")
     plt.margins(y=0.1)
     plt.savefig(target_file)
     plt.show()
