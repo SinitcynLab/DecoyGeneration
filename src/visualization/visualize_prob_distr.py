@@ -4,7 +4,7 @@ import numpy as np
 from src.io.fasta import read_fasta_file
 
 if __name__ == "__main__":
-    generator = "esm8M.best.c1"
+    generator = "rel_diff_smart_masking_esm_8M"
     data_file = f"data/visualization/distr_generators/prob_distr_{generator}.txt"
     target_file = f"src/visualization/images/prob_distr_{generator}.png"
 

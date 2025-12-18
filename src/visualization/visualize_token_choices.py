@@ -6,7 +6,7 @@ from src.decoy_generators.decoy_generator import DecoyGenerator
 from src.io.fasta import read_fasta_file
 
 if __name__ == "__main__":
-    generator = "rel_diff_smart_masking_esm_8M"
+    generator = "esm650M.best.c1"
     data_file = f"data/visualization/distr_generators/token_choices_{generator}.txt"
     target_file = f"src/visualization/images/token_choices_{generator}.png"
     ordering = DecoyGenerator.canonical_amino_acids
