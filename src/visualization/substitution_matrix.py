@@ -3,7 +3,7 @@ import numpy as np
 from src.decoy_generators.decoy_generator import DecoyGenerator
 
 if __name__ == "__main__":
-    generator = "rel_diff_smart_masking_esm_8M"
+    generator = "esm650M.best.c1"
     token_choice_file = f"data/visualization/distr_generators/token_choices_{generator}.txt"
     og_aa_file = f"data/visualization/distr_generators/og_aa_{generator}.txt"
     target_file = f"src/visualization/images/substitution_matrix_{generator}.png"
@@ -13,8 +13,8 @@ if __name__ == "__main__":
     og_aas = np.loadtxt(og_aa_file, dtype=int)
 
     heatmap, xedges, yedges = np.histogram2d(token_choices, og_aas, bins=20)
-
-    fig, ax = plt.subplots()
+    
+    fig, ax = plt.subplots(figsize=(6,6))
     plt.imshow(
         heatmap.T,
         origin='lower',
