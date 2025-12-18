@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 if __name__ == "__main__":
-    generator = "mass_smart_masking_esm_8M"
+    generator = "esm650M.best.c1"
     data_file = f"data/visualization/distr_generators/prob_distr_{generator}.txt"
     target_file = f"src/visualization/images/prob_distr_{generator}.png"
 
