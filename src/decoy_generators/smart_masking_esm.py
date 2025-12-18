@@ -21,7 +21,8 @@ class RelDiffMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
         for i, _ in enumerate(tokens_prob):
             scores[i] = - ((og_prob - tokens_prob[i])) / og_prob # multiply by -1 because find the max score
         score, token_choice = self._get_feasible_token_with_max_score(original_aa, scores, tokens)
-        sav_arr = torch.tensor((og_prob, tokens_prob[torch.where(tokens == token_choice)]))
+        new_aa_id = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids[token_choice])
+        sav_arr = torch.tensor((og_prob, probs[0, position, new_aa_id]))
         return score, token_choice, sav_arr, self.canonical_amino_acids.index(original_aa)
     
     def __str__(self):
@@ -33,7 +34,8 @@ class MaxProbMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
         token_prob, tokens = torch.topk(probs[0, position, self.aa_ids], k=self.k, largest=True)
         score, token_choice = self._get_feasible_token_with_max_score(original_aa, token_prob, tokens) # the token probability is the score in this case
         og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
-        sav_arr = torch.tensor((probs[0, position, og_aa_id], token_prob[torch.where(tokens == token_choice)]))
+        new_aa_id = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids[token_choice])
+        sav_arr = torch.tensor((probs[0, position, og_aa_id], probs[0, position, new_aa_id]))
         return score, token_choice, sav_arr, self.canonical_amino_acids.index(original_aa)
     
     def __str__(self):
@@ -68,7 +70,8 @@ class FreqMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
             scores[i] = scores[i] / self.freq_dict[self.canonical_amino_acids[tokens[i]]] # the score is the frequency-normalized probability mass
         score, token_choice = self._get_feasible_token_with_max_score(original_aa, scores, tokens)
         og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa) # note that this id is not the same as the index of the aa in 'self.canonical_amino_acids'
-        sav_arr = torch.tensor((probs[0, position, og_aa_id], token_prob[torch.where(tokens == token_choice)]))
+        new_aa_id = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids[token_choice])
+        sav_arr = torch.tensor((probs[0, position, og_aa_id], probs[0, position, new_aa_id]))
         return score, token_choice, sav_arr, self.canonical_amino_acids.index(original_aa)
     
     def __str__(self):
