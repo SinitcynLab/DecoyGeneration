@@ -3,7 +3,7 @@
 #SBATCH --job-name=repair_distr_%j
 #SBATCH --output=repair_distr_%j.txt
 #SBATCH --partition=tue.gpu.q         # Choose a partition that has GPUs
-#SBATCH --time=10:00:00
+#SBATCH --time=1:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/main.py
+python -u src/shorten.py
