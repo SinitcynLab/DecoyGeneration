@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=get_distr_%j
-#SBATCH --output=get_distr_%j.txt
+#SBATCH --job-name=get_distr_complete_%j
+#SBATCH --output=get_distr_complete_%j.txt
 #SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
 #SBATCH --time=10:00:00
 #SBATCH --nodes=1
