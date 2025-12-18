@@ -34,7 +34,7 @@ class MaxProbMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
         score, token_choice = self._get_feasible_token_with_max_score(original_aa, token_prob, tokens) # the token probability is the score in this case
         og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
         sav_arr = torch.tensor((probs[0, position, og_aa_id], token_prob[token_choice]))
-        return score, token_choice, sav_arr, og_aa_id
+        return score, token_choice, sav_arr, self.canonical_amino_acids.index(original_aa)
     
     def __str__(self):
         return f"mass_{super().__str__()}"
@@ -67,9 +67,9 @@ class FreqMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
         for i, _ in enumerate(scores):
             scores[i] = scores[i] / self.freq_dict[self.canonical_amino_acids[tokens[i]]] # the score is the frequency-normalized probability mass
         score, token_choice = self._get_feasible_token_with_max_score(original_aa, scores, tokens)
-        og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
+        og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa) # note that this id is not the same as the index of the aa in 'self.canonical_amino_acids'
         sav_arr = torch.tensor((probs[0, position, og_aa_id], token_prob[token_choice]))
-        return score, token_choice, sav_arr, og_aa_id
+        return score, token_choice, sav_arr, self.canonical_amino_acids.index(original_aa)
     
     def __str__(self):
         return f"freq_{super().__str__()}"
