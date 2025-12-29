@@ -4,7 +4,7 @@ from collections import Counter
 from src.decoy_generators.decoy_generator import DecoyGenerator
 
 if __name__ == "__main__":
-    generator = "esm650M.best.c1"
+    generator = "rel_diff_smart_masking_esm_8M"
     data_file = f"data/visualization/distr_generators/token_choices_{generator}.txt"
     target_file = f"src/visualization/images/token_choices_{generator}.png"
     ordering = DecoyGenerator.canonical_amino_acids

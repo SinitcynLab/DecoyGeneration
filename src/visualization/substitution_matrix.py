@@ -3,7 +3,7 @@ import numpy as np
 from src.decoy_generators.decoy_generator import DecoyGenerator
 
 if __name__ == "__main__":
-    generator = "esm8M.best.c1"
+    generator = "esm650M.best.c1"
     token_choice_file = f"data/visualization/distr_generators/token_choices_{generator}.txt"
     og_aa_file = f"data/visualization/distr_generators/og_aa_{generator}.txt"
     target_file = f"src/visualization/images/substitution_matrix_{generator}.png"
@@ -35,7 +35,7 @@ if __name__ == "__main__":
                 i, j, int(heatmap[i,j]),
                 ha="center", va="center", color="red", size=8
             )
-    plt.title("20x20 Matrix showing exact amino acid substitutions")
+    plt.title(f"20x20 Matrix showing amino acid substitutions\n for {generator}")
 
     plt.savefig(target_file)
     plt.show()
