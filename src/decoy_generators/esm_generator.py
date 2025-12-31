@@ -34,12 +34,13 @@ class EsmGenerator(MlGenerator):
             device: torch.device = 'cpu',
             masking_type: MaskingType = MaskingType.PERCENT,
             mask_percent: float = 0.3,
-            mask_count: int = 1
+            mask_count: int = 1,
+            weight_type: torch.dtype = torch.float32 # source: https://huggingface.co/blog/accelerate-large-models
     ):
         MlGenerator.__init__(self, local_path, random, special_amino_acids, sort_optimization,
                              batch_size, ml_generator_type, device, masking_type, mask_percent, mask_count)
-        self.model = EsmForMaskedLM.from_pretrained(local_path, local_files_only=True)
-        self.tokenizer = EsmTokenizer.from_pretrained(local_path, local_files_only=True)
+        self.model = EsmForMaskedLM.from_pretrained(local_path, local_files_only=True, torch_dtype=weight_type)
+        self.tokenizer = EsmTokenizer.from_pretrained(local_path, local_files_only=True, torch_dtype=weight_type)
         self.model.eval()
         self.model.to(self.device)
 
