@@ -101,7 +101,7 @@ class MlGenerator(DecoyGenerator):
         inputs = self.tokenizer(target_batch, return_tensors="pt", padding=True)  # [batch_size, L, vocab]
         if self.weight_type != torch.float32:
             for k, v in inputs.data.items():
-                if k is not "indices": inputs.data[k] = v.to(self.weight_type)
+                if k != 'indices': inputs.data[k] = v.to(self.weight_type)
         inputs.to(self.device)
         mask_positions: List[List[int]] = [[] for _ in range(len(target_batch))]
         for sequence_idx, sequence in enumerate(target_batch):
