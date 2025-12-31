@@ -100,7 +100,8 @@ class MlGenerator(DecoyGenerator):
     def _mask_and_get_probs(self, target_batch: List[str]) -> (Tuple[Tensor, List[List[int]]]):
         inputs = self.tokenizer(target_batch, return_tensors="pt", padding=True)  # [batch_size, L, vocab]
         if self.weight_type != torch.float32:
-            inputs.data = {k: v.to(self.weight_type) for k, v in inputs.data.items()}
+            for k, v in input.data.items():
+                if k is not "indices": input.data[k] = v.to(self.weight_type)
         inputs.to(self.device)
         mask_positions: List[List[int]] = [[] for _ in range(len(target_batch))]
         for sequence_idx, sequence in enumerate(target_batch):
