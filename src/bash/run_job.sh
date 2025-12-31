@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=timing_complete_%j
-#SBATCH --output=timing_complete_%j.txt
+#SBATCH --job-name=quant_test_%j
+#SBATCH --output=quant_test_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=10:00:00
 #SBATCH --nodes=1
