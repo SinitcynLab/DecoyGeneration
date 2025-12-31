@@ -110,7 +110,8 @@ class MlGenerator(DecoyGenerator):
                 mask_positions[sequence_idx].append(mask_idx)
 
         with torch.no_grad():
-            outputs = self.model(**inputs)
+            with torch.autocast("cuda"): 
+                outputs = self.model(**inputs)
         probs: Tensor = torch.softmax(outputs.logits, dim=-1)  # [batch_size, L, vocab]
         return (probs, mask_positions)
 
