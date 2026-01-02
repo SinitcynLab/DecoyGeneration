@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=all_data_new_param_counts_%j
-#SBATCH --output=all_data_new_param_counts_%j.txt
+#SBATCH --job-name=all_data_35M_%j
+#SBATCH --output=all_data_35M_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=10:00:00
 #SBATCH --nodes=1
