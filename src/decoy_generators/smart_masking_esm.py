@@ -61,7 +61,7 @@ class SimMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
         return score, token_choice, sav_arr, self.canonical_amino_acids.index(original_aa)
     
     def __str__(self):
-        return f"mass_{super().__str__()}"
+        return f"sim_{super().__str__()}"
     
 class FreqMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
     def __init__(
