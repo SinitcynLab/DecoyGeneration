@@ -15,7 +15,6 @@ class RelDiffMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
         og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa) # note that this id is not the same as the index of the aa in 'self.canonical_amino_acids'
         og_prob = probs[0, position, og_aa_id]
         
-        # find the top probability of aa's:
         tokens_prob, tokens = torch.topk(probs[0, position, self.aa_ids], k=self.k, largest=True)
         scores = tokens_prob.clone()
         for i, _ in enumerate(tokens_prob):
@@ -33,6 +32,29 @@ class MaxProbMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
         # find the top probability of aa's:
         token_prob, tokens = torch.topk(probs[0, position, self.aa_ids], k=self.k, largest=True)
         score, token_choice = self._get_feasible_token_with_max_score(original_aa, token_prob, tokens) # the token probability is the score in this case
+        og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
+        new_aa_id = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids[token_choice])
+        sav_arr = torch.tensor((probs[0, position, og_aa_id], probs[0, position, new_aa_id]))
+        return score, token_choice, sav_arr, self.canonical_amino_acids.index(original_aa)
+    
+    def __str__(self):
+        return f"mass_{super().__str__()}"
+
+class SimMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
+    def _get_score_and_token_choice(self, probs: Tensor, position: int, original_aa: str):
+        # get the original aa's prob:
+        # find the id of the originally present aa, and find the probability corresponding to this aa as judged by ESM:
+        og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa) # note that this id is not the same as the index of the aa in 'self.canonical_amino_acids'
+        og_prob = probs[0, position, og_aa_id]
+
+        # find aa with probability most similar to original probability:
+        token_prob, tokens = probs[0, position, self.aa_ids], self.aa_ids
+        scores = token_prob.clone()
+        for i, _ in enumerate(token_prob):
+            scores[i] = -1 * torch.abs(token_prob[i] - og_prob) # make negative, because we find max score
+        score, token_choice = self._get_feasible_token_with_max_score(original_aa, scores, tokens)
+
+        # returning data for plotting & generation:
         og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
         new_aa_id = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids[token_choice])
         sav_arr = torch.tensor((probs[0, position, og_aa_id], probs[0, position, new_aa_id]))
