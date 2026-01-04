@@ -28,6 +28,18 @@ if __name__ == "__main__":
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
         EsmGenerator(
+            local_path="models/esm2_t6_8M_UR50D",
+            random=random,
+            special_amino_acids=special_amino_acids,
+            sort_optimization=True,
+            batch_size=1,
+            ml_generator_type=MlGeneratorType.BEST,
+            device=device,
+            masking_type=MaskingType.COUNT,
+            mask_count=1,
+            weight_type=torch.float16
+        ),
+        EsmGenerator(
             local_path="models/esm2_t12_35M_UR50D",
             random=random,
             special_amino_acids=special_amino_acids,
@@ -36,7 +48,8 @@ if __name__ == "__main__":
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
             masking_type=MaskingType.COUNT,
-            mask_count=1
+            mask_count=1,
+            weight_type=torch.float16
         ),
         EsmGenerator(
             local_path="models/esm2_t30_150M_UR50D",
@@ -47,7 +60,20 @@ if __name__ == "__main__":
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
             masking_type=MaskingType.COUNT,
-            mask_count=1
+            mask_count=1,
+            weight_type=torch.float16
+        ),
+        EsmGenerator(
+            local_path="models/esm2_t33_650M_UR50D",
+            random=random,
+            special_amino_acids=special_amino_acids,
+            sort_optimization=True,
+            batch_size=1,
+            ml_generator_type=MlGeneratorType.BEST,
+            device=device,
+            masking_type=MaskingType.COUNT,
+            mask_count=1,
+            weight_type=torch.float16
         )
     ]
     for generator in generators:

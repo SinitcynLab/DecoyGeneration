@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=all_data_35M_%j
-#SBATCH --output=all_data_35M_%j.txt
+#SBATCH --job-name=gen_low_param_%j
+#SBATCH --output=gen_low_param_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
-#SBATCH --time=10:00:00
+#SBATCH --time=16:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
