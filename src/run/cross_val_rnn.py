@@ -41,8 +41,9 @@ if __name__ == "__main__":
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
 
-    decoy_files = [f'data/decoys/{base}.esm35M.best.c1.0.fasta']
-    decoy_ids = ['esm_35M_c1']
+    decoy_files = [f'data/decoys/{base}.esm8M.best.c1.16b.0.fasta', f'data/decoys/{base}.esm35M.best.c1.16b.0.fasta', f'data/decoys/{base}.esm150M.best.c1.16b.0.fasta', 
+                   f'data/decoys/{base}.esm650M.best.c1.16b.0.fasta']
+    decoy_ids = ['esm_8M_c1_16b', 'esm_35M_c1_16b', 'esm_150M_c1_16b', 'esm_650M_c1_16b']
     
     print("Cross validation of the RNN:")
     for i, decoy_file in enumerate(decoy_files):
