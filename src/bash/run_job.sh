@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=gen_low_param_%j
-#SBATCH --output=gen_low_param_%j.txt
+#SBATCH --job-name=rnn_all_data_low_param_%j
+#SBATCH --output=rnn_all_data_low_param_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
