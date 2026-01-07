@@ -48,10 +48,10 @@ class SimMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
         og_prob = probs[0, position, og_aa_id]
 
         # find aa with probability most similar to original probability:
-        token_prob, tokens = probs[0, position, self.aa_ids], self.aa_ids
+        token_prob, tokens = torch.topk(probs[0, position, self.aa_ids], k=self.k, largest=True)
         scores = token_prob.clone()
         for i, _ in enumerate(token_prob):
-            scores[i] = -1 * torch.abs(token_prob[i] - og_prob) # make negative, because we find max score
+            scores[i] = -1 * abs(token_prob[i] - og_prob) # make negative, because we find max score
         score, token_choice = self._get_feasible_token_with_max_score(original_aa, scores, tokens)
 
         # returning data for plotting & generation:
