@@ -1,16 +1,16 @@
 #!/bin/bash
 
-#SBATCH --job-name=rnn_ms_all_data
-#SBATCH --output=rnn_ms_all_data_%j.txt
-#SBATCH --partition=mcs.gpu.q         # Choose a partition that has GPUs
-#SBATCH --time=10:00:00
+#SBATCH --job-name=rnn_all_data_sim_%j
+#SBATCH --output=rnn_all_data_sim_%j.txt
+#SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
+#SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=16G
-#SBATCH --gpus=1
+#SBATCH --gpus=1 
 
-module load Python/3.11.3-GCCcore-12.3.0 
+module load Python/3.11.3-GCCcore-12.3.0
 module load Anaconda3/2023.09-0
 eval "$(conda shell.bash activate)"
 source activate decoy_gen

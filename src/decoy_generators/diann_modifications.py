@@ -40,6 +40,7 @@ class DiannRandomAcid(DiannGenerator):
             for idx in range(1, len(positions)):
                 a: int = positions[idx - 1] + 1
                 b: int = positions[idx]
+                if b - a < 1: continue
                 if self.terminus == 'C':
                     pos = b - 1
                 else:
