@@ -24,5 +24,6 @@ class RandomReplaceGenerator(DecoyGenerator):
                 b: int = positions[idx]
                 if b - a < 1: continue
                 random_pos = self.random.randrange(a, b)
+                # prevent same-mass aa AND prevent putting back the same AA                
                 sequence[random_pos] = self.random.choice(self.valid_aa_choices)
             yield "".join(sequence)
