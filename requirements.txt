@@ -8,3 +8,5 @@ matplotlib
 lmdb
 pickle
 seaborn
+koinapy
+pandas

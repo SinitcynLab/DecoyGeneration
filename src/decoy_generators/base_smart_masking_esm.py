@@ -35,7 +35,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
 
         return out
             
-    def __get_all_peptides(self, sequence: str):
+    def get_all_peptides(self, sequence: str):
         positions: List[int] = list(self.get_positions_special_aas(sequence))
         for i in range(1, len(positions)):
             start: int = positions[i - 1] + 1
@@ -63,7 +63,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             input.to(self.device)
             # Save original input ids:
             modified_input_ids = torch.clone(input["input_ids"])
-            for peptide in self.__get_all_peptides(sequence):
+            for peptide in self.get_all_peptides(sequence):
                 max_score: float = -torch.inf
                 max_score_pos: int = 0
                 token_choice_at_max = None
