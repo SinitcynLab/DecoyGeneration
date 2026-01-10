@@ -1,4 +1,6 @@
 import torch
+import sys
+import os
 import pandas as pd
 import numpy as np
 
@@ -40,7 +42,10 @@ class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
         inputs['precursor_charges'] = np.array(charge_list)
         inputs['collision_energies'] = np.array(col_e_list)
 
+        sys.stdout = open(os.devnull, 'w') # supress writing to console each time
         predicted_spectra: pd.DataFrame = self.model.predict(inputs)
+        sys.stdout = sys.__stdout__
+
         return predicted_spectra
 
     def __call__(self, sequences: Iterable[str]):
