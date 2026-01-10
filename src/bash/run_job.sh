@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=spectra_shuffle_esm650_%j
-#SBATCH --output=spectra_shuffle_esm650_%j.txt
+#SBATCH --job-name=out_%j
+#SBATCH --output=out_%j.txt
 #SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
