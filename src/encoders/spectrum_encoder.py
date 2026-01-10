@@ -10,12 +10,15 @@ from src.encoders.peptide_encoder import PeptideEncoder
 from src.io.peptide_processor import PeptideProcessor
 
 class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
-    def __init__(self, special_amino_acids: List[str], charge_const: int = 2, collision_energy_const: int = 25):
+    def __init__(self, special_amino_acids: List[str], charge_const: int = 2, collision_energy_const: int = 25,
+                 min_len: int = 8, max_len: int = 30, max_mz = 4000):
         PeptideEncoder.__init__(self)
         PeptideProcessor.__init__(self, special_amino_acids)
         self.charge_const = charge_const
         self.collision_energy_const = collision_energy_const
-        self.max_len = 30
+        self.max_len = max_len
+        self.min_len = min_len
+        self.max_mz = max_mz
         MODEL_ID: str = "Prosit_2019_intensity"
         WEB_ADDRESS: str = "koina.wilhelmlab.org:443"
         self.model = Koina(MODEL_ID, WEB_ADDRESS)
@@ -26,7 +29,7 @@ class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
         col_e_list: List[int] = []
         for sequence in sequences:
             for peptide in self.get_all_peptides(sequence):
-                if len(peptide) <= self.max_len:
+                if self.min_len <= len(peptide) and len(peptide) <= self.max_len:
                     start, end = peptide[0], peptide[-1]
                     peptide_list.append(sequence[start:end+1])
                     charge_list.append(self.charge_const)
@@ -47,11 +50,15 @@ class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
         indices = np.unique(predicted_spectra.index)
         for idx in indices:
             peptide_data = predicted_spectra.loc[predicted_spectra.index == idx]
-            peptide_list = []
+            peptide_tensor = torch.zeros(self.max_mz) # [self.max_mz]
             for _, row in peptide_data.iterrows():
-                mz_point = torch.tensor([row['mz'], row['intensities']])
-                peptide_list.append(mz_point)
-            peptide_tensor = torch.stack(peptide_list, dim=1) # [2, L]
-            output_list.append(peptide_tensor)
+                mz, intensity = row['mz'], row['intensities']
+                rounded_mz = round(mz)
+                ceiled_rounded_mz = min(rounded_mz, self.max_mz)
+                peptide_tensor[ceiled_rounded_mz] += intensity
+            min_intensity = peptide_tensor.min()
+            max_intensity = peptide_tensor.max()
+            peptide_tensor = (peptide_tensor - min_intensity) / (max_intensity - min_intensity) # normalize (if two intensities were at same ROUNDED m/z)
+            output_list.append(peptide_tensor.unsqueeze(0)) # [1, self.max_mz]
 
-        return output_list # contains one tensor per peptide, i.e. N peptide-level tensors each with dimension [2, L_n]
+        return output_list # contains one tensor per peptide, i.e. N peptide-level tensors each with dimension [self.max_mz]
