@@ -11,7 +11,7 @@ class DecoyGeneratorType(Enum):
     ONE2MANY = 2
 
 
-class DecoyGenerator(object, PeptideProcessor):
+class DecoyGenerator(PeptideProcessor):
     canonical_amino_acids: List[str] = list("ACDEFGHIKLMNPQRSTVWY")
     decoy_generation_type: DecoyGeneratorType = DecoyGeneratorType.ONE2ONE
 
