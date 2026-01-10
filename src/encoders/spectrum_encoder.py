@@ -42,9 +42,7 @@ class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
         inputs['precursor_charges'] = np.array(charge_list)
         inputs['collision_energies'] = np.array(col_e_list)
 
-        sys.stdout = open(os.devnull, 'w') # supress writing to console each time
-        predicted_spectra: pd.DataFrame = self.model.predict(inputs)
-        sys.stdout = sys.__stdout__
+        predicted_spectra: pd.DataFrame = self.model.predict(inputs, disable_progress_bar=True)
 
         return predicted_spectra
 
