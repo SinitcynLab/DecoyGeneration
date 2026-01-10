@@ -11,7 +11,7 @@ from src.io.lmdb_dataset import LMDBDataset
 
 def get_mlp_net():
     net = torch.nn.Sequential(
-        torch.nn.Dropout(p=0.25),
+        torch.nn.Dropout(p=0.35),
         torch.nn.Linear(4000, 256),
         torch.nn.ReLU(),
         torch.nn.Linear(256, 64),
