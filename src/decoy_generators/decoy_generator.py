@@ -18,7 +18,7 @@ class DecoyGenerator(PeptideProcessor):
     special_amino_acids: List[str]
 
     def __init__(self, special_amino_acids: List[str]):
-        PeptideProcessor.__init__(special_amino_acids)
+        PeptideProcessor.__init__(self, special_amino_acids)
 
     def convert(self, sequences: Iterator[str]) -> Iterator[str]:
         raise NotImplementedError()
