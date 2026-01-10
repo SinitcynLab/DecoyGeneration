@@ -9,14 +9,18 @@ from src.io.fasta import read_fasta_file
 from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
 from src.io.lmdb_dataset import LMDBDataset
 
-def get_mlp_net():
+def get_cnn_net():
     net = torch.nn.Sequential(
-        torch.nn.Dropout(p=0.35),
-        torch.nn.Linear(4000, 256),
+        torch.nn.Conv1d(1, 4, kernel_size=5),
+        torch.nn.MaxPool1d(kernel_size=4),
+        torch.nn.Conv1d(4, 16, kernel_size=5),
+        torch.nn.MaxPool1d(kernel_size=4),
+        torch.nn.Flatten(),
+        torch.nn.Linear(16000, 128),
         torch.nn.ReLU(),
-        torch.nn.Linear(256, 64),
+        torch.nn.Linear(128, 32),
         torch.nn.ReLU(),
-        torch.nn.Linear(64, 1),
+        torch.nn.Linear(32, 1),
         torch.nn.Sigmoid()
     )
     return net
@@ -28,7 +32,7 @@ if __name__ == "__main__":
     print(torch.get_num_threads())
     special_amino_acids = ['R', 'K']
     encoder = SpectrumEncoder(special_amino_acids)
-    classifier = FeedForwardNNClassifier(network=get_mlp_net(), encoder=encoder, device=device, name="mlp", resetter=get_mlp_net)
+    classifier = FeedForwardNNClassifier(network=get_cnn_net(), encoder=encoder, device=device, name="mlp", resetter=get_cnn_net)
 
     # define MLP classifier
     base = 'UP000000625_83333'
@@ -38,14 +42,14 @@ if __name__ == "__main__":
     # target data:
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
-    N = len(target_sequences)
+    N = 100#len(target_sequences)
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path, 1024)
 
     decoy_files = [f'data/decoys/{base}.shuffle.0.fasta', f'data/decoys/{base}.esm650M.best.c1.0.fasta']
     decoy_ids = ['shuffle', 'esm650M, count=1']
     
-    print("Cross validation of the MLP:")
+    print("Cross validation of the CNN:")
     for i, decoy_file in enumerate(decoy_files):
         if decoy_file == 'target':
             labels = torch.cat((torch.zeros(N//2), torch.ones(N - N//2)))
@@ -53,7 +57,7 @@ if __name__ == "__main__":
         else:
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
-            M = len(decoy_sequences)
+            M = 100#len(decoy_sequences)
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
             encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path, 1024)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
