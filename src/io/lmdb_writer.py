@@ -40,14 +40,13 @@ def main():
         sequences = [record.sequence for record in fasta_records]
         encode_seqs_to_lmdb(sequences, encoder, o_file, device)
 
-def encode_seqs_to_lmdb(sequences: Iterable[str], encoder: PeptideEncoder, o_file_name: str):
+def encode_seqs_to_lmdb(sequences: Iterable[str], encoder: PeptideEncoder, o_file_name: str, batch_size: int = 32):
     if os.path.exists(o_file_name) and os.path.isdir(o_file_name):
         shutil.rmtree(o_file_name)
     os.makedirs(o_file_name)
-    BATCH_SIZE = 32
-    batch_starts = np.arange(0, len(sequences), BATCH_SIZE)
+    batch_starts = np.arange(0, len(sequences), batch_size)
     for batch_start in batch_starts:
-        batch_end = min(len(sequences), batch_start + BATCH_SIZE)
+        batch_end = min(len(sequences), batch_start + batch_size)
         batch_encodings = encoder(sequences[batch_start:batch_end])
         if isinstance(batch_encodings, torch.Tensor):
             batch_encodings = list(batch_encodings.split(1, dim=0)) # if single tensor returned, unroll into a list of tensors

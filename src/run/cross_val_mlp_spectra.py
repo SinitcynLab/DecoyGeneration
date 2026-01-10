@@ -11,10 +11,10 @@ from src.io.lmdb_dataset import LMDBDataset
 
 def get_mlp_net():
     net = torch.nn.Sequential(
-        torch.nn.Dropout(p=0.1),
-        torch.nn.Linear(4000, 128),
+        torch.nn.Dropout(p=0.25),
+        torch.nn.Linear(4000, 256),
         torch.nn.ReLU(),
-        torch.nn.Linear(128, 64),
+        torch.nn.Linear(256, 64),
         torch.nn.ReLU(),
         torch.nn.Linear(64, 1),
         torch.nn.Sigmoid()
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     classifier = FeedForwardNNClassifier(network=get_mlp_net(), encoder=encoder, device=device, name="mlp", resetter=get_mlp_net)
 
     # define MLP classifier
-    base = 'UP000002311_559292'
+    base = 'src/run/cross_val_mlp.py'
     target_file = f"data/targets/{base}.fasta"
     temp_encoding_dir = f"data/encodings/temp_mlp"
 
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     target_sequences = [record.sequence for record in target_records]
     N = len(target_sequences)
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
-    encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
+    encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path, 1024)
 
     decoy_files = [f'data/decoys/{base}.shuffle.0.fasta', f'data/decoys/{base}.esm650M.best.c1.0.fasta']
     decoy_ids = ['shuffle', 'esm650M, count=1']
@@ -55,14 +55,14 @@ if __name__ == "__main__":
             decoy_sequences = [record.sequence for record in decoy_records]
             M = len(decoy_sequences)
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
-            encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path)
+            encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path, 1024)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
 
         # cross-validate MLP:
         n_epochs = 10
         batch_size = 10
-        cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i])
+        cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i], weight_decay=1e-5)
         if decoy_file != 'target':
             delete_lmdb(decoy_lmdb_path) # clear temporary data
     delete_lmdb(target_lmdb_path)

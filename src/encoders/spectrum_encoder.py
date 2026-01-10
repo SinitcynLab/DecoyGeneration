@@ -57,8 +57,9 @@ class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
             for _, row in peptide_data.iterrows():
                 mz, intensity = row['mz'], row['intensities']
                 rounded_mz = round(mz)
-                ceiled_rounded_mz = min(rounded_mz, self.max_mz)
-                peptide_tensor[ceiled_rounded_mz] += intensity
+                if rounded_mz > self.max_mz:
+                    continue # truncate at max_mz
+                peptide_tensor[rounded_mz] += intensity
             min_intensity = peptide_tensor.min()
             max_intensity = peptide_tensor.max()
             peptide_tensor = (peptide_tensor - min_intensity) / (max_intensity - min_intensity) # normalize (if two intensities were at same ROUNDED m/z)

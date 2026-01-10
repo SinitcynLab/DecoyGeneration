@@ -42,7 +42,7 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
             self.set_device(self.device)
 
 def cross_validate_nn(nn: NNClassifier, main_dataset: LMDBDataset, 
-                   n_epochs: int, batch_size: int, learning_rate: float, decoy_id: str, n_folds: int = 5,
+                   n_epochs: int, batch_size: int, learning_rate: float, decoy_id: str, weight_decay: float = 0, n_folds: int = 5,
                    metric: BaseMetric = DefaultMetric()) -> float:
     print(f"*** *** RESULTS FOR DECOYS={decoy_id} *** ***")
     N = main_dataset.size()
@@ -57,7 +57,7 @@ def cross_validate_nn(nn: NNClassifier, main_dataset: LMDBDataset,
         val_ids = shuffle(val_ids)
         
         nn.reset()
-        optimizer = torch.optim.Adam(nn.parameters(), lr=learning_rate)
+        optimizer = torch.optim.Adam(nn.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
         best_val_fold: np.ndarray = np.ones(4) * (- np.inf) 
         corr_train_fold: np.ndarray = np.zeros(4)
@@ -91,8 +91,8 @@ def cross_validate_nn(nn: NNClassifier, main_dataset: LMDBDataset,
     return best_val_metrics[0] # return mean recorded 'best' ROC
 
 def train_nn(nn : NNClassifier, dataset: LMDBDataset, train_ids: Iterable[int], val_ids: Iterable[int],
-            n_epochs : int, batch_size : int, learning_rate : float, metric: BaseMetric = DefaultMetric()):
-    optimizer = torch.optim.Adam(params=nn.parameters(), lr = learning_rate)
+            n_epochs : int, batch_size : int, learning_rate : float, weight_decay: float = 0, metric: BaseMetric = DefaultMetric()):
+    optimizer = torch.optim.Adam(params=nn.parameters(), lr = learning_rate, weight_decay=weight_decay)
     loss_fn = torch.nn.BCELoss()
 
     best_val_auc = - np.inf
