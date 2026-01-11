@@ -11,12 +11,12 @@ from src.io.lmdb_dataset import LMDBDataset
 
 def get_cnn_net():
     net = torch.nn.Sequential(
-        torch.nn.Conv1d(1, 4, kernel_size=5),
+        torch.nn.Conv1d(1, 32, kernel_size=5),
         torch.nn.MaxPool1d(kernel_size=4),
-        torch.nn.Conv1d(4, 16, kernel_size=5),
+        torch.nn.Conv1d(32, 64, kernel_size=5),
         torch.nn.MaxPool1d(kernel_size=4),
         torch.nn.Flatten(),
-        torch.nn.Linear(16000, 128),
+        torch.nn.Linear(15872, 128),
         torch.nn.ReLU(),
         torch.nn.Linear(128, 32),
         torch.nn.ReLU(),
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     print(device)
     print(torch.get_num_threads())
     special_amino_acids = ['R', 'K']
-    encoder = SpectrumEncoder(special_amino_acids)
+    encoder = SpectrumEncoder(special_amino_acids, True)
     classifier = FeedForwardNNClassifier(network=get_cnn_net(), encoder=encoder, device=device, name="mlp", resetter=get_cnn_net)
 
     # define MLP classifier
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     # target data:
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
-    N = 100#len(target_sequences)
+    N = len(target_sequences)
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path, 1024)
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         else:
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
-            M = 100#len(decoy_sequences)
+            M = len(decoy_sequences)
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
             encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path, 1024)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))

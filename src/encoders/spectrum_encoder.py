@@ -11,7 +11,7 @@ from src.encoders.peptide_encoder import PeptideEncoder
 from src.io.peptide_processor import PeptideProcessor
 
 class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
-    def __init__(self, special_amino_acids: List[str], charge_const: int = 2, collision_energy_const: int = 25,
+    def __init__(self, special_amino_acids: List[str], add_channel: bool = False, charge_const: int = 2, collision_energy_const: int = 25,
                  min_len: int = 8, max_len: int = 30, max_mz = 4000):
         PeptideEncoder.__init__(self)
         PeptideProcessor.__init__(self, special_amino_acids)
@@ -20,6 +20,7 @@ class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
         self.max_len = max_len
         self.min_len = min_len
         self.max_mz = max_mz
+        self.add_channel = add_channel
         MODEL_ID: str = "Prosit_2019_intensity"
         WEB_ADDRESS: str = "koina.wilhelmlab.org:443"
         self.model = Koina(MODEL_ID, WEB_ADDRESS)
@@ -67,7 +68,11 @@ class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
                 min_intensity = peptide_tensor.min()
                 max_intensity = peptide_tensor.max()
                 peptide_tensor = (peptide_tensor - min_intensity) / (max_intensity - min_intensity) # normalize (if two intensities were at same ROUNDED m/z)
-                output_list.append(peptide_tensor.unsqueeze(0)) # [1, self.max_mz]
+                if self.add_channel:
+                    peptide_tensor = peptide_tensor.reshape((1,1,self.max_mz)) # [1, 1, self.max_mz]
+                else:
+                    peptide_tensor = peptide_tensor.unsqueeze(0) # [1, self.max_mz]
+                output_list.append(peptide_tensor) 
 
             return output_list # contains one tensor per peptide, i.e. N peptide-level tensors each with dimension [self.max_mz]
         else:
