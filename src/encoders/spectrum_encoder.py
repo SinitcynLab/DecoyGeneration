@@ -49,7 +49,7 @@ class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
             return pd.DataFrame()
 
     def __call__(self, sequences: Iterable[str]):
-        sequences = [re.sub(r"[X]", "L", sequence) for sequence in sequences] # Replace 'any' (X) by most prevalent
+        sequences = [re.sub(r"[UZOBX]", "L", sequence) for sequence in sequences] # Replace 'odd' amino acids by most prevalent (L)
         predicted_spectra = self.get_predicted_spectra(sequences)
 
         if predicted_spectra.size > 0:

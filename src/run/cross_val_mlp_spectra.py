@@ -40,7 +40,7 @@ if __name__ == "__main__":
     target_sequences = [record.sequence for record in target_records]
     N = len(target_sequences)
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
-    encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path, 1024)
+    encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path, 1)
 
     decoy_files = [f'data/decoys/{base}.shuffle.0.fasta', f'data/decoys/{base}.esm650M.best.c1.0.fasta']
     decoy_ids = ['shuffle', 'esm650M, count=1']
@@ -55,7 +55,7 @@ if __name__ == "__main__":
             decoy_sequences = [record.sequence for record in decoy_records]
             M = len(decoy_sequences)
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
-            encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path, 1024)
+            encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path, 1)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
 
