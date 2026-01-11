@@ -4,7 +4,7 @@ import shutil
 from src.peptide_classifiers.nn_classifier import cross_validate_nn
 from src.peptide_classifiers.feed_forward_nn_classifier import FeedForwardNNClassifier
 from src.encoders.protbert_cls_encoder import ProtBertClsEncoder
-from src.encoders.spectrum_encoder import SpectrumEncoder
+from src.encoders.spectrum_encoder import VectorSpectrumEncoder, SmoothVectorSpectrumEncoder
 from src.io.fasta import read_fasta_file
 from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
 from src.io.lmdb_dataset import LMDBDataset
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     print(device)
     print(torch.get_num_threads())
     special_amino_acids = ['R', 'K']
-    encoder = SpectrumEncoder(special_amino_acids, True)
+    encoder = SmoothVectorSpectrumEncoder(special_amino_acids, True)
     classifier = FeedForwardNNClassifier(network=get_cnn_net(), encoder=encoder, device=device, name="cnn", resetter=get_cnn_net)
 
     # define MLP classifier
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         # cross-validate CNN:
         n_epochs = 20
         batch_size = 10
-        cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i], weight_decay=1e-5)
+        cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i])
         if decoy_file != 'target':
             delete_lmdb(decoy_lmdb_path) # clear temporary data
     delete_lmdb(target_lmdb_path)

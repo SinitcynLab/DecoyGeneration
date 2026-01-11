@@ -4,7 +4,7 @@ import shutil
 from src.peptide_classifiers.nn_classifier import cross_validate_nn
 from src.peptide_classifiers.feed_forward_nn_classifier import FeedForwardNNClassifier
 from src.encoders.protbert_cls_encoder import ProtBertClsEncoder
-from src.encoders.spectrum_encoder import SpectrumEncoder
+from src.encoders.spectrum_encoder import VectorSpectrumEncoder
 from src.io.fasta import read_fasta_file
 from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
 from src.io.lmdb_dataset import LMDBDataset
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     print(device)
     print(torch.get_num_threads())
     special_amino_acids = ['R', 'K']
-    encoder = SpectrumEncoder(special_amino_acids)
+    encoder = VectorSpectrumEncoder(special_amino_acids)
     classifier = FeedForwardNNClassifier(network=get_mlp_net(), encoder=encoder, device=device, name="mlp", resetter=get_mlp_net)
 
     # define MLP classifier

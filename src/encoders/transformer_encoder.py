@@ -74,8 +74,9 @@ def pad_tensor_list(tensor_list: Iterable[torch.Tensor]) -> Tuple[torch.Tensor, 
     lengths: List[int] = [t.size(dim=1) for t in tensor_list]
     lengths = torch.IntTensor(lengths)
     max_len: int = torch.max(lengths)
+    dim = tensor_list[0].size(dim=2)
     for i in range(len(tensor_list)):
         diff = max_len - tensor_list[i].size(dim=1)
-        pad = torch.zeros((1, diff, 1024))
+        pad = torch.zeros((1, diff, dim))
         tensor_list[i] = torch.cat((tensor_list[i], pad), axis=1)
     return torch.cat(tensor_list, axis=0), lengths
