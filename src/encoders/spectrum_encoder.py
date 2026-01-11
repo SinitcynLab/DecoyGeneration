@@ -1,6 +1,5 @@
 import torch
-import sys
-import os
+import re
 import pandas as pd
 import numpy as np
 
@@ -37,32 +36,39 @@ class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
                     charge_list.append(self.charge_const)
                     col_e_list.append(self.collision_energy_const)
         
-        inputs = pd.DataFrame()
-        inputs['peptide_sequences'] = np.array(peptide_list)
-        inputs['precursor_charges'] = np.array(charge_list)
-        inputs['collision_energies'] = np.array(col_e_list)
+        if len(peptide_list) > 0:
+            inputs = pd.DataFrame()
+            inputs['peptide_sequences'] = np.array(peptide_list)
+            inputs['precursor_charges'] = np.array(charge_list)
+            inputs['collision_energies'] = np.array(col_e_list)
 
-        predicted_spectra: pd.DataFrame = self.model.predict(inputs, disable_progress_bar=True)
+            predicted_spectra: pd.DataFrame = self.model.predict(inputs, disable_progress_bar=True)
 
-        return predicted_spectra
+            return predicted_spectra
+        else:
+            return pd.DataFrame()
 
     def __call__(self, sequences: Iterable[str]):
+        sequences = [re.sub(r"[X]", "L", sequence) for sequence in sequences] # Replace 'any' (X) by most prevalent
         predicted_spectra = self.get_predicted_spectra(sequences)
 
-        output_list: List[Tensor] = []
-        indices = np.unique(predicted_spectra.index)
-        for idx in indices:
-            peptide_data = predicted_spectra.loc[predicted_spectra.index == idx]
-            peptide_tensor = torch.zeros(self.max_mz) # [self.max_mz]
-            for _, row in peptide_data.iterrows():
-                mz, intensity = row['mz'], row['intensities']
-                rounded_mz = round(mz)
-                if rounded_mz > self.max_mz:
-                    continue # truncate at max_mz
-                peptide_tensor[rounded_mz] += intensity
-            min_intensity = peptide_tensor.min()
-            max_intensity = peptide_tensor.max()
-            peptide_tensor = (peptide_tensor - min_intensity) / (max_intensity - min_intensity) # normalize (if two intensities were at same ROUNDED m/z)
-            output_list.append(peptide_tensor.unsqueeze(0)) # [1, self.max_mz]
+        if predicted_spectra.size > 0:
+            output_list: List[Tensor] = []
+            indices = np.unique(predicted_spectra.index)
+            for idx in indices:
+                peptide_data = predicted_spectra.loc[predicted_spectra.index == idx]
+                peptide_tensor = torch.zeros(self.max_mz) # [self.max_mz]
+                for _, row in peptide_data.iterrows():
+                    mz, intensity = row['mz'], row['intensities']
+                    rounded_mz = round(mz)
+                    if rounded_mz > self.max_mz:
+                        continue # truncate at max_mz
+                    peptide_tensor[rounded_mz] += intensity
+                min_intensity = peptide_tensor.min()
+                max_intensity = peptide_tensor.max()
+                peptide_tensor = (peptide_tensor - min_intensity) / (max_intensity - min_intensity) # normalize (if two intensities were at same ROUNDED m/z)
+                output_list.append(peptide_tensor.unsqueeze(0)) # [1, self.max_mz]
 
-        return output_list # contains one tensor per peptide, i.e. N peptide-level tensors each with dimension [self.max_mz]
+            return output_list # contains one tensor per peptide, i.e. N peptide-level tensors each with dimension [self.max_mz]
+        else:
+            return None

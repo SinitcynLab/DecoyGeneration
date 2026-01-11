@@ -50,7 +50,8 @@ def encode_seqs_to_lmdb(sequences: Iterable[str], encoder: PeptideEncoder, o_fil
         batch_encodings = encoder(sequences[batch_start:batch_end])
         if isinstance(batch_encodings, torch.Tensor):
             batch_encodings = list(batch_encodings.split(1, dim=0)) # if single tensor returned, unroll into a list of tensors
-        append_tensors_to_lmdb(batch_encodings, range(batch_start, batch_end), o_file_name)
+        if batch_encodings != None:
+            append_tensors_to_lmdb(batch_encodings, range(batch_start, batch_end), o_file_name)
 
 def append_tensors_to_lmdb(tensors: Iterable[torch.Tensor], indices: Iterable[int], out_file: str):
     env = lmdb.open(out_file, map_size=1024**4)
