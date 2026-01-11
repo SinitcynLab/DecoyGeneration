@@ -32,7 +32,7 @@ if __name__ == "__main__":
     print(torch.get_num_threads())
     special_amino_acids = ['R', 'K']
     encoder = SpectrumEncoder(special_amino_acids, True)
-    classifier = FeedForwardNNClassifier(network=get_cnn_net(), encoder=encoder, device=device, name="mlp", resetter=get_cnn_net)
+    classifier = FeedForwardNNClassifier(network=get_cnn_net(), encoder=encoder, device=device, name="cnn", resetter=get_cnn_net)
 
     # define MLP classifier
     base = 'UP000000625_83333'
@@ -63,8 +63,8 @@ if __name__ == "__main__":
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
 
-        # cross-validate MLP:
-        n_epochs = 10
+        # cross-validate CNN:
+        n_epochs = 20
         batch_size = 10
         cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i], weight_decay=1e-5)
         if decoy_file != 'target':
