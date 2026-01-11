@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=cnn_spectra_shuffle_esm650_%j
-#SBATCH --output=cnn_spectra_shuffle_esm650_%j.txt
+#SBATCH --job-name=rnn_spectra_shuffle_esm650_%j
+#SBATCH --output=rnn_spectra_shuffle_esm650_%j.txt
 #SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/run/cross_val_mlp_spectra.py
+python -u src/run/cross_val_rnn_spectra.py
