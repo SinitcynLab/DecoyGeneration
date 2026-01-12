@@ -17,7 +17,7 @@ from src.io.fasta import write_fasta_file, read_fasta_file
 from src.io.utils import remove_long_sequences
 
 if __name__ == "__main__":
-    target_filename: str = "data/targets/UP000000625_83333.fasta"
+    target_filename: str = "data/targets/UP000002311_559292.fasta"
     write_batched: bool = True
 
     special_amino_acids: List[str] = ['R', 'K']
