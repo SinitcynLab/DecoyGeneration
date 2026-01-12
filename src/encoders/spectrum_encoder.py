@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+from scipy.fft import fft, ifft, fftfreq
 from typing import Iterable, List
 from koinapy import Koina
 from torch import Tensor
@@ -12,7 +13,7 @@ from src.encoders.peptide_encoder import PeptideEncoder
 from src.io.peptide_processor import PeptideProcessor
 
 class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
-    def __init__(self, special_amino_acids: List[str], add_channel: bool = False, charge_const: int = 2, collision_energy_const: int = 25,
+    def __init__(self, special_amino_acids: List[str], add_channel: bool = False, charge_const: int = 2, collision_energy_const: int = 30,
                  min_len: int = 8, max_len: int = 30, max_mz = 4000):
         PeptideEncoder.__init__(self)
         PeptideProcessor.__init__(self, special_amino_acids)
@@ -133,3 +134,36 @@ class TupleSpectrumEncoder(SpectrumEncoder):
             return output_list # contains one tensor per peptide, each with dim [2, L_idx] where L_idx depends on the peptide length
         else:
             return None
+
+class FFTSpectrumEncoder(VectorSpectrumEncoder):
+    def __init__(self, special_amino_acids, add_channel = False, charge_const = 2, 
+                 collision_energy_const = 25, min_len = 8, max_len = 30, max_mz=4000, sample_rate = 500, threshold = 10):
+        VectorSpectrumEncoder.__init__(self, special_amino_acids, add_channel, charge_const, collision_energy_const, min_len, max_len, max_mz)
+        self.sample_rate = sample_rate
+        self.threshold = threshold
+
+    def __call__(self, sequences: Iterable[str]):
+        output_list = VectorSpectrumEncoder.__call__(self, sequences)
+
+        for i, peptide_tensor in enumerate(output_list):
+            y = peptide_tensor.numpy().squeeze()
+            
+            # get fft and amplitudes of each frequency:
+            transformed_y = fft(y)
+            frequencies = fftfreq(len(y), d=1/self.sample_rate)
+
+            # filter out weak frequencies:
+            transformed_y[np.abs(frequencies) > self.threshold] = 0
+
+            # plot (for debugging):
+            _, (ax1, ax2) = plt.subplots(2, 1, figsize=(10,8))
+            horizontal_axis = np.arange(start=0, stop=4000, step=1)
+            ax1.plot(horizontal_axis, y, label="original")
+            ax1.plot(horizontal_axis, transformed_y, label="filtered")
+            ax1.legend()
+            ax2.plot(frequencies, np.abs(transformed_y))
+            plt.show()
+
+            output_list[i] = self.set_tensor_dim(torch.tensor(transformed_y))
+
+        return output_list

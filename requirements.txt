@@ -10,3 +10,8 @@ pickle
 seaborn
 koinapy
 pandas
+umap-learn
+datashader
+bokeh
+holoviews
+scipy
