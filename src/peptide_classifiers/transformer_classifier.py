@@ -2,37 +2,39 @@ import torch
 
 from typing import Callable
 
-from src.peptide_classifiers.feed_forward_nn_classifier import FeedForwardNNClassifier
+from src.peptide_classifiers.recurrent_nn_classifier import RecurrentNNClassifier
 from src.encoders.peptide_encoder import PeptideEncoder
 
-class TransformerClassifier(FeedForwardNNClassifier):
+class TransformerClassifier(RecurrentNNClassifier):
     def __init__(self, network: torch.nn.Sequential, embedding: torch.nn.Linear, pos_embedding: torch.nn.Embedding, 
                  transformer: torch.nn.TransformerEncoder, encoder: PeptideEncoder, name: str, device: torch.device, resetter: Callable = None):
-        FeedForwardNNClassifier.__init__(self, network, encoder, name, device)
+        RecurrentNNClassifier.__init__(self, torch.nn.RNN(input_size=1, hidden_size=1), network, encoder, name, device)
         self.embedding = embedding
         self.pos_embedding = pos_embedding
         self.transformer = transformer
         self.resetter = resetter
+        self.set_device(self.device)
 
-    def forward(self, x):
-        x = x.unsqueeze(-1)
-        batch_size, seq_len, _ = x.shape
+    def forward(self, x, l):
+        out = torch.zeros(x.shape[0]).to(self.device)
+        for i, t in enumerate(x):
+            t = t[0:l[i],:] # keep only first l[i] timesteps
+            positions = torch.arange(l[i], device=self.device).unsqueeze(0)
+            t = self.embedding(t) + self.pos_embedding(positions)
 
-        positions = torch.arange(seq_len, device=self.device).unsqueeze(0)
-        positions = positions.expand(batch_size, seq_len)
-        x = self.embedding(x) + self.pos_embedding(positions)
+            t = self.transformer(t)
 
-        x = self.transformer(x)
+            t = t.mean(dim=1)
 
-        x = x.mean(dim=1)
+            out[i] = self.network(t)
 
-        return self.network(x).squeeze(-1)
+        return out
     
     def set_device(self, device):
         self.embedding.to(device)
         self.pos_embedding.to(device)
         self.transformer.to(device)
-        FeedForwardNNClassifier.set_device(self, device)
+        RecurrentNNClassifier.set_device(self, device)
 
     def reset(self):
         if self.resetter == None:

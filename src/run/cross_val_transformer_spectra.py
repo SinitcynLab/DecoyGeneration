@@ -4,20 +4,21 @@ import shutil
 from src.peptide_classifiers.nn_classifier import cross_validate_nn
 from src.peptide_classifiers.transformer_classifier import TransformerClassifier
 from src.encoders.protbert_cls_encoder import ProtBertClsEncoder
-from src.encoders.spectrum_encoder import VectorSpectrumEncoder
+from src.encoders.spectrum_encoder import VectorSpectrumEncoder, TupleSpectrumEncoder
 from src.io.fasta import read_fasta_file
 from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
 from src.io.lmdb_dataset import LMDBDataset
 
 def get_transformer_nets():
+    d_model = 1024
     net = torch.nn.Sequential(
-        torch.nn.Linear(128, 1),
+        torch.nn.Linear(d_model, 1),
         torch.nn.Sigmoid()
     )
-    embedding = torch.nn.Linear(1, 128)
-    pos_embedding = torch.nn.Embedding(4000, 128)
+    embedding = torch.nn.Linear(2, d_model)
+    pos_embedding = torch.nn.Embedding(62, d_model)
     transformer = torch.nn.TransformerEncoder(
-        torch.nn.TransformerEncoderLayer(d_model=128, nhead=4, dropout=0.1),
+        torch.nn.TransformerEncoderLayer(d_model=d_model, nhead=4, dropout=0.1),
         num_layers=2
     )
     return net, embedding, pos_embedding, transformer
@@ -28,7 +29,7 @@ if __name__ == "__main__":
     print(device)
     print(torch.get_num_threads())
     special_amino_acids = ['R', 'K']
-    encoder = VectorSpectrumEncoder(special_amino_acids)
+    encoder = TupleSpectrumEncoder(special_amino_acids)
     net, embedding, pos_embedding, transformer = get_transformer_nets()
     classifier = TransformerClassifier(network=net, embedding=embedding, pos_embedding=pos_embedding, transformer=transformer,
                                        encoder=encoder, device=device, name="transformer", resetter=get_transformer_nets)
@@ -62,8 +63,8 @@ if __name__ == "__main__":
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
 
-        # cross-validate CNN:
-        n_epochs = 10
+        # cross-validate transformer:
+        n_epochs = 20
         batch_size = 10
         cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i], weight_decay=1e-5)
         if decoy_file != 'target':
