@@ -14,7 +14,7 @@ from src.io.peptide_processor import PeptideProcessor
 
 class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
     def __init__(self, special_amino_acids: List[str], add_channel: bool = False, charge_const: int = 2, collision_energy_const: int = 30,
-                 min_len: int = 8, max_len: int = 30, max_mz = 4000):
+                 min_len: int = 8, max_len: int = 30, min_mz = 100, max_mz = 1000):
         PeptideEncoder.__init__(self)
         PeptideProcessor.__init__(self, special_amino_acids)
         self.charge_const = charge_const
@@ -22,6 +22,7 @@ class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
         self.max_len = max_len
         self.min_len = min_len
         self.max_mz = max_mz
+        self.min_mz = min_mz
         self.add_channel = add_channel
         MODEL_ID: str = "Prosit_2019_intensity"
         WEB_ADDRESS: str = "koina.wilhelmlab.org:443"
