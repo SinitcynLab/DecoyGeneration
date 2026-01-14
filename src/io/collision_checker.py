@@ -32,6 +32,8 @@ def main():
             collisions, n_peptides = count_collisions(decoy_sequence, target_sequence, peptide_processor, min_len, max_len)
             tot_collisions += collisions
             tot_peptides += n_peptides
+        if i % 1000 == 0:
+            print(f"{i+1}/{len(decoy_sequences)}")
     print(f"target file: {target_file}")
     print(f"decoy file: {decoy_file}")
     print(f"Number of collisions: {tot_collisions}")
