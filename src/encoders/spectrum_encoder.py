@@ -65,21 +65,20 @@ class VectorSpectrumEncoder(SpectrumEncoder):
     def __call__(self, sequences: Iterable[str]):
         predicted_spectra = self.get_predicted_spectra(sequences)
 
+        boundary_list = np.arange(start=self.min_mz, stop=self.max_mz, step=2)
         if predicted_spectra.size > 0:
             output_list: List[Tensor] = []
             indices = np.unique(predicted_spectra.index)
             for idx in indices:
                 peptide_data = predicted_spectra.loc[predicted_spectra.index == idx]
-                peptide_tensor = torch.zeros(self.max_mz) # [self.max_mz]
+                peptide_tensor = torch.zeros(self.max_mz - self.min_mz) # [self.max_mz]
                 for _, row in peptide_data.iterrows():
                     mz, intensity = row['mz'], row['intensities']
-                    rounded_mz = round(mz)
-                    if rounded_mz > self.max_mz:
-                        continue # truncate at max_mz
-                    peptide_tensor[rounded_mz] += intensity
-                min_intensity = peptide_tensor.min()
-                max_intensity = peptide_tensor.max()
-                peptide_tensor = (peptide_tensor - min_intensity) / (max_intensity - min_intensity) # normalize (if two intensities were at same ROUNDED m/z)
+                    if mz < self.min_mz or mz > self.max_mz:
+                        continue
+                    bin = (boundary_list * (boundary_list < mz)).argmax()
+                    peptide_tensor[bin] += intensity
+                peptide_tensor = (peptide_tensor - peptide_tensor.min()) / (peptide_tensor.max() - peptide_tensor.min()) # normalize (if two intensities were at same ROUNDED m/z)
                 output_list.append(self.set_tensor_dim(peptide_tensor)) 
 
             return output_list # contains one tensor per peptide, i.e. N peptide-level tensors each with dimension [self.max_mz]
@@ -113,6 +112,11 @@ class SmoothVectorSpectrumEncoder(VectorSpectrumEncoder):
         return output_list
     
 class TupleSpectrumEncoder(SpectrumEncoder):
+    def __init__(self, special_amino_acids, add_channel = False, charge_const = 2, collision_energy_const = 30, 
+                 min_len = 8, max_len = 30, min_mz=100, max_mz=1000, normalize_mz = True):
+        super().__init__(special_amino_acids, add_channel, charge_const, collision_energy_const, min_len, max_len, min_mz, max_mz)
+        self.normalize_mz = normalize_mz
+
     def __call__(self, sequences: Iterable[str]):
         predicted_spectra = self.get_predicted_spectra(sequences)
 
@@ -129,7 +133,8 @@ class TupleSpectrumEncoder(SpectrumEncoder):
                     peptide_tensor[mz_idx,0] = mz
                     peptide_tensor[mz_idx,1] = intensity
                     mz_idx += 1
-                peptide_tensor[:, 0] = (peptide_tensor[:, 0] - peptide_tensor[:, 0].min()) / (peptide_tensor[:, 0].max() - peptide_tensor[:, 0].min()) # normalize
+                if self.normalize_mz:
+                    peptide_tensor[:, 0] = (peptide_tensor[:, 0] - peptide_tensor[:, 0].min()) / (peptide_tensor[:, 0].max() - peptide_tensor[:, 0].min()) # normalize
                 output_list.append(self.set_tensor_dim(peptide_tensor)) 
 
             return output_list # contains one tensor per peptide, each with dim [2, L_idx] where L_idx depends on the peptide length

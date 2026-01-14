@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=rnn_all_data_35M_16b_new_seed_%j
-#SBATCH --output=rnn_all_data_35M_16b_new_seed_%j.txt
+#SBATCH --job-name=random_replace_excl_present_aa_%j
+#SBATCH --output=random_replace_excl_present_aa_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
-#SBATCH --time=24:00:00
+#SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2

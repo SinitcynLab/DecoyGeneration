@@ -24,6 +24,14 @@ class RandomReplaceGenerator(DecoyGenerator):
                 b: int = positions[idx]
                 if b - a < 1: continue
                 random_pos = self.random.randrange(a, b)
-                # prevent same-mass aa AND prevent putting back the same AA                
-                sequence[random_pos] = self.random.choice(self.valid_aa_choices)
+                current_valid_aa_choices = self.valid_aa_choices.copy()
+
+                if sequence[random_pos] in current_valid_aa_choices: # if the currently-present aa is in the list of choices
+                    current_valid_aa_choices.remove(sequence[random_pos]) # then remove it
+                if sequence[random_pos] == 'L' and 'I' in current_valid_aa_choices: # handle I/L-dilemma
+                    current_valid_aa_choices.remove('I')
+                elif sequence[random_pos] == 'I' and 'L' in current_valid_aa_choices:
+                    current_valid_aa_choices.remove('L')
+
+                sequence[random_pos] = self.random.choice(current_valid_aa_choices)
             yield "".join(sequence)

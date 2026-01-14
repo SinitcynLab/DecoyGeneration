@@ -15,29 +15,28 @@ from src.metrics.base_metric import BaseMetric
 from src.metrics.default_metric import DefaultMetric
 
 class SVMClassifier(PeptideClassifier):
-    def __init__(self, network : torch.nn.Sequential, encoder : PeptideEncoder, name: str, device : torch.device, kernel : Callable = None):
+    def __init__(self, encoder : PeptideEncoder, name: str, device : torch.device, kernel_function : Callable = None):
         PeptideClassifier.__init__(self, encoder, name, device)
-        torch.nn.Module.__init__(self)
-        self.network = network
-        self.network.to(device)
-        self.kernel = kernel
-        self.svm_instance = svm.SVC(kernel=kernel)
+        self.kernel_function = kernel_function
+        self.svm_instance = svm.SVC(kernel="precomputed")
 
     def set_device(self, device : torch.device):
         PeptideClassifier.set_device(self, device)
-        self.network.to(device)
 
     def evaluate_on_data(self, dataset: Tuple[List[Tensor], Tensor]):
-        val_data = torch.cat(dataset[0], dim=0)
-        prediction_tensor = torch.tensor(self.svm_instance.predict(val_data))
+        val_data = dataset[0]
+        prediction_tensor = torch.tensor(self.svm_instance.predict(self.kernel_function(val_data, self.X_fit)))
         return prediction_tensor
 
     def train_on_data(self, dataset: Tuple[List[Tensor], Tensor]):
-        train_data, train_labels = torch.cat(dataset[0], dim=0), dataset[1].numpy()
-        self.svm_instance.fit(train_data, train_labels)
+        train_data, train_labels = dataset[0], dataset[1].numpy()
+        gs_matrix = self.kernel_function(train_data, train_data)
+        self.svm_instance.fit(gs_matrix, train_labels)
+        self.X_fit = train_data
     
     def reset(self):
-        self.svm_instance = svm.SVC(kernel=self.kernel)
+        self.svm_instance = svm.SVC(kernel="precomputed")
+        self.X_fit = None
 
 def cross_validate_svm(svm: SVMClassifier, main_dataset: LMDBDataset, n_folds: int = 5, metric: BaseMetric = DefaultMetric()):
     N = main_dataset.size()
