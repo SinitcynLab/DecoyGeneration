@@ -25,7 +25,7 @@ if __name__ == "__main__":
     print(device)
 
     n: int = 1
-    random: Random = Random(50)
+    random: Random = Random(42)
     generators: List[DecoyGenerator] = [
         RandomReplaceGenerator(
             special_amino_acids=special_amino_acids,
