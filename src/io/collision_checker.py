@@ -38,6 +38,8 @@ def main():
     print(f"decoy file: {decoy_file}")
     print(f"Number of collisions: {tot_collisions}")
     print(f"Total number of peptides with specified length: {tot_peptides}")
+    if max_len != sys.maxsize or min_len != -1:
+        print(f"(min_len, max_len) = ({min_len}, {max_len}).")
 
 def count_collisions(decoy_sequence: str, target_sequence: str, peptide_processor: PeptideProcessor, min_len: int, max_len: int):
     count: int = 0

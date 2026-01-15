@@ -143,8 +143,8 @@ class TupleSpectrumEncoder(SpectrumEncoder):
 
 class FFTSpectrumEncoder(VectorSpectrumEncoder):
     def __init__(self, special_amino_acids, add_channel = False, charge_const = 2, 
-                 collision_energy_const = 25, min_len = 8, max_len = 30, max_mz=4000, sample_rate = 500, threshold = 10):
-        VectorSpectrumEncoder.__init__(self, special_amino_acids, add_channel, charge_const, collision_energy_const, min_len, max_len, max_mz)
+                 collision_energy_const = 25, min_len = 8, max_len = 30, min_mz = 100, max_mz = 1000, sample_rate = 500, threshold = 10):
+        VectorSpectrumEncoder.__init__(self, special_amino_acids, add_channel, charge_const, collision_energy_const, min_len, max_len, min_mz, max_mz)
         self.sample_rate = sample_rate
         self.threshold = threshold
 
@@ -160,16 +160,21 @@ class FFTSpectrumEncoder(VectorSpectrumEncoder):
 
             # filter out weak frequencies:
             transformed_y[np.abs(frequencies) > self.threshold] = 0
+            
+            # get back the filtered signal from the transformed one:
+            filtered_y = ifft(transformed_y)
 
             # plot (for debugging):
-            _, (ax1, ax2) = plt.subplots(2, 1, figsize=(10,8))
-            horizontal_axis = np.arange(start=0, stop=4000, step=1)
-            ax1.plot(horizontal_axis, y, label="original")
-            ax1.plot(horizontal_axis, transformed_y, label="filtered")
-            ax1.legend()
-            ax2.plot(frequencies, np.abs(transformed_y))
-            plt.show()
+            # _, (ax1, ax2) = plt.subplots(2, 1, figsize=(10,8))
+            # horizontal_axis = np.arange(start=self.min_mz, stop=self.max_mz, step=1)
+            # ax1.plot(horizontal_axis, y, label="original")
+            # ax1.plot(horizontal_axis, transformed_y, label="filtered")
+            # ax1.title("Original and filtered signals")
+            # ax1.legend()
+            # ax2.plot(frequencies, np.abs(transformed_y))
+            # ax2.title("Frequency diagram.")
+            # plt.show()
 
-            output_list[i] = self.set_tensor_dim(torch.tensor(transformed_y))
+            output_list[i] = self.set_tensor_dim(torch.tensor(filtered_y.real))
 
         return output_list
