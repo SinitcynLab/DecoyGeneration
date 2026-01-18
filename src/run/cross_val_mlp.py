@@ -32,7 +32,8 @@ if __name__ == "__main__":
     # define MLP classifier
     base = 'UP000002311_559292'
     target_file = f"data/targets/{base}.fasta"
-    temp_encoding_dir = f"data/encodings/temp_mlp"
+    timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
+    temp_encoding_dir = f"data/encodings/temp_rnn_{timestamp}"
 
     # target data:
     target_records = read_fasta_file(target_file)
