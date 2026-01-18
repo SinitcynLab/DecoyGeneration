@@ -66,13 +66,16 @@ if __name__ == "__main__":
     embedding = umap.UMAP().fit_transform(X=plot_data, y=labels)
 
     plt.style.use("bmh") # professional look
+    size_val = 1
+    cmap = plt.cm.ColormapRegistry.get_cmap("Set1")
 
     for label in np.unique(labels):
         indices_with_label = np.where(labels == label)
         data_to_plot = embedding[indices_with_label]
-        plt.scatter(data_to_plot[:,0], data_to_plot[:,1], s=1)
+        plt.scatter(data_to_plot[:,0], data_to_plot[:,1], s=size_val, c=cmap(label))
 
     plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%d'))
-    plt.gca().legend(seq_ids)
+    plt.gca().legend(seq_ids, markerscale=5//size_val)
+    plt.tight_layout()
     plt.title(f"UMAP visualization of target sequences, sequences generated \n using the shuffle procedure and sequences \n generator using ESM 650M")
     plt.savefig("src/visualization/images/umap/umap_publish_target_v_shuffle.png")
