@@ -1,11 +1,8 @@
 import torch
 import numpy as np
 import umap
-import pandas as pd
-
 from umap import plot
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FormatStrFormatter
 
 from src.peptide_classifiers.nn_classifier import cross_validate_nn
 from src.peptide_classifiers.feed_forward_nn_classifier import FeedForwardNNClassifier
@@ -37,15 +34,18 @@ def generate_umap_image(targets: LMDBDataset, decoys: LMDBDataset, path: str, de
     plt.savefig(path)
 
 if __name__ == "__main__":
+    # define MLP classifier
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(device)
     print(torch.get_num_threads())
-    encoder = ProtBertClsEncoder(device)
+    special_amino_acids = ['L', 'R']
+    encoder = VectorSpectrumEncoder(special_amino_acids)
 
     # Choose base file:
     base = 'UP000002311_559292'
-    files = [f'data/targets/{base}.fasta', f'data/decoys/{base}.shuffle.0.fasta', f'data/decoys/{base}.esm650M.best.c1.0.fasta']
-    seq_ids = ('Target', 'Shuffle', 'ESM 650M')
+
+    files = [f'data/targets/{base}.fasta', f'data/targets/{base}.fasta']
+    seq_ids = ('targets', 'diann', 'esm650M')
     
     print("Generating UMAP image...")
     data_list = []
@@ -53,26 +53,20 @@ if __name__ == "__main__":
     for i, file in enumerate(files):
         records = read_fasta_file(file)
         sequences = [record.sequence for record in records]
-        N = 2000
-        encodings = encoder(sequences[0:N])
+        N = 3000
+        encodings = encoder(sequences[N*i:N*(i+1)])
+        K = len(encodings)
+        encodings = torch.cat(encodings)
         file_data: np.ndarray = encodings.numpy()
-        file_labels = np.ones(N, dtype=int) * i
+        file_labels = np.ones(K, dtype=int) * i
         
         data_list.append(file_data)
         label_list.append(file_labels)
         print(f"{i+1}/{len(files)}")
     plot_data = np.concat(data_list, axis=0)
     labels = np.concat(label_list, axis=0)
-    embedding = umap.UMAP().fit_transform(X=plot_data, y=labels)
-
-    plt.style.use("seaborn-v0_8-colorblind") # for professional look
-
-    for label in np.unique(labels):
-        indices_with_label = np.where(labels == label)
-        data_to_plot = embedding[indices_with_label]
-        plt.scatter(data_to_plot[:,0], data_to_plot[:,1], s=5)
-
-    plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%d'))
-    plt.gca().legend(seq_ids)
-    plt.title(f"UMAP visualization of target sequences, sequences generated \n using the shuffle procedure and sequences \n generator using ESM 650M")
-    plt.savefig("src/visualization/images/umap/umap_spectra(targets vs shuffle).png")
+    mapper = umap.UMAP().fit(X=plot_data)
+    plot.points(mapper, labels=labels, color_key_cmap='Paired')
+    #plt.gca().legend(seq_ids)
+    plt.title(f"UMAP visualization of target vs decoy sequences (Protbert CLS encoder)")
+    plt.savefig("src/visualization/images/umap/umap_spectra(targets vs targets).png")

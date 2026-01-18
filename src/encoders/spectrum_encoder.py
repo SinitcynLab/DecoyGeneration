@@ -14,7 +14,7 @@ from src.io.peptide_processor import PeptideProcessor
 
 class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
     def __init__(self, special_amino_acids: List[str], add_channel: bool = False, charge_const: int = 2, collision_energy_const: int = 30,
-                 min_len: int = 8, max_len: int = 30, min_mz = 100, max_mz = 1000):
+                 min_len: int = 8, max_len: int = 30, min_mz = 100, max_mz = 1000, bin_size = 2):
         PeptideEncoder.__init__(self)
         PeptideProcessor.__init__(self, special_amino_acids)
         self.charge_const = charge_const
@@ -23,6 +23,8 @@ class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
         self.min_len = min_len
         self.max_mz = max_mz
         self.min_mz = min_mz
+        self.bin_size = bin_size
+        self.vec_len = round((self.max_mz - self.min_mz) / self.bin_size)
         self.add_channel = add_channel
         MODEL_ID: str = "Prosit_2019_intensity"
         WEB_ADDRESS: str = "koina.wilhelmlab.org:443"
@@ -33,11 +35,12 @@ class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
         peptide_list: List[str] = []
         charge_list: List[int] = []
         col_e_list: List[int] = []
+        translation = str.maketrans({c: " " for c in self.special_amino_acids})
+
         for sequence in sequences:
-            for peptide in self.get_all_peptides(sequence):
+            for peptide in sequence.translate(translation).split():
                 if self.min_len <= len(peptide) and len(peptide) <= self.max_len:
-                    start, end = peptide[0], peptide[-1]
-                    peptide_list.append(sequence[start:end+1])
+                    peptide_list.append(peptide)
                     charge_list.append(self.charge_const)
                     col_e_list.append(self.collision_energy_const)
         
@@ -55,9 +58,9 @@ class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
         
     def set_tensor_dim(self, peptide_tensor: torch.Tensor):
         if self.add_channel:
-            peptide_tensor = peptide_tensor.reshape((1,1,self.max_mz)) # [1, 1, self.max_mz]
+            peptide_tensor = peptide_tensor.reshape((1,1,self.vec_len)) # [1, 1, self.self.max_mz - self.min_mz]
         else:
-            peptide_tensor = peptide_tensor.unsqueeze(0) # [1, self.max_mz]
+            peptide_tensor = peptide_tensor.unsqueeze(0) # [1, self.max_mz - self.min_mz]
         return peptide_tensor
 
 
@@ -65,13 +68,13 @@ class VectorSpectrumEncoder(SpectrumEncoder):
     def __call__(self, sequences: Iterable[str]):
         predicted_spectra = self.get_predicted_spectra(sequences)
 
-        boundary_list = np.arange(start=self.min_mz, stop=self.max_mz, step=2)
+        boundary_list = np.arange(start=self.min_mz, stop=self.max_mz, step=self.bin_size)
         if predicted_spectra.size > 0:
             output_list: List[Tensor] = []
             indices = np.unique(predicted_spectra.index)
             for idx in indices:
                 peptide_data = predicted_spectra.loc[predicted_spectra.index == idx]
-                peptide_tensor = torch.zeros(self.max_mz - self.min_mz) # [self.max_mz]
+                peptide_tensor = torch.zeros(self.vec_len) # [self.max_mz]
                 for _, row in peptide_data.iterrows():
                     mz, intensity = row['mz'], row['intensities']
                     if mz < self.min_mz or mz > self.max_mz:

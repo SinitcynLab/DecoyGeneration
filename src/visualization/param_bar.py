@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+# for professional look:
+plt.style.use("seaborn-v0_8-colorblind")
+
 # Data
 categories = ['8M', '35M', '150M', '650M']
 group1 = [0.660, 0.656]

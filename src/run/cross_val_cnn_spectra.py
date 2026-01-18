@@ -4,7 +4,7 @@ import shutil
 from src.peptide_classifiers.nn_classifier import cross_validate_nn
 from src.peptide_classifiers.feed_forward_nn_classifier import FeedForwardNNClassifier
 from src.encoders.protbert_cls_encoder import ProtBertClsEncoder
-from src.encoders.spectrum_encoder import VectorSpectrumEncoder, SmoothVectorSpectrumEncoder
+from src.encoders.spectrum_encoder import VectorSpectrumEncoder, SmoothVectorSpectrumEncoder, FFTSpectrumEncoder
 from src.io.fasta import read_fasta_file
 from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
 from src.io.lmdb_dataset import LMDBDataset
@@ -16,7 +16,7 @@ def get_cnn_net():
         torch.nn.Conv1d(32, 64, kernel_size=5),
         torch.nn.MaxPool1d(kernel_size=4),
         torch.nn.Flatten(),
-        torch.nn.Linear(15872, 128),
+        torch.nn.Linear(3520, 128),
         torch.nn.ReLU(),
         torch.nn.Linear(128, 32),
         torch.nn.ReLU(),
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     print(device)
     print(torch.get_num_threads())
     special_amino_acids = ['R', 'K']
-    encoder = SmoothVectorSpectrumEncoder(special_amino_acids, True)
+    encoder = FFTSpectrumEncoder(special_amino_acids, add_channel=True)
     classifier = FeedForwardNNClassifier(network=get_cnn_net(), encoder=encoder, device=device, name="cnn", resetter=get_cnn_net)
 
     # define MLP classifier
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     # target data:
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
-    N = len(target_sequences)
+    N = 1000#len(target_sequences)
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path, 1024)
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         else:
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
-            M = len(decoy_sequences)
+            M = 1000#len(decoy_sequences)
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
             encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path, 1024)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))

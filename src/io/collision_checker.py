@@ -1,15 +1,15 @@
 import argparse
 import sys
 
+from typing import List, Tuple
+from statistics import mean
+
 from src.io.fasta import read_fasta_file
-from src.io.peptide_processor import PeptideProcessor
 
 def collect_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--targets", help="The file holding the target sequences.")
     parser.add_argument("-d", "--decoys", help="The file holding the decoy sequences.")
-    parser.add_argument("-m", "--min_length", help="The minimum length of peptides to take into account.", default=-1)
-    parser.add_argument("-M", "--max_length", help="The maximum length of peptides to take into account.", default=sys.maxsize)
 
     return parser.parse_args()
 
@@ -17,42 +17,52 @@ def main():
     args = collect_args()
     target_file = args.targets
     decoy_file = args.decoys
-    min_len = args.min_length
-    max_len = args.max_length
-    peptide_processor = PeptideProcessor(['L', 'R'])
+    special_amino_acids = ['R', 'K']
     
     target_records = read_fasta_file(target_file)
     decoy_records = read_fasta_file(decoy_file)
     
     target_sequences = [rec.sequence for rec in target_records]
     decoy_sequences = [rec.sequence for rec in decoy_records]
-    tot_collisions, tot_peptides = 0, 0
-    for i, decoy_sequence in enumerate(decoy_sequences):
-        for target_sequence in target_sequences:
-            collisions, n_peptides = count_collisions(decoy_sequence, target_sequence, peptide_processor, min_len, max_len)
-            tot_collisions += collisions
-            tot_peptides += n_peptides
-        if i % 1000 == 0:
-            print(f"{i+1}/{len(decoy_sequences)}")
-    print(f"target file: {target_file}")
-    print(f"decoy file: {decoy_file}")
-    print(f"Number of collisions: {tot_collisions}")
-    print(f"Total number of peptides with specified length: {tot_peptides}")
-    if max_len != sys.maxsize or min_len != -1:
-        print(f"(min_len, max_len) = ({min_len}, {max_len}).")
 
-def count_collisions(decoy_sequence: str, target_sequence: str, peptide_processor: PeptideProcessor, min_len: int, max_len: int):
-    count: int = 0
-    decoy_peptides = peptide_processor.get_all_peptides(decoy_sequence)
-    decoy_peptides = set(decoy_sequence[peptide[0]:peptide[-1]] for peptide in decoy_peptides if min_len <= len(peptide) <= max_len)
-    target_peptides = peptide_processor.get_all_peptides(target_sequence)
-    target_peptides = set(target_sequence[peptide[0]:peptide[-1]] for peptide in target_peptides if min_len <= len(peptide) <= max_len)
+    target_peptides = set()
+    decoy_peptides = list()
+    translation = str.maketrans({c: " " for c in special_amino_acids})
+    for target_sequence in target_sequences:
+        peptides = target_sequence.translate(translation).split()
+        target_peptides = target_peptides | set(peptides) # note '|' is the union operator
+    for decoy_sequence in decoy_sequences:
+        peptides = decoy_sequence.translate(translation).split()
+        decoy_peptides += peptides
 
+    result_list: List[dict] = []
     for decoy_peptide in decoy_peptides:
         if decoy_peptide in target_peptides:
-            count += 1
+            result_list.append({"collided": 1, "length": len(decoy_peptide)})
+        else:
+            result_list.append({"collided": 0, "length": len(decoy_peptide)})
 
-    return count, len(decoy_peptides)
+    print(f"Target file: {target_file}")
+    print(f"Decoy file: {decoy_file}")
+    print()
+    print("Stats for all peptides:")
+    print_stats(result_list)
+    print()
+    print("Stats for peptides length <= 8:")
+    print_stats(result_list, (-1, 8))
+    print()
+    print("Stats for peptides length > 8:")
+    print_stats(result_list, (9, sys.maxsize))
+    print()
+
+def print_stats(result_list: List[dict], len_range: Tuple[int, int] = (-1, sys.maxsize)):
+    filtered_list = [result for result in result_list if len_range[0] <= result["length"] <= len_range[1]]
+
+    collided_list = [result['collided'] for result in filtered_list]
+    len_list = [result['length'] for result in filtered_list]
+    
+    print(f"Probability of peptide colliding (estimate): {mean(collided_list)}")
+    print(f"Mean peptide length: {mean(len_list)}")
 
 if __name__=="__main__":
     main()
