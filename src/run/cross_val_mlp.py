@@ -30,20 +30,21 @@ if __name__ == "__main__":
     classifier = FeedForwardNNClassifier(network=get_mlp_net(), encoder=encoder, device=device, name="mlp", resetter=get_mlp_net)
 
     # define MLP classifier
-    base = 'UP000000625_83333'
+    base = 'UP000002311_559292'
     target_file = f"data/targets/{base}.fasta"
     temp_encoding_dir = f"data/encodings/temp_mlp"
 
     # target data:
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
-    N = 100
+    N = len(target_sequences)
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
 
     decoy_files = ['target', f'data/decoys/{base}.shuffle.0.fasta', f'data/decoys/{base}.reverse.fasta',
-                   f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.diann_random_pos.fasta',f'data/decoys/{base}.diann_N.fasta']
-    decoy_ids = ['target', 'shuffle', 'reverse', 'diann_C', 'diann_random_pos', 'diann_N']
+                   f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.esm8M.best.c1.0.fasta',
+                   f'data/decoys/{base}.esm650M.best.c1.0.fasta']
+    decoy_ids = ['target', 'shuffle', 'reverse', 'diann_C', 'diann_random_pos', 'esm 8M, count=1, 32bit', 'esm 650M, count=1, 32bit']
     
     print("Cross validation of the MLP:")
     for i, decoy_file in enumerate(decoy_files):
@@ -53,7 +54,7 @@ if __name__ == "__main__":
         else:
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
-            M = 100
+            M = len(decoy_sequences)
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
             encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))

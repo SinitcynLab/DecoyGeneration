@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # for professional look:
-plt.style.use("seaborn-v0_8-colorblind")
+plt.style.use("bmh")
 
 # Data
 categories = ['8M', '35M', '150M', '650M']
@@ -26,11 +26,11 @@ plt.bar(x + width/2, data[:, 1], width, label='32 bit')
 plt.xlabel('Parameter count and parameter precision')
 plt.ylabel('AUC')
 plt.ylim(0.5, 0.7)
-plt.title('Grouped Bar Chart of ESM-generator performance, mask_count = 1')
+plt.title('Grouped Bar Chart of ESM-generator performance')
 plt.xticks(x, categories)
 plt.legend()
 
 # Layout and display
 plt.tight_layout()
 plt.show()
-plt.savefig("src/visualization/images/AUC_chart.png")
+plt.savefig("src/visualization/images/param_chart.png")
