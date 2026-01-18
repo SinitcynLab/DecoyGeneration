@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=random_replace_excl_present_aa_%j
-#SBATCH --output=random_replace_excl_present_aa_%j.txt
+#SBATCH --job-name=smart_mask_650M_%j
+#SBATCH --output=smart_mask_650M_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
-#SBATCH --time=12:00:00
+#SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/run/cross_val_rnn.py
+python -u src/main.py

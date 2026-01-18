@@ -27,9 +27,15 @@ if __name__ == "__main__":
     n: int = 1
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
-        RandomReplaceGenerator(
+        MaxProbMaskingEsmGenerator(
+            local_path="models/esm2_t33_650M_UR50D",
+            random=random,
             special_amino_acids=special_amino_acids,
-            random=random
+            sort_optimization=True,
+            batch_size=1,
+            ml_generator_type=MlGeneratorType.BEST,
+            device=device,
+            weight_type=torch.float32
         )
     ]
     for generator in generators:
