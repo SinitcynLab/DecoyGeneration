@@ -53,7 +53,7 @@ if __name__ == "__main__":
     for i, file in enumerate(files):
         records = read_fasta_file(file)
         sequences = [record.sequence for record in records]
-        N = 2000
+        N = 100#len(sequences)
         encodings = encoder(sequences[0:N])
         file_data: np.ndarray = encodings.numpy()
         file_labels = np.ones(N, dtype=int) * i
@@ -65,14 +65,14 @@ if __name__ == "__main__":
     labels = np.concat(label_list, axis=0)
     embedding = umap.UMAP().fit_transform(X=plot_data, y=labels)
 
-    plt.style.use("seaborn-v0_8-colorblind") # for professional look
+    plt.style.use("bmh") # professional look
 
     for label in np.unique(labels):
         indices_with_label = np.where(labels == label)
         data_to_plot = embedding[indices_with_label]
-        plt.scatter(data_to_plot[:,0], data_to_plot[:,1], s=5)
+        plt.scatter(data_to_plot[:,0], data_to_plot[:,1], s=1)
 
     plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%d'))
     plt.gca().legend(seq_ids)
     plt.title(f"UMAP visualization of target sequences, sequences generated \n using the shuffle procedure and sequences \n generator using ESM 650M")
-    plt.savefig("src/visualization/images/umap/umap_spectra(targets vs shuffle).png")
+    plt.savefig("src/visualization/images/umap/umap_publish_target_v_shuffle.png")

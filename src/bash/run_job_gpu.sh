@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=cross_val_mlp_w_error_%j
-#SBATCH --output=cross_val_mlp_w_error_%j.txt
+#SBATCH --job-name=cross_val_mlp_w_error_rest_%j
+#SBATCH --output=cross_val_mlp_w_error_rest_%j.txt
 #SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=10:00:00
 #SBATCH --nodes=1
