@@ -57,7 +57,7 @@ def cross_validate_nn(nn: NNClassifier, main_dataset: LMDBDataset,
         val_ids = shuffle(val_ids)
         
         nn.reset()
-        optimizer = torch.optim.Adam(nn.parameters(), lr=learning_rate, weight_decay=weight_decay)
+        optimizer = torch.optim.Adam(nn.parameters(), lr=learning_rate)
 
         best_val_fold: np.ndarray = np.ones(4) * (- np.inf) 
         corr_train_fold: np.ndarray = np.zeros(4)
