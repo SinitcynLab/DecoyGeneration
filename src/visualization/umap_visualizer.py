@@ -53,7 +53,7 @@ if __name__ == "__main__":
     for i, file in enumerate(files):
         records = read_fasta_file(file)
         sequences = [record.sequence for record in records]
-        N = 100#len(sequences)
+        N = 200#len(sequences)
         encodings = encoder(sequences[0:N])
         file_data: np.ndarray = encodings.numpy()
         file_labels = np.ones(N, dtype=int) * i
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     plt.style.use("bmh") # professional look
     size_val = 1
-    cmap = plt.cm.ColormapRegistry.get_cmap("Set1")
+    cmap = plt.get_cmap("Set1")
 
     for label in np.unique(labels):
         indices_with_label = np.where(labels == label)
@@ -76,6 +76,6 @@ if __name__ == "__main__":
 
     plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%d'))
     plt.gca().legend(seq_ids, markerscale=5//size_val)
-    plt.tight_layout()
+    plt.subplots_adjust(top=0.83)
     plt.title(f"UMAP visualization of target sequences, sequences generated \n using the shuffle procedure and sequences \n generator using ESM 650M")
     plt.savefig("src/visualization/images/umap/umap_publish_target_v_shuffle.png")

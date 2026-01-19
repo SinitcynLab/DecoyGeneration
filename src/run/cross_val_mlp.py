@@ -35,7 +35,7 @@ if __name__ == "__main__":
     base = 'UP000002311_559292'
     target_file = f"data/targets/{base}.fasta"
     timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
-    temp_encoding_dir = f"data/encodings/temp_rnn_{timestamp}"
+    temp_encoding_dir = f"data/encodings/temp_mlp_{timestamp}"
 
     # target data:
     target_records = read_fasta_file(target_file)
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     decoy_files = [f'data/decoys/{base}.reverse.fasta',
                    f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.esm8M.best.c1.0.fasta',
                    f'data/decoys/{base}.esm650M.best.c1.0.fasta']
-    decoy_ids = ['reverse', 'diann_C', 'diann_random_pos', 'esm 8M, count=1, 32bit', 'esm 650M, count=1, 32bit']
+    decoy_ids = ['reverse', 'diann_C', 'esm 8M, count=1, 32bit', 'esm 650M, count=1, 32bit']
     
     print("Cross validation of the MLP:")
     for i, decoy_file in enumerate(decoy_files):
