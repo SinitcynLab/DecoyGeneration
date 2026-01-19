@@ -51,7 +51,7 @@ def cross_validate_nn(nn: NNClassifier, main_dataset: LMDBDataset,
     best_val_metrics: np.ndarray = np.zeros((n_folds, metric.dim)) # [auc, acc, prec, rec], one for each fold
     corr_train_metrics: np.ndarray = np.zeros((n_folds, metric.dim))
 
-    kfold = StratifiedKFold(n_splits=n_folds, shuffle=True)
+    kfold = StratifiedKFold(n_splits=n_folds)
     for fold, (train_ids, val_ids) in enumerate(kfold.split(torch.zeros(N), main_dataset.get_labels())):
         train_ids = shuffle(train_ids)
         val_ids = shuffle(val_ids)
