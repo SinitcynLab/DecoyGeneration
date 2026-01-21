@@ -1,6 +1,6 @@
 import gc
 import torch
-from typing import Iterable, Tuple, List, Union
+from typing import Iterable, Tuple, List
 
 from transformers import EsmTokenizer, EsmForMaskedLM
 from torch.cuda import memory_usage
@@ -30,31 +30,53 @@ class TransformerEncoder(PeptideEncoder):
         else:
             hidden_states = output_object.hidden_states[-1] # extract the embeddings
         if self.cls_only:
-            hidden_states = hidden_states[0][0] # [1, num_tokens, 1024], first token is CLS token
-            return hidden_states.unsqueeze(0) # add dimension to get each sample as a row
+            return self.__extract_cls_token(hidden_states)
         else:
             return hidden_states
+        
+    def __extract_cls_token(self, hidden_states: torch.Tensor) -> torch.Tensor:
+        hidden_states = hidden_states[:,0,:] # [batch_size, num_tokens, 1024], first token is CLS token
+        return hidden_states # add dimension to get each sample as a row
+    
+    def __embed_batch_inputs(self, batch_inputs: torch.Tensor) -> torch.Tensor:
+        batch_inputs = batch_inputs.to(self.device)
+        with torch.no_grad():
+            batch_outputs = self.model(**batch_inputs, output_hidden_states=True)
+        batch_hidden_st_gpu = self.__extract_hidden_state(batch_outputs)
+        batch_hidden_st_cpu = batch_hidden_st_gpu.cpu()
+        del batch_inputs, batch_hidden_st_gpu
+        torch.cuda.empty_cache()
+        return batch_hidden_st_cpu
 
-    def _embed_batched(self, sequences : Iterable[str], batch_size : int = 32) -> Union[torch.Tensor, list[torch.Tensor]]:
-        if not self.constant_length:
-            batch_size = 1 # if non-constant length, one sample per batch.
+    def _embed_batched_varied_length(self, sequences : Iterable[str]) -> Tuple[torch.Tensor, torch.Tensor]:
+        output_list = []
+        for i in range(len(sequences)):
+            batch_sequences = sequences[i:i+1]
+            batch_inputs = self.tokenizer(batch_sequences, return_tensors="pt")
+            output_list.append(self.__embed_batch_inputs(batch_inputs))
+        
+        # pad output to all get same length s.t. we can pass it around as a tensor:
+        return output_list
+
+    def _embed_batched_constant_length(self, sequences : Iterable[str], batch_size : int = 32) -> torch.Tensor:
         batch_starts = torch.arange(0, len(sequences), batch_size)
         output_list = []
         for batch_start in batch_starts:
             batch_end = min(batch_start + batch_size, len(sequences))
             batch_sequences = sequences[batch_start:batch_end]
             # Truncate/pad sequences if we mandate constant length, do not otherwise:
-            if self.constant_length:
-                batch_inputs = self.tokenizer(batch_sequences, return_tensors="pt", padding='max_length', max_length=self.max_tokenized_length, truncation=True)
-            else:
-                batch_inputs = self.tokenizer(batch_sequences, return_tensors="pt")
-            batch_inputs.to(self.device)
-            with torch.no_grad():
-                batch_outputs = self.model(**batch_inputs, output_hidden_states=True)
-            batch_hidden_states = self.__extract_hidden_state(batch_outputs)
-            output_list.append(batch_hidden_states)
-        # Return output as tensor if we mandate constant length, output list otherwise:
-        if self.constant_length or self.cls_only:
-            return torch.cat(output_list, axis=0)
-        else:
-            return output_list
+            batch_inputs = self.tokenizer(batch_sequences, return_tensors="pt", padding='max_length', max_length=self.max_tokenized_length, truncation=True)
+            output_list.append(self.__embed_batch_inputs(batch_inputs))
+
+        return torch.cat(output_list, axis=0)
+
+def pad_tensor_list(tensor_list: Iterable[torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
+    lengths: List[int] = [t.size(dim=1) for t in tensor_list]
+    lengths = torch.IntTensor(lengths)
+    max_len: int = torch.max(lengths)
+    dim = tensor_list[0].size(dim=2)
+    for i in range(len(tensor_list)):
+        diff = max_len - tensor_list[i].size(dim=1)
+        pad = torch.zeros((1, diff, dim))
+        tensor_list[i] = torch.cat((tensor_list[i], pad), axis=1)
+    return torch.cat(tensor_list, axis=0), lengths
