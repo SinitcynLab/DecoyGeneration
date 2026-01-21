@@ -56,6 +56,7 @@ class SVMClassifierUMAP(SVMClassifier):
             mask = (label == dataset[1].numpy())
             plt.scatter(transformed_data[mask,0], transformed_data[mask,1])
         plt.savefig("val_plot.png")
+        plt.close()
         return super().evaluate_on_data((transformed_data, dataset[1]))
 
     def train_on_data(self, dataset):
@@ -66,6 +67,7 @@ class SVMClassifierUMAP(SVMClassifier):
             mask = (label == dataset[1].numpy())
             plt.scatter(self.umap.embedding_[mask,0], self.umap.embedding_[mask,1])
         plt.savefig("train_plot.png")
+        plt.close()
         return super().train_on_data((self.umap.embedding_, dataset[1]))
 
 def cross_validate_svm(svm: SVMClassifier, main_dataset: LMDBDataset, n_folds: int = 5, metric: BaseMetric = DefaultMetric()):
