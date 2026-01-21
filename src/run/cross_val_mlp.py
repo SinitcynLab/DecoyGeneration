@@ -41,7 +41,7 @@ if __name__ == "__main__":
     # target data:
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
-    N = 6000#len(target_sequences)
+    N = 500#len(target_sequences)
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
 
@@ -58,7 +58,7 @@ if __name__ == "__main__":
         else:
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
-            M = 6000#len(decoy_sequences)
+            M = 500#len(decoy_sequences)
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
             encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
