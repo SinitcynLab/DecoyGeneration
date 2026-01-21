@@ -48,7 +48,7 @@ if __name__ == "__main__":
     decoy_files = [f'data/decoys/{base}.reverse.fasta', f'data/decoys/{base}.shuffle.0.fasta',
                    f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.esm8M.best.c1.0.fasta',
                    f'data/decoys/{base}.esm650M.best.c1.0.fasta']
-    decoy_ids = ['reverse', 'diann_C', 'esm 8M, count=1, 32bit', 'esm 650M, count=1, 32bit']
+    decoy_ids = ['reverse', 'shuffle', 'diann_C', 'esm 8M, count=1, 32bit', 'esm 650M, count=1, 32bit']
     
     print("Cross validation of the MLP:")
     for i, decoy_file in enumerate(decoy_files):
