@@ -52,7 +52,7 @@ def cross_validate_nn(nn: NNClassifier, main_dataset: LMDBDataset,
     corr_train_metrics: np.ndarray = np.zeros((n_folds, metric.dim))
 
     kfold = StratifiedKFold(n_splits=n_folds)
-    for fold, (train_ids, val_ids) in enumerate(kfold.split(torch.zeros(N), main_dataset.get_labels())):
+    for fold, (train_ids, val_ids) in enumerate(kfold.split(np.zeros(N), main_dataset.get_labels())):
         train_ids = shuffle(train_ids)
         val_ids = shuffle(val_ids)
         
@@ -140,6 +140,6 @@ def train_val_iteration(nn: NNClassifier, dataset: LMDBDataset, train_ids: Itera
         del y_pred, t_list, y
         torch.cuda.empty_cache()
     avg_val_metrics = metric.extract_values(predictions, dataset.get_labels(val_ids))
-    save_scores(scores=predictions, epoch=epoch)
+    #save_scores(scores=predictions, epoch=epoch)
 
     return avg_train_metrics, avg_val_metrics

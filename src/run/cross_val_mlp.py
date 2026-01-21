@@ -10,6 +10,7 @@ from src.encoders.spectrum_encoder import VectorSpectrumEncoder
 from src.io.fasta import read_fasta_file
 from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
 from src.io.lmdb_dataset import LMDBDataset
+from sklearn.utils import shuffle
 
 def get_mlp_net():
     net = torch.nn.Sequential(
