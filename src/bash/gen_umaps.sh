@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=target_test_mlp_%j
-#SBATCH --output=target_test_mlp_%j.txt
+#SBATCH --job-name=umap_gen_6000_%j
+#SBATCH --output=umap_gen_6000_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=10:00:00
 #SBATCH --nodes=1
