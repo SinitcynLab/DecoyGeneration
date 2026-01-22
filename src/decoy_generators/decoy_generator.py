@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Iterator, List
 
 from src.io.fasta import FastaRecord
+from src.io.peptide_processor import PeptideProcessor
 
 
 class DecoyGeneratorType(Enum):
@@ -10,14 +11,14 @@ class DecoyGeneratorType(Enum):
     ONE2MANY = 2
 
 
-class DecoyGenerator(object):
+class DecoyGenerator(PeptideProcessor):
     canonical_amino_acids: List[str] = list("ACDEFGHIKLMNPQRSTVWY")
     decoy_generation_type: DecoyGeneratorType = DecoyGeneratorType.ONE2ONE
 
     special_amino_acids: List[str]
 
     def __init__(self, special_amino_acids: List[str]):
-        self.special_amino_acids = special_amino_acids
+        PeptideProcessor.__init__(self, special_amino_acids)
 
     def convert(self, sequences: Iterator[str]) -> Iterator[str]:
         raise NotImplementedError()
@@ -28,7 +29,7 @@ class DecoyGenerator(object):
             FastaRecord(head=record.head, sequence=new_seq)
             for record, new_seq in zip(targets2, self.convert(record.sequence for record in targets1))
         )
-
+    
     def get_positions_special_aas(self, sequence: str) -> Iterator[int]:
         if sequence[0] == "M":  # special case of the first amino acid in proteins, which is usually M
             yield 0
