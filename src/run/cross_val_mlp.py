@@ -59,7 +59,7 @@ if __name__ == "__main__":
             decoy_sequences = [record.sequence for record in decoy_records]
             M = len(decoy_sequences)
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
-            encode_seqs_to_lmdb(decoy_sequences[0:M], decoy_lmdb_path)
+            encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
 
