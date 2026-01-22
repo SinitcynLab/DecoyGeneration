@@ -41,5 +41,4 @@ plt.legend()
 
 # Layout and display
 plt.tight_layout()
-plt.show()
 plt.savefig("src/visualization/images/param_chart.png")

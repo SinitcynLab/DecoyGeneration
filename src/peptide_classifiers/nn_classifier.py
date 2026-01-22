@@ -53,8 +53,8 @@ def cross_validate_nn(nn: NNClassifier, main_dataset: LMDBDataset,
 
     kfold = StratifiedKFold(n_splits=n_folds)
     for fold, (train_ids, val_ids) in enumerate(kfold.split(np.zeros(N), main_dataset.get_labels())):
-        #train_ids = shuffle(train_ids)
-        #val_ids = shuffle(val_ids)
+        train_ids = shuffle(train_ids)
+        val_ids = shuffle(val_ids)
         
         nn.reset()
         optimizer = torch.optim.Adam(nn.parameters(), lr=learning_rate)

@@ -7,23 +7,23 @@ plt.style.use("bmh")
 # Data
 categories = ['Target', 'Shuffle', 'Reverse', 'DIA-NN', 'ESM 8M', 'ESM 650M']
 
-group1 = [0, 0.519]
-error1 = [0, 0.020]
+group1 = [0.516, 0.519]
+error1 = [0.014, 0.020]
 
-group2 = [0, 0.957]
-error2 = [0, 0.012]
+group2 = [0.953, 0.957]
+error2 = [0.005, 0.012]
 
-group3 = [0, 0.940]
-error3 = [0, 0.012]
+group3 = [0.946, 0.940]
+error3 = [0.005, 0.012]
 
-group4 = [0, 0.702]
-error4 = [0, 0.070]
+group4 = [0.698, 0.702]
+error4 = [0.011, 0.070]
 
-group5 = [0, 0.656]
-error5 = [0, 0.042]
+group5 = [0.722, 0.656]
+error5 = [0.016, 0.042]
 
-group6 = [0, 0.563]
-error6 = [0, 0.065]
+group6 = [0.681, 0.563]
+error6 = [0.011, 0.065]
 
 data = np.array([group1, group2, group3, group4, group5, group6])
 err = np.array([error1, error2, error3, error4, error5, error6])
@@ -47,5 +47,4 @@ plt.legend()
 
 # Layout and display
 plt.tight_layout()
-plt.show()
 plt.savefig("src/visualization/images/quality_bar_chart.png")

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=cross_val_mlp_%j
-#SBATCH --output=cross_val_mlp_%j.txt
+#SBATCH --job-name=target_test_mlp_%j
+#SBATCH --output=target_test_mlp_%j.txt
 #SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=10:00:00
 #SBATCH --nodes=1
