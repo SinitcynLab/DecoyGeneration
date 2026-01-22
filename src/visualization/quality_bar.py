@@ -7,8 +7,8 @@ plt.style.use("bmh")
 # Data
 categories = ['Target', 'Shuffle', 'Reverse', 'DIA-NN', 'ESM 8M', 'ESM 650M']
 
-group1 = [0.516, 0.519]
-error1 = [0.014, 0.020]
+group1 = [0.505, 0.519]
+error1 = [0.005, 0.020]
 
 group2 = [0.953, 0.957]
 error2 = [0.005, 0.012]
