@@ -17,7 +17,7 @@ from src.io.fasta import write_fasta_file, read_fasta_file
 from src.io.utils import remove_long_sequences
 
 if __name__ == "__main__":
-    target_filename: str = "data/targets/UP000002311_559292.fasta"
+    target_filename: str = "data/targets/human_and_crap.fasta"
     write_batched: bool = True
 
     special_amino_acids: List[str] = ['R', 'K']
@@ -27,15 +27,8 @@ if __name__ == "__main__":
     n: int = 1
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
-        MaxProbMaskingEsmGenerator(
-            local_path="models/esm2_t33_650M_UR50D",
-            random=random,
-            special_amino_acids=special_amino_acids,
-            sort_optimization=True,
-            batch_size=1,
-            ml_generator_type=MlGeneratorType.BEST,
-            device=device,
-            weight_type=torch.float32
+        DiannGenerator(
+            special_amino_acids=special_amino_acids
         )
     ]
     for generator in generators:
