@@ -55,7 +55,7 @@ class FeedForwardNNClassifier(NNClassifier):
         y_pred = self(X)
         loss = loss_fn(y_pred, y)
         optimizer.zero_grad()
-        loss.backward(retain_graph=True)
+        loss.backward()
         optimizer.step()
         del X, y, loss
         torch.cuda.empty_cache()
