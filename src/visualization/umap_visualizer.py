@@ -4,7 +4,6 @@ import umap
 import pandas as pd
 import argparse
 
-from umap import plot
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from typing import Iterable
