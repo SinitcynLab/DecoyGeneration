@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=test_smart_mlp_%j
-#SBATCH --output=test_smart_mlp_%j.txt
-#SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
-#SBATCH --time=10:00:00
+#SBATCH --job-name=smart_mask_650M_1553_%j
+#SBATCH --output=smart_mask_650M_1553_%j.txt
+#SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
+#SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
