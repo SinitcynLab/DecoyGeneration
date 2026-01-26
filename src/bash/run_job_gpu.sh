@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH --job-name=bucket_mask_mass_%j
-#SBATCH --output=bucket_mask_mass_%j.txt
-#SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
+#SBATCH --job-name=rnn_all_data_cross_val_bucket_%j
+#SBATCH --output=rnn_all_data_cross_val_bucket_%j.txt
+#SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/main.py
+python -u src/run/cross_val_rnn.py
