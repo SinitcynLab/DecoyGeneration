@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=smart_mask_650M_1553_%j
-#SBATCH --output=smart_mask_650M_1553_%j.txt
+#SBATCH --job-name=smart_mask_mass_retry_%j
+#SBATCH --output=smart_mask_mass_retry_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
