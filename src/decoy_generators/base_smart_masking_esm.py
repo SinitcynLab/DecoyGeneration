@@ -51,7 +51,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
         if og_aa_id in current_valid_aa_ids: current_valid_aa_ids.remove(og_aa_id)
         return current_valid_aa_ids
 
-    def _get_score_and_token_choice(self, probs: Tensor, position: int, original_aa: str) -> Tuple[float, Tensor]:
+    def _get_score_and_token_choice(self, probs: Tensor, pos_in_prob_tensor: int, original_aa: str) -> Tuple[float, Tensor]:
         raise NotImplementedError()
         
     def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
@@ -78,7 +78,8 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                         outputs = self.model(**input)
                     probs: Tensor = torch.softmax(outputs.logits, dim=-1)
                     # compute difference between top-2 most likely tokens:
-                    score, token_choice, sav_arr, og_aa_id = self._get_score_and_token_choice(probs, pos, sequence[pos])
+                    prob_pos = pos + 1 # increment by 1 because the 0-th entry of prob tensor is for CLS-token
+                    score, token_choice, sav_arr, og_aa_id = self._get_score_and_token_choice(probs, prob_pos, sequence[pos])
                     # if new smallest found, save position and choice:
                     if score > max_score:
                         max_score = score
