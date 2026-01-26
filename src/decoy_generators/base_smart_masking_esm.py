@@ -70,16 +70,16 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                 sav_arr_at_max = None
                 og_aa_id_at_max = None
                 for pos in peptide:
+                    token_pos = pos + 1 # increment by 1 because the 0-th entry of prob tensor is for CLS-token
                     input["input_ids"] = torch.clone(modified_input_ids)
                     # Mask out  position in the peptide:
-                    input["input_ids"][0][pos] = self.tokenizer.mask_token_id
+                    input["input_ids"][0][token_pos] = self.tokenizer.mask_token_id
                     # obtain token probabilities:
                     with torch.no_grad():
                         outputs = self.model(**input)
                     probs: Tensor = torch.softmax(outputs.logits, dim=-1)
-                    # compute difference between top-2 most likely tokens:
-                    prob_pos = pos + 1 # increment by 1 because the 0-th entry of prob tensor is for CLS-token
-                    score, token_choice, sav_arr, og_aa_id = self._get_score_and_token_choice(probs, prob_pos, sequence[pos])
+                    # compute score:
+                    score, token_choice, sav_arr, og_aa_id = self._get_score_and_token_choice(probs, token_pos, sequence[pos])
                     # if new smallest found, save position and choice:
                     if score > max_score:
                         max_score = score

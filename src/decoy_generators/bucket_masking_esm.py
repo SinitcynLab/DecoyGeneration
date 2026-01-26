@@ -47,7 +47,7 @@ class BucketMaskingEsmGenerator(EsmGenerator):
 
         special_indices = [i for i in range(len(self.canonical_amino_acids)) if self.canonical_amino_acids[i] in self.special_amino_acids]
         sequence_means: List[Tensor] = []
-        sequence_masks = List[List[int]] = []
+        sequence_masks: List[List[int]] = []
         for seq_id, sequence in enumerate(target_batch):
             sequence_mask: List[int] = []
             L = len(sequence)
@@ -56,11 +56,12 @@ class BucketMaskingEsmGenerator(EsmGenerator):
             sequence_mean = sample_mean[seq_id, :, :].squeeze(0) # [L, vocab_size]
             sequence_means.append(sequence_mean)
             for i in range(L): # for each position
-                sequence_mean[i, disable_dict[i] + special_indices] = 0 # set the probability of the originally present and special amino acids very low
+                sequence_mean[i, [disable_dict[i]] + special_indices] = 0 # set the probability of the originally present and special amino acids very low
             for peptide in self.get_all_peptides(sequence):
-                peptide_mean = sequence_mean[peptide[0]:peptide[-1], :] # [peptide_length, vocab_size]
+                peptide_mean = sequence_mean[peptide[0]:peptide[-1]+1, :] # [peptide_length, vocab_size]
                 peptide_max = peptide_mean.max(dim=1).values # [peptide_length]
-                _, optimal_pos = torch.topk(peptide_max, k=self.mask_count, largest=True) # get positions with highest max prob
+                k = min(self.mask_count, len(peptide))
+                _, optimal_pos = torch.topk(peptide_max, k=k, largest=True) # get positions with highest max prob
                 sequence_mask = sequence_mask + [i for i in optimal_pos] # append them to the mask for this sequence
             sequence_masks.append(sequence_mask) # append mask of this sequence to list of all masks
 
@@ -70,7 +71,7 @@ class BucketMaskingEsmGenerator(EsmGenerator):
     
     def _get_sample(self, target_batch: List[str], inputs: BatchEncoding) -> List[List[float]]:
         L = max([len(seq) for seq in target_batch])
-        vocab_size = len(self.canonical_amino_acids)
+        vocab_size = self.tokenizer.vocab_size
         batch_size = len(target_batch)
         sample_probs = torch.zeros((batch_size, L, vocab_size))
 
@@ -88,7 +89,7 @@ class BucketMaskingEsmGenerator(EsmGenerator):
             for seq_id in range(batch_size):
                 current_bucket = torch.tensor(bucket_list[seq_id][bucket_id], dtype=int)
                 current_bucket_incr = current_bucket + 1 # add 1 because first token is now CLS token (final token is SEP token)
-                sample_probs[seq_id, current_bucket, :] = bucket_probs[seq_id][current_bucket_incr][:, self.aa_ids]
+                sample_probs[seq_id, current_bucket, :] = bucket_probs[seq_id][current_bucket_incr][:]
                 # TODO: double-check if above line sets correctly by debugging.
 
         return sample_probs # return collected probs
