@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=gen_bucket_650_%j
-#SBATCH --output=gen_bucket_650_%j.txt
+#SBATCH --job-name=mlp_all_data_bucket_%j
+#SBATCH --output=mlp_all_data_bucket_%j.txt
 #SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/main.py
+python -u src/run/cross_val_rnn.py
