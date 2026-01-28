@@ -54,8 +54,8 @@ def generate_umap_image(files: Iterable[str], seq_ids: Iterable[str], number: in
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--files", help="What files to obtain sequences from to plot in a UMAP image.")
-    parser.add_argument("-i", "--identifiers", help="What labels to use for the sequences from the various files.")
+    parser.add_argument("-f", "--files", help="What files to obtain sequences from to plot in a UMAP image.", nargs="+")
+    parser.add_argument("-i", "--identifiers", help="What labels to use for the sequences from the various files.", nargs="+")
     parser.add_argument("-n", "--number", type=int, help="The number of points to plot per class in the UMAP image.", default=100)
 
     args = parser.parse_args()
