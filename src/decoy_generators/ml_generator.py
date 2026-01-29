@@ -106,13 +106,14 @@ class MlGenerator(DecoyGenerator):
         mask_positions: List[List[int]] = [[] for _ in range(len(target_batch))]
         for sequence_idx, sequence in enumerate(target_batch):
             for mask_idx in self._get_masked_positions(sequence):
-                inputs["input_ids"][sequence_idx][mask_idx] = self.tokenizer.mask_token_id
+                inputs["input_ids"][sequence_idx][mask_idx + 1] = self.tokenizer.mask_token_id
                 mask_positions[sequence_idx].append(mask_idx)
 
         with torch.no_grad():
             with torch.autocast("cuda"): 
                 outputs = self.model(**inputs)
         probs: Tensor = torch.softmax(outputs.logits, dim=-1)  # [batch_size, L, vocab]
+        probs = probs[:, 1:, :] # remove [cls]-entry
         return (probs, mask_positions)
 
     def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:

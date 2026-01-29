@@ -28,7 +28,7 @@ if __name__ == "__main__":
     n: int = 1
     random: Random = Random(42)
     generators: List[DecoyGenerator] = [
-        BucketMaskingEsmGenerator(
+        EsmGenerator(
             local_path="models/esm2_t33_650M_UR50D",
             random=random,
             special_amino_acids=special_amino_acids,
@@ -36,7 +36,9 @@ if __name__ == "__main__":
             batch_size=1,
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
-            weight_type=torch.float32
+            weight_type=torch.float32,
+            masking_type=MaskingType.COUNT,
+            mask_count=1
         )
     ]
     for generator in generators:
