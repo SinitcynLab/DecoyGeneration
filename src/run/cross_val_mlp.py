@@ -44,8 +44,8 @@ if __name__ == "__main__":
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
 
-    decoy_files = [f'data/decoys/{base}.esm650M.best.c1.0.new.fasta']
-    decoy_ids = ['ESM650 new']
+    decoy_files = [f'data/decoys/{base}.esm8M.best.c1.0.new.fasta']
+    decoy_ids = ['ESM8 new']
     
     print("Cross validation of the MLP:")
     for i, decoy_file in enumerate(decoy_files):
