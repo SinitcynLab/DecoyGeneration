@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=mlp_all_data_650M_new_%j
 #SBATCH --output=mlp_all_data_650M_new_%j.txt
-#SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
+#SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=10:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
