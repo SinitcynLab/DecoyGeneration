@@ -26,8 +26,9 @@ def generate_umap_image(files: Iterable[str], seq_ids: Iterable[str], number: in
         records = read_fasta_file(file)
         sequences = [record.sequence for record in records]
         encodings = encoder(sequences[0:number])
+        encodings = torch.cat(encodings, dim=0)
         file_data: np.ndarray = encodings.numpy()
-        file_labels = np.ones(N, dtype=int) * i
+        file_labels = np.ones(number, dtype=int) * i
         
         data_list.append(file_data)
         label_list.append(file_labels)
