@@ -94,7 +94,8 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                 # we now have the position and token choice for this peptide
                 # we immediately put in the most-easily substituted aa and then proceed to next peptide, 
                 # taking this new aa into account:
-                modified_input_ids[0][max_score_pos] = token_choice_at_max
+                token_choice_at_max_id = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids[token_choice_at_max])
+                modified_input_ids[0][max_score_pos] = token_choice_at_max_id
 
             new_sequence: List[str] = list(sequence)
             for mask_position, token_choice in max_pos_and_choices:
