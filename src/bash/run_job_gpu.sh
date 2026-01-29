@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH --job-name=mlp_all_data_8M_new_%j
-#SBATCH --output=mlp_all_data_8M_new_%j.txt
-#SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
+#SBATCH --job-name=gen_max_mass_8M_new_%j
+#SBATCH --output=gen_max_mass_8M_new_%j.txt
+#SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/run/cross_val_mlp.py
+python -u src/main.py
