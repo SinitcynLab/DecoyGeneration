@@ -16,9 +16,6 @@ from src.io.fasta import write_fasta_file, read_fasta_file
 from src.io.utils import remove_long_sequences
 
 def generate_decoys(target_file: str, n: int, generator_list: List[DecoyGenerator]):
-    special_amino_acids: List[str] = ['R', 'K']
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(device)
     n: int = 1
     for generator in generator_list:
         branch_on_generator(target_file, n, generator)
