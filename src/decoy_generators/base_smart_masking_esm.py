@@ -24,53 +24,37 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
         EsmGenerator.__init__(self, local_path, random, special_amino_acids, sort_optimization,
                              batch_size, ml_generator_type, device, MaskingType.COUNT, 0, 1, weight_type)
         self.k: int = len(self.canonical_amino_acids) # you want to compute scores over all amino acids
-        self.aa_ids = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
+        self.aa_ids: List[int] = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
         
     def __str__(self):
-        param_count = self.local_path.split('/')[-1].split('_')[2]
-        out = f"smart_masking_esm_{param_count}"
+        param_count: str = self.local_path.split('/')[-1].split('_')[2]
+        out: str = f"smart_masking_esm_{param_count}"
         
         if self.weight_type == torch.float16:
             out = out + ".16b"
 
         return out
-            
-    def get_all_peptides(self, sequence: str):
-        positions: List[int] = list(self.get_positions_special_aas(sequence))
-        for i in range(1, len(positions)):
-            start: int = positions[i - 1] + 1
-            end: int = positions[i]
-            if start == end:
-                continue
-            else:
-                yield range(start, end)
-    
-    def _get_current_val_aa_ids(self, og_aa_id: int):
-        # get all 'valid' aa's that could fill the spot (exclude special aas and the original aa):
-        current_valid_aa_ids = list(self.valid_aa_ids)
-        if og_aa_id in current_valid_aa_ids: current_valid_aa_ids.remove(og_aa_id)
-        return current_valid_aa_ids
 
     def _get_score_and_token_choice(self, probs: Tensor, pos_in_prob_tensor: int, original_aa: str) -> Tuple[float, Tensor]:
         raise NotImplementedError()
         
     def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
         for sequence in target_batch:
-            max_pos_and_choices: List[Tuple[int, NamedTuple[Tensor, Tensor]]] = []
+            max_pos_and_choices: List[Tuple[int, int]] = []
             sav_list = []
             # Tokenize sequence:
             input = self.tokenizer(sequence, return_tensors="pt", padding=True)
             input.to(self.device)
             # Save original input ids:
-            modified_input_ids = torch.clone(input["input_ids"])
+            modified_input_ids: Tensor = torch.clone(input["input_ids"])
             for peptide in self.get_all_peptides(sequence):
                 max_score: float = -torch.inf
                 max_score_pos: int = 0
-                token_choice_at_max = None
+                token_choice_at_max: int = None
                 sav_arr_at_max = None
                 og_aa_id_at_max = None
                 for pos in peptide:
-                    token_pos = pos + 1 # increment by 1 because the 0-th entry of prob tensor is for CLS-token
+                    token_pos: int = pos + 1 # increment by 1 because the 0-th entry of prob tensor is for CLS-token
                     input["input_ids"] = torch.clone(modified_input_ids)
                     # Mask out  position in the peptide:
                     input["input_ids"][0][token_pos] = self.tokenizer.mask_token_id
