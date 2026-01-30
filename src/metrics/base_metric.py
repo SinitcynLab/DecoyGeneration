@@ -7,10 +7,10 @@ from collections.abc import Callable
 
 class BaseMetric(object):
     def __init__(self, metric_list: Iterable[Callable], metric_names: Iterable[str], device: torch.device = 'cpu'):
-        self.dim = len(metric_list)
+        self.dim: int = len(metric_list)
         self.metric_list = metric_list
         self.metric_names = metric_names
-        self.device = device
+        self.to(device)
 
     def extract_values(self, predictions: Tensor, targets: Tensor) -> np.ndarray:
         targets_int: Tensor = targets.int()
@@ -29,8 +29,8 @@ class BaseMetric(object):
         if value_arr.ndim != 2:
             raise ValueError("Function 'print_metric_series' expects a 2D array. Did you mean 'print_metric'?")
         for i, name in enumerate(self.metric_names):
-            mean = np.mean(value_arr[:,i])
-            std = np.std(value_arr[:,i])
+            mean: np.floating = np.mean(value_arr[:,i])
+            std: np.floating = np.std(value_arr[:,i])
             print(f"{name}: {mean:.3f} ± {std:.3f}.")
 
     def to(self, device: torch.device):

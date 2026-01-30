@@ -9,10 +9,9 @@ from src.decoy_generators.diann_generator import DiannGenerator
 from src.decoy_generators.esm_generator import EsmGenerator, MaskingType, MlGeneratorType
 from src.decoy_generators.reverse_generator import ReverseGenerator
 from src.decoy_generators.shuffle_generator import ShuffleGenerator
-from src.decoy_generators.diann_modifications import DiannRandomAcid, DiannRandomPos
 from src.decoy_generators.ml_generator import MlGenerator
-from src.decoy_generators.smart_masking_esm import MaxProbMaskingEsmGenerator, FreqMaskingEsmGenerator, RelDiffMaskingEsmGenerator
 from src.decoy_generators.random_replace_generator import RandomReplaceGenerator
+from src.decoy_generators.smart_masking_esm import MaxProbMaskingEsmGenerator
 from src.io.fasta import write_fasta_file, read_fasta_file
 from src.io.utils import remove_long_sequences
 
@@ -64,7 +63,7 @@ if __name__ == "__main__":
             masking_type=MaskingType.COUNT,
             mask_count=1
         ),
-        RelDiffMaskingEsmGenerator(
+        MaxProbMaskingEsmGenerator(
             local_path="models/esm2_t6_8M_UR50D",
             random=random,
             special_amino_acids=special_amino_acids,
