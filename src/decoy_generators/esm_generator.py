@@ -45,12 +45,12 @@ class EsmGenerator(MlGenerator):
         self.model.to(self.device)
 
     def __str__(self):
-        out = ""
-        param_count = self.local_path.split('/')[-1].split('_')[2]
+        out: str = ""
+        param_count: str = self.local_path.split('/')[-1].split('_')[2]
 
         if self.masking_type == MaskingType.PERCENT:
-            mask_percent = f"{self.mask_percent}".replace(".", "_") # avoid also using '.' for decimal point
-            out = f"esm{param_count}.{self.ml_generator_type.name.lower()}.p{self.mask_percent}"
+            mask_percent: str = f"{self.mask_percent}".replace(".", "") # avoid also using '.' for decimal point
+            out = f"esm{param_count}.{self.ml_generator_type.name.lower()}.p{mask_percent}"
         elif self.masking_type == MaskingType.COUNT:
             out = f"esm{param_count}.{self.ml_generator_type.name.lower()}.c{self.mask_count}"
 

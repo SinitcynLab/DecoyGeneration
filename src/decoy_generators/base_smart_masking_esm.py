@@ -35,13 +35,12 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
 
         return out
 
-    def _get_score_and_token_choice(self, probs: Tensor, pos_in_prob_tensor: int, original_aa: str) -> Tuple[float, Tensor]:
+    def _get_score_and_token_choice(self, probs: Tensor, pos: int, original_aa: str) -> Tuple[float, Tensor]:
         raise NotImplementedError()
         
     def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
         for sequence in target_batch:
             max_pos_and_choices: List[Tuple[int, int]] = []
-            sav_list = []
             # Tokenize sequence:
             input = self.tokenizer(sequence, return_tensors="pt", padding=True)
             input.to(self.device)
@@ -51,29 +50,24 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                 max_score: float = -torch.inf
                 max_score_pos: int = 0
                 token_choice_at_max: int = None
-                sav_arr_at_max = None
-                og_aa_id_at_max = None
                 for pos in peptide:
-                    token_pos: int = pos + 1 # increment by 1 because the 0-th entry of prob tensor is for CLS-token
                     input["input_ids"] = torch.clone(modified_input_ids)
                     # Mask out  position in the peptide:
-                    input["input_ids"][0][token_pos] = self.tokenizer.mask_token_id
+                    input["input_ids"][0][pos + 1] = self.tokenizer.mask_token_id # increment by one to account for [cls]
                     # obtain token probabilities:
                     with torch.no_grad():
                         outputs = self.model(**input)
                     probs: Tensor = torch.softmax(outputs.logits, dim=-1)
+                    probs = probs[0, 1:, :] # drop the first dimension (batch_size is always 1 here) and drop entries corresponding to [cls]
                     # compute score:
-                    score, token_choice, sav_arr, og_aa_id = self._get_score_and_token_choice(probs, token_pos, sequence[pos])
+                    score, token_choice = self._get_score_and_token_choice(probs, pos, sequence[pos])
                     # if new smallest found, save position and choice:
                     if score > max_score:
                         max_score = score
                         max_score_pos = pos
                         token_choice_at_max = token_choice
-                        sav_arr_at_max = sav_arr
-                        og_aa_id_at_max = og_aa_id
                 # save position and token choice for this peptide:
                 max_pos_and_choices.append((max_score_pos, token_choice_at_max))
-                sav_list.append((sav_arr_at_max, og_aa_id_at_max))
 
                 # we now have the position and token choice for this peptide
                 # we immediately put in the most-easily substituted aa and then proceed to next peptide, 
@@ -84,22 +78,14 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             new_sequence: List[str] = list(sequence)
             for mask_position, token_choice in max_pos_and_choices:
                 new_sequence[mask_position] = self.canonical_amino_acids[token_choice]
-            with open(f'token_choices_{self}.txt', 'a') as file:
-                for _, token_choice in max_pos_and_choices:
-                    file.write(f"{token_choice}\n")
-            with open(f'og_aa_{self}.txt', 'a') as file:
-                for _, og_aa in sav_list:
-                    file.write(f"{og_aa}\n")
-            with open(f'prob_distr_{self}.txt', 'a') as file:
-                for sav_arr, _ in sav_list:
-                    np.savetxt(file, sav_arr_at_max.cpu().numpy())
-                    file.write('\n')
 
             yield "".join(new_sequence)
+    
+    def _get_feasible_token_with_max_score(self, original_aa: str, scores: Tensor, tokens: Tensor):
+        sort_idx = torch.argsort(scores, descending=True)
 
-    # should be in parent class, but kept it here because I'm not 1000% sure of correctness
-    def _get_first_feasible_index(self, original_aa: str, top_tokens: Tensor):
-        for idx in top_tokens:
+        token_choice = 0 # if no aa satisfies constraints, default to A (first amino acid in list)
+        for idx in tokens[sort_idx]:
             new_aa: str = self.canonical_amino_acids[idx]
             if new_aa == original_aa:
                 continue
@@ -108,11 +94,9 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             if (new_aa == 'I' and original_aa == 'L') or (
                     new_aa == 'L' and original_aa == 'I'):
                 continue
-            return idx
-        # if no aa satisfies constraints, default to original (esm gen itself does this too):
-        return self.canonical_amino_acids.index(original_aa)
-    
-    def _get_feasible_token_with_max_score(self, original_aa: str, scores: Tensor, tokens: Tensor):
-        sort_idx = torch.argsort(scores, descending=True)
-        token_choice = self._get_first_feasible_index(original_aa, tokens[sort_idx])
-        return scores[torch.where(tokens == token_choice)[0]], token_choice
+            token_choice = idx
+        
+        # recover the index of token_choice amoung the unsorten tokens tensor:
+        pos_token_choice: int = torch.argmax(tokens == token_choice)
+        # use aforementioned position to get score corresponding to token_choice:
+        return scores[pos_token_choice], token_choice

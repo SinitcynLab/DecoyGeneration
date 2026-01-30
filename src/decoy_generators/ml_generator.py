@@ -122,7 +122,7 @@ class MlGenerator(DecoyGenerator):
 
         k: int = 2 + len(self.special_amino_acids)  # why 2 - aa itself and I/L dillema
 
-        probs, mask_positions = self._mask_and_get_probs(target_batch)
+        probs, mask_positions = self._mask_and_get_probs(target_batch) # get the mask positions and probabilities from batch inference
 
         for sequence_idx, sequence in enumerate(target_batch):
             new_sequence: List[str] = list(sequence)
@@ -144,16 +144,7 @@ class MlGenerator(DecoyGenerator):
                     if (new_aa == 'I' and original_aa == 'L') or (
                             new_aa == 'L' and original_aa == 'I'):
                         continue
-                    with open(f'token_choices_{self}.txt', 'a') as file:
-                        file.write(f"{idx}\n")
-                    with open(f'og_aa_{self}.txt', 'a') as file:
-                        file.write(f'{self.canonical_amino_acids.index(original_aa)}\n')
-                    og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
-                    new_aa_id = self.tokenizer.convert_tokens_to_ids(new_aa)
-                    sav_arr = torch.tensor((probs[sequence_idx, mask_position, og_aa_id], probs[sequence_idx, mask_position, new_aa_id]))
-                    with open(f'prob_distr_{self}.txt', 'a') as file:
-                        np.savetxt(file, sav_arr.cpu().numpy())
-                        file.write('\n')
                     new_sequence[mask_position] = new_aa
                     break
+                
             yield "".join(new_sequence)
