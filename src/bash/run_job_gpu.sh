@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=gen_max_mass_8M_new_rest_%j
-#SBATCH --output=gen_max_mass_8M_new_rest_%j
+#SBATCH --output=gen_max_mass_8M_new_rest_%j.txt
 #SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=16:00:00
 #SBATCH --nodes=1
