@@ -17,12 +17,22 @@ from src.io.utils import remove_long_sequences
 from src.run.generate import branch_on_generator
 
 def timing_test(test_file: str, N: int, generator_list: List[DecoyGenerator]):
-    special_amino_acids: List[str] = ['R', 'K']
-    device = "cpu" # on CPU because some approaches (e.g. shuffle) don't leverage GPU, making comparison unfair
-    n: int = 1
-
     for generator in generator_list:
-        start_time: float = 0
-        end_time: float = 0
-        branch_on_generator(test_file, 1, generator)
-        print(f"{generator}: {end_time - start_time:.3f} seconds.")
+        duration = time_generator(test_file, generator, N)
+        print(f"{generator}: {duration:.3f} seconds.")
+
+def time_generator(target_file: str, generator: DecoyGenerator, N) -> float:
+    target_records = [record for record in read_fasta_file(target_file)]
+    target_records = target_records[0:N]
+    if issubclass(type(generator), MlGenerator):
+        batch_starts = np.arange(0, len(target_records), generator.batch_size)
+        start_time = time.perf_counter()
+        for start in batch_starts:
+            end = min(start + generator.batch_size, len(target_records))
+            generator.convert_fasta(target_records[start:end])
+        end_time = time.perf_counter()
+    else:
+        start_time = time.perf_counter()
+        generator.convert_fasta(target_records)
+        end_time = time.perf_counter()
+    return end_time - start_time

@@ -38,17 +38,18 @@ def process_generate(generator_strings: List[str], target_file: str, n: int, out
     generate_decoys(target_file, generators, n, output_dir)
 
 def process_timing(generator_strings: List[str], target_file: str, number_of_seqs_for_timing: int, seed:int, mask_count: int):
-    generators = create_generators_from_list(generator_strings, seed, mask_count)
+    generators = create_generators_from_list(generator_strings, seed, mask_count, "cpu")
     timing_test(target_file, number_of_seqs_for_timing, generators)
 
-def create_generators_from_list(generator_strings: List[str], seed: int, mask_count: int):
+def create_generators_from_list(generator_strings: List[str], seed: int, mask_count: int, device: torch.device = None):
     generators: List[DecoyGenerator] = []
     for generator_string in generator_strings:
-        generators.append(create_generator_from_string(generator_string), seed, mask_count)
+        generators.append(create_generator_from_string(generator_string), seed, mask_count, device)
     return generators
 
-def create_generator_from_string(generator_string: str, seed: int, mask_count: int):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def create_generator_from_string(generator_string: str, seed: int, mask_count: int, device: torch.device = None):
+    if device == None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     random: Random = Random(seed)
     special_amino_acids: List[str] = ['R', 'K']
 
