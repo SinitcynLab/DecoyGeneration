@@ -21,7 +21,7 @@ def generate_decoys(target_file: str, generator_list: List[DecoyGenerator], n: i
 
 def branch_on_generator(target_file: str, generator: DecoyGenerator, n: int, destination_dir: str):
     filename, extension = os.path.splitext(target_file)
-    filename = os.path.join(destination_dir, filename)
+    filename = os.path.join(destination_dir, os.path.basename(filename))
     if issubclass(type(generator), MlGenerator):
         for i in range(n):
             filename_out = f"{filename}.{generator}.{i}{extension}"

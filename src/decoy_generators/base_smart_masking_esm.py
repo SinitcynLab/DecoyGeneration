@@ -95,8 +95,9 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                     new_aa == 'L' and original_aa == 'I'):
                 continue
             token_choice = idx
+            break
         
-        # recover the index of token_choice amoung the unsorten tokens tensor:
-        pos_token_choice: int = torch.argmax(tokens == token_choice)
-        # use aforementioned position to get score corresponding to token_choice:
+        # recover the index of token_choice among the unsorted tokens tensor:
+        pos_token_choice: int = torch.nonzero(tokens == token_choice)[0]
+        # use aforementioned position to get score corresponding to chosen token:
         return scores[pos_token_choice], token_choice

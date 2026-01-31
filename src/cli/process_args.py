@@ -22,7 +22,7 @@ def process_args(args: argparse.Namespace):
     if command == "evaluate":
         process_evaluate(args.classifier, args.target_file, args.decoy_files, args.decoy_ids)
     elif command == "generate":
-        process_generate(args.generators, args.target_file, args.gen_count, args.output_directory, args.random_seed, args.mask_count)
+        process_generate(args.generators, args.target_file, args.gen_count, args.output_directory, args.seed, args.mask_count)
     elif command == "time":
         process_timing(args.generators, args.target_file, args.timing_sample)
 
@@ -44,7 +44,7 @@ def process_timing(generator_strings: List[str], target_file: str, number_of_seq
 def create_generators_from_list(generator_strings: List[str], seed: int, mask_count: int, device: torch.device = None):
     generators: List[DecoyGenerator] = []
     for generator_string in generator_strings:
-        generators.append(create_generator_from_string(generator_string), seed, mask_count, device)
+        generators.append(create_generator_from_string(generator_string, seed, mask_count, device))
     return generators
 
 def create_generator_from_string(generator_string: str, seed: int, mask_count: int, device: torch.device = None):
