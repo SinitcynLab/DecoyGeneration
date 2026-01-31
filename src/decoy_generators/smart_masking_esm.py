@@ -1,6 +1,5 @@
 import torch
 
-from src.decoy_generators.ml_generator import MlGeneratorType, MaskingType
 from src.decoy_generators.base_smart_masking_esm import BaseSmartMaskingEsmGenerator
 
 from torch import Tensor
