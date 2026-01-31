@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 import umap
+import random
 
 from collections.abc import Callable
 from typing import List, Tuple
@@ -8,7 +9,6 @@ from sklearn import svm
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import shuffle
 from torch import Tensor
-from random import Random
 
 from src.peptide_classifiers.peptide_classifier import PeptideClassifier
 from src.encoders.peptide_encoder import PeptideEncoder
