@@ -1,9 +1,8 @@
 import torch
-import numpy as np
 
 from src.decoy_generators.ml_generator import MlGeneratorType, MaskingType
 from src.decoy_generators.esm_generator import EsmGenerator
-from typing import List, Iterator, Tuple, NamedTuple
+from typing import List, Iterator, Tuple
 
 from time import time
 from random import Random

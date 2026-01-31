@@ -1,16 +1,11 @@
 import torch
-import gc
 
 from collections.abc import Callable
-from typing import Iterable, Tuple
-from src.peptide_classifiers.nn_classifier import NNClassifier, cross_validate_nn, train_nn
+from typing import Iterable
+from src.peptide_classifiers.nn_classifier import NNClassifier
 from src.encoders.peptide_encoder import PeptideEncoder
 from typing import Iterable
-from src.metrics.base_metric import BaseMetric
-from src.metrics.default_metric import DefaultMetric
-from sklearn.utils import shuffle
 from src.encoders.transformer_encoder import pad_tensor_list
-from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence
 
 class RecurrentNNClassifier(NNClassifier):
     def __init__(self, rnn : torch.nn.RNN, network : torch.nn.Sequential, encoder : PeptideEncoder, name: str, device : torch.device, resetter: Callable = None):

@@ -1,5 +1,3 @@
-import torch
-
 from src.metrics.base_metric import BaseMetric
 from torchmetrics import AUROC
 from torchmetrics.classification import BinaryAccuracy, BinaryPrecision, BinaryRecall

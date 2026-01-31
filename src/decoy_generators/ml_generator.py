@@ -1,6 +1,5 @@
 import math
 import torch
-import numpy as np
 
 from typing import Iterator, List, Tuple
 from random import Random

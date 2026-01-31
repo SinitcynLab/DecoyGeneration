@@ -1,6 +1,5 @@
 from typing import Iterator, List
 from src.io.fasta import FastaRecord
-import os, shutil
 
 def split_targets(target_sequences: List[str]):
     N = len(target_sequences)//2

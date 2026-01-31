@@ -1,11 +1,8 @@
 import torch
-import numpy as np
 
 from src.decoy_generators.ml_generator import MlGeneratorType, MaskingType
 from src.decoy_generators.base_smart_masking_esm import BaseSmartMaskingEsmGenerator
-from typing import List, Iterator, Tuple, NamedTuple
 
-from random import Random
 from torch import Tensor
     
 class MaxProbMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):

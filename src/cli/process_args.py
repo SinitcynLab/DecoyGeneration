@@ -4,14 +4,12 @@ import torch
 from typing import List
 from random import Random
 
-from src.decoy_generators.decoy_generator import DecoyGenerator, DecoyGeneratorType
+from src.decoy_generators.decoy_generator import DecoyGenerator
 from src.decoy_generators.diann_generator import DiannGenerator
 from src.decoy_generators.esm_generator import EsmGenerator, MaskingType, MlGeneratorType
 from src.decoy_generators.reverse_generator import ReverseGenerator
 from src.decoy_generators.shuffle_generator import ShuffleGenerator
-from src.decoy_generators.ml_generator import MlGenerator
 from src.decoy_generators.smart_masking_esm import MaxProbMaskingEsmGenerator
-from src.decoy_generators.random_replace_generator import RandomReplaceGenerator
 from src.run.cross_val_mlp import cross_val_mlp
 from src.run.cross_val_rnn import cross_val_rnn
 from src.run.generate import generate_decoys

@@ -1,5 +1,4 @@
 import torch
-from typing import Iterable
 
 from src.encoders.peptide_encoder import PeptideEncoder
 
