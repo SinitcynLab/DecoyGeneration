@@ -15,14 +15,13 @@ from src.decoy_generators.random_replace_generator import RandomReplaceGenerator
 from src.io.fasta import write_fasta_file, read_fasta_file
 from src.io.utils import remove_long_sequences
 
-def generate_decoys(target_file: str, n: int, generator_list: List[DecoyGenerator]):
-    n: int = 1
+def generate_decoys(target_file: str, generator_list: List[DecoyGenerator], n: int, destination_dir: str):
     for generator in generator_list:
-        branch_on_generator(target_file, n, generator)
-        
+        branch_on_generator(target_file, generator, n, destination_dir)
 
-def branch_on_generator(target_file: str, n: int, generator):
+def branch_on_generator(target_file: str, generator: DecoyGenerator, n: int, destination_dir: str):
     filename, extension = os.path.splitext(target_file)
+    filename = os.path.join(destination_dir, filename)
     if issubclass(type(generator), MlGenerator):
         for i in range(n):
             filename_out = f"{filename}.{generator}.{i}{extension}"

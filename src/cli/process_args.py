@@ -12,29 +12,39 @@ from src.decoy_generators.shuffle_generator import ShuffleGenerator
 from src.decoy_generators.ml_generator import MlGenerator
 from src.decoy_generators.smart_masking_esm import MaxProbMaskingEsmGenerator
 from src.decoy_generators.random_replace_generator import RandomReplaceGenerator
+from src.run.cross_val_mlp import cross_val_mlp
+from src.run.cross_val_rnn import cross_val_rnn
+from src.run.generate import generate_decoys
+from src.run.timing_test import timing_test
 
 def process_args(args: argparse.Namespace):
     command = args.command
     if command == "evaluate":
         process_evaluate(args.classifier, args.target_file, args.decoy_files, args.decoy_ids)
     elif command == "generate":
-        process_generate(args.generators, args.target_file, args.output_directory, args.random_seed)
+        process_generate(args.generators, args.target_file, args.gen_count, args.output_directory, args.random_seed, args.mask_count)
     elif command == "time":
         process_timing(args.generators, args.target_file, args.timing_sample)
 
 def process_evaluate(classifier: str, target_file: str, decoy_files: str, decoy_ids: str):
+    if classifier == "mlp":
+        cross_val_mlp(target_file, decoy_files, decoy_ids)
+    elif classifier == "rnn":
+        cross_val_rnn(target_file, decoy_files, decoy_ids)
     return
 
-def process_generate(generators: List[str], target_file: str, output_dir: str, random_seed: int):
-    return
+def process_generate(generator_strings: List[str], target_file: str, n: int, output_dir: str, seed: int, mask_count: int):
+    generators = create_generators_from_list(generator_strings, seed, mask_count)
+    generate_decoys(target_file, generators, n, output_dir)
 
-def process_timing(generators: List[str], target_file: str, number_of_seqs_for_timing: int):
-    return
+def process_timing(generator_strings: List[str], target_file: str, number_of_seqs_for_timing: int, seed:int, mask_count: int):
+    generators = create_generators_from_list(generator_strings, seed, mask_count)
+    timing_test(target_file, number_of_seqs_for_timing, generators)
 
-def create_generators_from_list(generator_strings: List[str]):
+def create_generators_from_list(generator_strings: List[str], seed: int, mask_count: int):
     generators: List[DecoyGenerator] = []
     for generator_string in generator_strings:
-        generators.append(create_generator_from_string(generator_string))
+        generators.append(create_generator_from_string(generator_string), seed, mask_count)
     return generators
 
 def create_generator_from_string(generator_string: str, seed: int, mask_count: int):
