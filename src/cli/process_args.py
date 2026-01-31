@@ -10,6 +10,7 @@ from src.decoy_generators.esm_generator import EsmGenerator, MaskingType, MlGene
 from src.decoy_generators.reverse_generator import ReverseGenerator
 from src.decoy_generators.shuffle_generator import ShuffleGenerator
 from src.decoy_generators.smart_masking_esm import MaxProbMaskingEsmGenerator
+from src.decoy_generators.random_replace_generator import RandomReplaceGenerator
 from src.run.cross_val_mlp import cross_val_mlp
 from src.run.cross_val_rnn import cross_val_rnn
 from src.run.cross_val_svm import cross_val_svm
@@ -60,6 +61,8 @@ def create_generator_from_string(generator_string: str, seed: int, mask_count: i
         generator = ReverseGenerator(special_amino_acids=special_amino_acids)
     elif generator_string == "diann":
         generator = DiannGenerator(special_amino_acids=special_amino_acids)
+    elif generator_string == "random_replace":
+        generator_string = RandomReplaceGenerator(special_amino_acids=special_amino_acids, random=random)
     elif generator_string == "esm8M_32bit":
         generator = EsmGenerator(
             local_path="models/esm2_t6_8M_UR50D",
