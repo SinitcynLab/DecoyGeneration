@@ -2,8 +2,8 @@
 
 #SBATCH --job-name=gen_max_mass_8M_new_rest_%j
 #SBATCH --output=gen_max_mass_8M_new_rest_%j.txt
-#SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
-#SBATCH --time=16:00:00
+#SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
+#SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/main.py
+python -u src/decoy_gen.py --command, generate --generators smart_masking_esm --target_file data/targets/human_and_crap.fasta --output_directory data/targets
