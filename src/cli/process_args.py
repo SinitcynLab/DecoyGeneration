@@ -12,6 +12,7 @@ from src.decoy_generators.shuffle_generator import ShuffleGenerator
 from src.decoy_generators.smart_masking_esm import MaxProbMaskingEsmGenerator
 from src.run.cross_val_mlp import cross_val_mlp
 from src.run.cross_val_rnn import cross_val_rnn
+from src.run.cross_val_svm import cross_val_svm
 from src.run.generate import generate_decoys
 from src.run.timing_test import timing_test
 
@@ -29,6 +30,8 @@ def process_evaluate(classifier: str, target_file: str, decoy_files: str, decoy_
         cross_val_mlp(target_file, decoy_files, decoy_ids)
     elif classifier == "rnn":
         cross_val_rnn(target_file, decoy_files, decoy_ids)
+    elif classifier == "svm":
+        cross_val_svm(target_file, decoy_files, decoy_ids)
     return
 
 def process_generate(generator_strings: List[str], target_file: str, n: int, output_dir: str, seed: int, mask_count: int):
