@@ -2,11 +2,7 @@ import argparse
 
 from src.cli.process_args import process_args
 from src.cli.validate_args import validate_args
-
-CLASSIFIER_LIST = ["mlp", "rnn"]
-GENERATOR_LIST = ["reverse", "shuffle", "diann", "esm650M_32bit", "esm650M_16bit", 
-                  "esm8M_32bit", "esm8M_16bit", "smart_masking_esm"]
-COMMAND_LIST = ["evaluate", "generate", "time"]
+from src.cli.option_lists import CLASSIFIER_LIST, COMMAND_LIST, GENERATOR_LIST
 
 def collect_args():
     parser = argparse.ArgumentParser()

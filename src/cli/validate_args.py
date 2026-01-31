@@ -1,6 +1,6 @@
 import argparse
 
-from src.decoy_gen import CLASSIFIER_LIST, GENERATOR_LIST, COMMAND_LIST
+from src.cli.option_lists import CLASSIFIER_LIST, COMMAND_LIST, GENERATOR_LIST
 
 def validate_args(args: argparse.Namespace):
     if args.target_file is None:
