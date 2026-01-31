@@ -10,7 +10,7 @@ class MaxProbMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
         # find the top probability of aa's:
         token_prob, amino_acid_indices = torch.topk(probs[0, pos, self.aa_ids], k=self.k, largest=True)
         # convert list of tokens (indices of self.canonical_amino_acids) to a list of strings:
-        amino_acids = self.canonical_amino_acids[amino_acid_indices]
+        amino_acids = [self.canonical_amino_acids[index] for index in amino_acid_indices]
         # the token probability is the score in this case
         score, aa_choice = self._get_feasible_token_with_max_score(original_aa, token_prob, amino_acids)
         # return feasible token with highest score and corresponding score:

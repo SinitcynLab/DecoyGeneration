@@ -57,9 +57,9 @@ def create_generator_from_string(generator_string: str, seed: int, mask_count: i
     if generator_string == "shuffle":
         generator = ShuffleGenerator(special_amino_acids=special_amino_acids, random=random)
     elif generator_string == "reverse":
-        generator = ReverseGenerator(special_amino_acids=special_amino_acids, random=random)
+        generator = ReverseGenerator(special_amino_acids=special_amino_acids)
     elif generator_string == "diann":
-        generator = DiannGenerator(special_amino_acids=special_amino_acids, random=random)
+        generator = DiannGenerator(special_amino_acids=special_amino_acids)
     elif generator_string == "esm8M_32bit":
         generator = EsmGenerator(
             local_path="models/esm2_t6_8M_UR50D",

@@ -22,7 +22,7 @@ def collect_args():
     parser.add_argument("--mask_count", type=int, default=1, help="The masking count to use for ESM generators (defaults to 1).")
     parser.add_argument("--gen_count", type=int, default=1, help="The number of decoy files to generate if a decoy method is one-to-many (defaults to 1).")
 
-    parser.add_argument("--timing_sample", type=int, default=100, help="The number of sequences from the target file to use for timing measurments, taken from the start of the file (defaults to 100).")
+    parser.add_argument("--timing_sample", type=int, default=100, help="The number of sequences from the target file to use for timing measurements, taken from the start of the file (defaults to 100).")
 
     return parser.parse_args()
 

@@ -6,8 +6,6 @@ from src.encoders.peptide_encoder import PeptideEncoder
 class TransformerEncoder(PeptideEncoder):
     def __init__(self, max_tokenized_length : int = 256, device : torch.device = 'cpu', constant_length : bool = True, flatten: bool = True, 
                  cls_only : bool = False):
-        if flatten and not constant_length:
-            raise ValueError("Varied-length encodings are incompatible with flattened encodings.")
         PeptideEncoder.__init__(self)
         self.max_tokenized_length = max_tokenized_length
         self.device = device
@@ -72,7 +70,7 @@ class TransformerEncoder(PeptideEncoder):
         else:
             embeddings: torch.Tensor = self._embed_batched_varied_length(sequences) # List, each entry [tokenized_length, 1024 or 320]
         
-        if self.flatten and self.constant_length:
+        if self.flatten:
             embeddings: List[torch.Tensor] = [e.flatten(start_dim=1, end_dim=2) for e in embeddings] # [Batch, max_tokenized_length * (1024 or 320)]
         
         return embeddings

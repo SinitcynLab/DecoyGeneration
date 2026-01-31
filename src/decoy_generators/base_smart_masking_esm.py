@@ -83,7 +83,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
         sort_idx = torch.argsort(scores, descending=True) # practically, amino acids are already sorted. This is for clarity/robustness
 
         aa_choice = 'A' # if no aa satisfies constraints, default to A (first amino acid in list)
-        for new_aa in amino_acids[sort_idx]:
+        for new_aa in [amino_acids[idx] for idx in sort_idx]:
             if new_aa == original_aa:
                 continue
             if new_aa in self.special_amino_acids:
