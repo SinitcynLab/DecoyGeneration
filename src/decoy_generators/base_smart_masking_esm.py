@@ -39,7 +39,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
         
     def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
         for sequence in target_batch:
-            max_pos_and_choices: List[Tuple[int, int]] = []
+            max_pos_and_choices: List[Tuple[int, str]] = []
             # Tokenize sequence:
             input = self.tokenizer(sequence, return_tensors="pt", padding=True)
             input.to(self.device)
@@ -48,7 +48,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             for peptide in self.get_all_peptides(sequence):
                 max_score: float = -torch.inf
                 max_score_pos: int = 0
-                token_choice_at_max: int = None
+                aa_choice_at_max: str = ""
                 for pos in peptide:
                     input["input_ids"] = torch.clone(modified_input_ids)
                     # Mask out  position in the peptide:
@@ -59,33 +59,31 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                     probs: Tensor = torch.softmax(outputs.logits, dim=-1)
                     probs = probs[:, 1:, :] # drop the first dimension (batch_size is always 1 here) and drop entries corresponding to [cls]
                     # compute score:
-                    score, token_choice = self._get_score_and_token_choice(probs, pos, sequence[pos])
+                    score, aa_choice = self._get_score_and_token_choice(probs, pos, sequence[pos])
                     # if new smallest found, save position and choice:
                     if score > max_score:
                         max_score = score
                         max_score_pos = pos
-                        token_choice_at_max = token_choice
+                        aa_choice_at_max = aa_choice
                 # save position and token choice for this peptide:
-                max_pos_and_choices.append((max_score_pos, token_choice_at_max))
+                max_pos_and_choices.append((max_score_pos, aa_choice_at_max))
 
                 # we now have the position and token choice for this peptide
                 # we immediately put in the most-easily substituted aa and then proceed to next peptide, 
                 # taking this new aa into account:
-                token_choice_at_max_id = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids[token_choice_at_max])
-                modified_input_ids[0][max_score_pos] = token_choice_at_max_id
+                modified_input_ids = self._update_input_ids(modified_input_ids, max_score_pos, aa_choice_at_max)
 
             new_sequence: List[str] = list(sequence)
-            for mask_position, token_choice in max_pos_and_choices:
-                new_sequence[mask_position] = self.canonical_amino_acids[token_choice]
+            for mask_position, aa_choice in max_pos_and_choices:
+                new_sequence[mask_position] = aa_choice
 
             yield "".join(new_sequence)
     
-    def _get_feasible_token_with_max_score(self, original_aa: str, scores: Tensor, tokens: Tensor):
-        sort_idx = torch.argsort(scores, descending=True) # strictly, tokens should already be sorted. This is for clarity
+    def _get_feasible_token_with_max_score(self, original_aa: str, scores: Tensor, amino_acids: List[str]):
+        sort_idx = torch.argsort(scores, descending=True) # practically, amino acids are already sorted. This is for clarity/robustness
 
-        token_choice = 0 # if no aa satisfies constraints, default to A (first amino acid in list)
-        for idx in tokens[sort_idx]:
-            new_aa: str = self.canonical_amino_acids[idx]
+        aa_choice = 'A' # if no aa satisfies constraints, default to A (first amino acid in list)
+        for new_aa in amino_acids[sort_idx]:
             if new_aa == original_aa:
                 continue
             if new_aa in self.special_amino_acids:
@@ -93,10 +91,18 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             if (new_aa == 'I' and original_aa == 'L') or (
                     new_aa == 'L' and original_aa == 'I'):
                 continue
-            token_choice = idx
+            aa_choice = new_aa
             break
         
-        # recover the index of token_choice among the unsorted tokens tensor:
-        pos_token_choice: int = torch.nonzero(tokens == token_choice)[0] # note that torch.nonzero gets the indices of all non-zero entries
+        # recover the index of aa_choice among the unsorted amino acid list:
+        pos_aa_choice: int = amino_acids.index(aa_choice)
         # use aforementioned position to get score corresponding to chosen token:
-        return scores[pos_token_choice], token_choice
+        return scores[pos_aa_choice], aa_choice
+    
+    def _update_input_ids(self, input_ids: Tensor, max_score_pos: int, aa_choice_at_max: str):
+        # get the id of the token corresponding to the best amino acid (different than its index in self.canonical_amino_acids):
+        token_choice_at_max_id: int = self.tokenizer.convert_tokens_to_ids(aa_choice_at_max)
+        # update the token in the amino acid chain:
+        input_ids[0][max_score_pos] = token_choice_at_max_id
+        # return the updated tokenization:
+        return input_ids
