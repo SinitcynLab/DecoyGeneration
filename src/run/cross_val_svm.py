@@ -16,7 +16,7 @@ def cos_sim_kernel(x: List[Tensor], y: List[Tensor]):
     y = torch.cat(y, dim=0)
     return cosine_similarity(x, y)
 
-def cross_val_svm(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
+def cross_val_svm(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str], seed: int = None):
     # define SVM classifier
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(device)
@@ -51,7 +51,7 @@ def cross_val_svm(target_file: str, decoy_files: Iterable[str], decoy_ids: Itera
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
 
         # cross-validate SVM:
-        cross_validate_svm(classifier, dataset, n_folds=5)
+        cross_validate_svm(classifier, dataset, n_folds=5, seed=seed)
         if decoy_file != 'target':
             delete_lmdb(decoy_lmdb_path) # clear temporary data
     delete_lmdb(target_lmdb_path)

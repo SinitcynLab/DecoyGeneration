@@ -20,7 +20,7 @@ def get_rnn_net():
     )
     return net, rnn
 
-def cross_val_rnn(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
+def cross_val_rnn(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str], seed: int = None):
     # define RNN classifier
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(device)
@@ -56,7 +56,7 @@ def cross_val_rnn(target_file: str, decoy_files: Iterable[str], decoy_ids: Itera
         # cross-validate RNN:
         n_epochs = 20
         batch_size = 10
-        cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i])
+        cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i], seed=seed)
         if decoy_ids[i] != 'target':
             delete_lmdb(decoy_lmdb_path) # clear temporary data
     delete_lmdb(target_lmdb_path)

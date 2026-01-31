@@ -8,6 +8,7 @@ from sklearn import svm
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils import shuffle
 from torch import Tensor
+from random import Random
 
 from src.peptide_classifiers.peptide_classifier import PeptideClassifier
 from src.encoders.peptide_encoder import PeptideEncoder
@@ -57,15 +58,17 @@ class SVMClassifierUMAP(SVMClassifier):
         self.umap = umap.UMAP(n_components=self.n_components).fit(data_array, dataset[1])
         return super().train_on_data((self.umap.embedding_, dataset[1]))
 
-def cross_validate_svm(svm: SVMClassifier, main_dataset: LMDBDataset, n_folds: int = 5, metric: BaseMetric = DefaultMetric()):
+def cross_validate_svm(svm: SVMClassifier, main_dataset: LMDBDataset, n_folds: int = 5, 
+                       metric: BaseMetric = DefaultMetric(), seed: int = random.getrandbits(32)):
+    random_state = np.random.RandomState(seed=seed)
     N = main_dataset.size()
 
     kfold = StratifiedKFold(n_splits=n_folds)
     val_metrics = np.zeros((n_folds, metric.dim))
     train_metrics = np.zeros((n_folds, metric.dim))
     for fold, (train_ids, val_ids) in enumerate(kfold.split(torch.zeros(N), main_dataset.get_labels())):
-        train_ids = shuffle(train_ids)
-        val_ids = shuffle(val_ids)
+        train_ids = shuffle(train_ids, random_state=random_state)
+        val_ids = shuffle(val_ids, random_state=random_state)
         
         # reset and train:
         svm.reset()

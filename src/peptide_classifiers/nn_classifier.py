@@ -1,6 +1,7 @@
 import torch
 import copy
 import numpy as np
+import random
 
 from typing import Iterable
 from collections.abc import Callable
@@ -39,9 +40,10 @@ class NNClassifier(PeptideClassifier, torch.nn.Module):
 
 def cross_validate_nn(nn: NNClassifier, main_dataset: LMDBDataset, 
                    n_epochs: int, batch_size: int, learning_rate: float, decoy_id: str, weight_decay: float = 0, n_folds: int = 5,
-                   metric: BaseMetric = DefaultMetric()) -> float:
+                   metric: BaseMetric = DefaultMetric(), seed: int = random.getrandbits(32)) -> float:
     print(f"*** *** RESULTS FOR DECOYS={decoy_id} *** ***")
     N = main_dataset.size()
+    random_state = np.random.RandomState(seed=seed)
 
     loss_fn = torch.nn.BCELoss()
     best_val_metrics: np.ndarray = np.zeros((n_folds, metric.dim)) # [auc, acc, prec, rec], one for each fold
@@ -49,8 +51,8 @@ def cross_validate_nn(nn: NNClassifier, main_dataset: LMDBDataset,
 
     kfold = StratifiedKFold(n_splits=n_folds)
     for fold, (train_ids, val_ids) in enumerate(kfold.split(np.zeros(N), main_dataset.get_labels())):
-        train_ids: np.ndarray = shuffle(train_ids)
-        val_ids: np.ndarray = shuffle(val_ids)
+        train_ids: np.ndarray = shuffle(train_ids, random_state=random_state)
+        val_ids: np.ndarray = shuffle(val_ids, random_state=random_state)
         
         nn.reset()
         optimizer = torch.optim.Adam(nn.parameters(), lr=learning_rate)

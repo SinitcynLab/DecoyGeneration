@@ -20,20 +20,19 @@ from src.run.timing_test import timing_test
 def process_args(args: argparse.Namespace):
     command = args.command
     if command == "evaluate":
-        process_evaluate(args.classifier, args.target_file, args.decoy_files, args.decoy_ids)
+        process_evaluate(args.classifier, args.target_file, args.decoy_files, args.decoy_ids, args.seed)
     elif command == "generate":
         process_generate(args.generators, args.target_file, args.gen_count, args.output_directory, args.seed, args.mask_count)
     elif command == "time":
         process_timing(args.generators, args.target_file, args.timing_sample)
 
-def process_evaluate(classifier: str, target_file: str, decoy_files: str, decoy_ids: str):
+def process_evaluate(classifier: str, target_file: str, decoy_files: str, decoy_ids: str, seed: int):
     if classifier == "mlp":
-        cross_val_mlp(target_file, decoy_files, decoy_ids)
+        cross_val_mlp(target_file, decoy_files, decoy_ids, seed)
     elif classifier == "rnn":
-        cross_val_rnn(target_file, decoy_files, decoy_ids)
+        cross_val_rnn(target_file, decoy_files, decoy_ids, seed)
     elif classifier == "svm":
-        cross_val_svm(target_file, decoy_files, decoy_ids)
-    return
+        cross_val_svm(target_file, decoy_files, decoy_ids, seed)
 
 def process_generate(generator_strings: List[str], target_file: str, n: int, output_dir: str, seed: int, mask_count: int):
     generators = create_generators_from_list(generator_strings, seed, mask_count)
