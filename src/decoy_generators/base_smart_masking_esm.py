@@ -81,7 +81,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             yield "".join(new_sequence)
     
     def _get_feasible_token_with_max_score(self, original_aa: str, scores: Tensor, tokens: Tensor):
-        sort_idx = torch.argsort(scores, descending=True)
+        sort_idx = torch.argsort(scores, descending=True) # strictly, tokens should already be sorted. This is for clarity
 
         token_choice = 0 # if no aa satisfies constraints, default to A (first amino acid in list)
         for idx in tokens[sort_idx]:
@@ -97,6 +97,6 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             break
         
         # recover the index of token_choice among the unsorted tokens tensor:
-        pos_token_choice: int = torch.nonzero(tokens == token_choice)[0]
+        pos_token_choice: int = torch.nonzero(tokens == token_choice)[0] # note that torch.nonzero gets the indices of all non-zero entries
         # use aforementioned position to get score corresponding to chosen token:
         return scores[pos_token_choice], token_choice
