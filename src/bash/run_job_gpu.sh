@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH --job-name=gen_max_mass_8M_new_rest_%j
-#SBATCH --output=gen_max_mass_8M_new_rest_%j.txt
-#SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
+#SBATCH --job-name=gen_650M_8M_cli_%j
+#SBATCH --output=gen_650M_8M_cli_%j.txt
+#SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/decoy_gen.py --command generate --generators smart_masking_esm --target_file data/targets/UP000002311_559292.fasta --output_directory data/targets
+python -u src/decoy_gen.py --command generate --generators esm8M_32bit esm650M_32bit --target_file data/targets/UP000002311_559292.fasta --output_directory data/targets
