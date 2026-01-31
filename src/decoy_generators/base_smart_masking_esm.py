@@ -60,7 +60,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                     probs = probs[:, 1:, :] # drop the first dimension (batch_size is always 1 here) and drop entries corresponding to [cls]
                     # compute score:
                     score, aa_choice = self._get_score_and_token_choice(probs, pos, sequence[pos])
-                    # if new smallest found, save position and choice:
+                    # if new best found, save position and choice:
                     if score > max_score:
                         max_score = score
                         max_score_pos = pos
@@ -71,7 +71,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                 # we now have the position and token choice for this peptide
                 # we immediately put in the most-easily substituted aa and then proceed to next peptide, 
                 # taking this new aa into account:
-                modified_input_ids = self._update_input_ids(modified_input_ids, max_score_pos+1, aa_choice_at_max) # add one for [cls]
+                #modified_input_ids = self._update_input_ids(modified_input_ids, max_score_pos+1, aa_choice_at_max) # add one for [cls]
 
             new_sequence: List[str] = list(sequence)
             for mask_position, aa_choice in max_pos_and_choices:
