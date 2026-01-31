@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/decoy_gen.py --command, generate --generators smart_masking_esm --target_file data/targets/human_and_crap.fasta --output_directory data/targets
+python -u src/decoy_gen.py --command generate --generators smart_masking_esm --target_file data/targets/UP000002311_559292.fasta --output_directory data/targets
