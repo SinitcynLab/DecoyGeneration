@@ -1,0 +1,29 @@
+import argparse
+
+from src.decoy_gen import CLASSIFIER_LIST, GENERATOR_LIST, COMMAND_LIST
+
+def validate_args(args: argparse.Namespace):
+    if args.target_file is None:
+        raise ValueError("Please provide a target file as input.")
+    if args.command == "evaluate":
+        if args.classifier not in CLASSIFIER_LIST:
+            raise ValueError(f"Choose classifiers from {CLASSIFIER_LIST}.")
+        if args.decoy_files is None:
+            raise ValueError("Please provide decoy files to classify against")
+        if len(args.decoy_files) != len(args.decoy_ids):
+            raise ValueError("Please ensure that the list of decoy files is as long as the list of decoy ids.")
+    elif args.command == "generate":
+        validate_generators()
+        if args.output_directory is None:
+            raise ValueError("Please provide an output directory for the decoy .fasta files.")
+    elif args.command == "time":
+        validate_generators()
+    else:
+        raise ValueError(f"Please choose a command from {COMMAND_LIST}.")
+
+def validate_generators(args: argparse.Namespace):
+    if args.generators is None:
+        raise ValueError("Please provide generators which must create the files.")
+    for generator_str in args.generators:
+        if generator_str not in GENERATOR_LIST:
+            raise ValueError(f"Choose generators from {GENERATOR_LIST}.")
