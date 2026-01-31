@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=gen_crap_%j
-#SBATCH --output=gen_crap_%j.txt
+#SBATCH --job-name=mlp_crap_%j
+#SBATCH --output=mlp_crap_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=4:00:00
 #SBATCH --nodes=1
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/decoy_gen.py --command generate --target_file data/targets/crap.fasta --output_directory data/decoys --generators smart_masking_esm
+python -u src/decoy_gen.py --command evaluate --classifier mlp --target_file data/targets/crap.fasta --decoy_files crap.max_prob_smart_masking_esm_8M.0.fasta --decoy_ids smart_masking
