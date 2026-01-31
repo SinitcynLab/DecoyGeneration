@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=random_replace_mlp_%j
-#SBATCH --output=random_replace_mlp_%j.txt
-#SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
-#SBATCH --time=12:00:00
+#SBATCH --job-name=mlp_all_data_max_prob_new_%j
+#SBATCH --output=mlp_all_data_max_prob_new_%j.txt
+#SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
+#SBATCH --time=4:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/decoy_gen.py --command classify --classifier mlp --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.random_replace.0.fasta --decoy_ids random_replace
+python -u src/decoy_gen.py --command classify --classifier mlp --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.max_prob_smart_masking_esm_8M.0.fasta --decoy_ids random_replace
