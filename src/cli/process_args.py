@@ -7,6 +7,7 @@ from random import Random
 from src.decoy_generators.decoy_generator import DecoyGenerator
 from src.decoy_generators.diann_generator import DiannGenerator
 from src.decoy_generators.esm_generator import EsmGenerator, MaskingType, MlGeneratorType
+from src.decoy_generators.terminus_esm_generator import TerminusEsmGenerator
 from src.decoy_generators.reverse_generator import ReverseGenerator
 from src.decoy_generators.shuffle_generator import ShuffleGenerator
 from src.decoy_generators.smart_masking_esm import MaxProbMaskingEsmGenerator, RelDiffMaskingEsmGenerator
@@ -56,6 +57,9 @@ def create_generator_from_string(generator_string: str, seed: int, mask_count: i
     random: Random = Random(seed)
     special_amino_acids: List[str] = ['R', 'K']
 
+    # TODO: decompose the specification of generators from single strings to multiple separate arguments
+    # e.g. instead of specifying 'esm650M_32bit', you specify 'esm', '650' and '32' as separate arguments. That would severly cut down the
+    # size of the if-statement below.
     if generator_string == "shuffle":
         generator = ShuffleGenerator(special_amino_acids=special_amino_acids, random=random)
     elif generator_string == "reverse":
@@ -133,5 +137,31 @@ def create_generator_from_string(generator_string: str, seed: int, mask_count: i
             batch_size=1,
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
+        )
+    elif generator_string == "esm_n_terminus":
+        generator = TerminusEsmGenerator(
+            local_path="models/esm2_t33_650M_UR50D",
+            random=random,
+            special_amino_acids=special_amino_acids,
+            sort_optimization=True,
+            batch_size=1,
+            ml_generator_type=MlGeneratorType.BEST,
+            device=device,
+            masking_type=MaskingType.COUNT,
+            mask_count=mask_count,
+            terminus='N'
+        )
+    elif generator_string == "esm_c_terminus":
+        generator = TerminusEsmGenerator(
+            local_path="models/esm2_t33_650M_UR50D",
+            random=random,
+            special_amino_acids=special_amino_acids,
+            sort_optimization=True,
+            batch_size=1,
+            ml_generator_type=MlGeneratorType.BEST,
+            device=device,
+            masking_type=MaskingType.COUNT,
+            mask_count=mask_count,
+            terminus='C'
         )
     return generator
