@@ -68,6 +68,12 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                 # save position and token choice for this peptide:
                 max_pos_and_choices.append((max_score_pos, aa_choice_at_max))
 
+                # we now have the position and token choice for this peptide
+                # we immediately put in the most-easily substituted aa and then proceed to next peptide, 
+                # taking this new aa into account:
+                modified_input_ids = self._update_input_ids(modified_input_ids, max_score_pos, aa_choice_at_max)
+                modified_input_ids = self._update_input_ids(modified_input_ids, max_score_pos+1, aa_choice_at_max) # add one for [cls]
+
             new_sequence: List[str] = list(sequence)
             for mask_position, aa_choice in max_pos_and_choices:
                 new_sequence[mask_position] = aa_choice
@@ -75,7 +81,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             yield "".join(new_sequence)
     
     def _get_feasible_token_with_max_score(self, original_aa: str, scores: Tensor, amino_acids: List[str]):
-        sort_idx = torch.argsort(scores, descending=True) # practically, amino acids are already sorted. This is for clarity/robustness
+        sort_idx = torch.argsort(scores, descending=True)
 
         aa_choice = 'A' # if no aa satisfies constraints, default to A (first amino acid in list)
         for new_aa in [amino_acids[idx] for idx in sort_idx]:

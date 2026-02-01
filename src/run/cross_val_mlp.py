@@ -26,8 +26,7 @@ def get_mlp_net():
 def cross_val_mlp(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
         # define MLP classifier
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print(device)
-        print(torch.get_num_threads())
+        print(f"Using {device}...")
         encoder = ProtBertClsEncoder(device)
         classifier = FeedForwardNNClassifier(network=get_mlp_net(), encoder=encoder, device=device, name="mlp", resetter=get_mlp_net)
 

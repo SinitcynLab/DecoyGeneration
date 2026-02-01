@@ -19,8 +19,7 @@ def cos_sim_kernel(x: List[Tensor], y: List[Tensor]):
 def cross_val_svm(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
     # define SVM classifier
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(device)
-    print(torch.get_num_threads())
+    print(f"Using {device}...")
     special_amino_acids = ['R', 'K']
     encoder = VectorSpectrumEncoder(special_amino_acids)
     classifier = SVMClassifier(encoder=encoder, device=device, name="svm", kernel_function=cos_sim_kernel)

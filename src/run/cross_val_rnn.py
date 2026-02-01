@@ -23,8 +23,7 @@ def get_rnn_net():
 def cross_val_rnn(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
     # define RNN classifier
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(device)
-    print(torch.get_num_threads())
+    print(f"Using {device}...")
     encoder = ProtBertEncoder(device=device, constant_length=False, flatten=False)
     net, rnn = get_rnn_net()
     classifier = RecurrentNNClassifier(rnn=rnn, network=net, encoder=encoder, device=device, name="rnn", resetter=get_rnn_net)
