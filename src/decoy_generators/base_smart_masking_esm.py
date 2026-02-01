@@ -44,13 +44,13 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             input = self.tokenizer(sequence, return_tensors="pt", padding=True)
             input.to(self.device)
             # Save original input ids:
-            original_input_ids: Tensor = torch.clone(input["input_ids"])
+            modified_input_ids: Tensor = torch.clone(input["input_ids"])
             for peptide in self.get_all_peptides(sequence):
                 max_score: float = -torch.inf
                 max_score_pos: int = 0
                 aa_choice_at_max: str = ""
                 for pos in peptide:
-                    input["input_ids"] = torch.clone(original_input_ids)
+                    input["input_ids"] = torch.clone(modified_input_ids)
                     # Mask out  position in the peptide:
                     input["input_ids"][0][pos + 1] = self.tokenizer.mask_token_id # increment by one to account for [cls]
                     # obtain token probabilities:
@@ -71,7 +71,6 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                 # we now have the position and token choice for this peptide
                 # we immediately put in the most-easily substituted aa and then proceed to next peptide, 
                 # taking this new aa into account:
-                modified_input_ids = self._update_input_ids(modified_input_ids, max_score_pos, aa_choice_at_max)
                 modified_input_ids = self._update_input_ids(modified_input_ids, max_score_pos+1, aa_choice_at_max) # add one for [cls]
 
             new_sequence: List[str] = list(sequence)
