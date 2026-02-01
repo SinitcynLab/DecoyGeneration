@@ -14,7 +14,8 @@ class ShuffleGenerator(DecoyGenerator):
         super().__init__(special_amino_acids)
 
     def __str__(self):
-        return f"shuffle.s{self.skip_prob}"
+        skip_prob: str = f"{self.skip_prob}".replace(".", "")
+        return f"shuffle.s{skip_prob}"
 
     def convert(self, targets: Iterator[str]) -> Iterator[str]:
         for target in targets:
@@ -24,7 +25,7 @@ class ShuffleGenerator(DecoyGenerator):
             for idx in range(1, len(positions)):
                 a: int = positions[idx - 1] + 1
                 b: int = positions[idx]
-                if b - a < 2 or self.sample_pos_prob() < self.skip_prob: continue
+                if b - a < 2 or self.random.uniform(0,1) < self.skip_prob: continue
                 if b - a == 2:
                     sequence[a], sequence[a + 1] = sequence[a + 1], sequence[a]
                 else:
@@ -33,10 +34,3 @@ class ShuffleGenerator(DecoyGenerator):
                     for i, j in zip(range(a, b), ab):
                         sequence[i] = target[j]
             yield "".join(sequence)
-
-    def sample_pos_prob(self) -> float:
-        s = self.random.uniform(0,1)
-        if s == 0:
-            return self.sample_pos_prob()
-        else:
-            return s

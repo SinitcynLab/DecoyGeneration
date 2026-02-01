@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 import umap
-import matplotlib.pyplot as plt
+import random
 
 from collections.abc import Callable
 from typing import List, Tuple
@@ -51,26 +51,15 @@ class SVMClassifierUMAP(SVMClassifier):
     def evaluate_on_data(self, dataset):
         data_array = torch.cat(dataset[0]).numpy()
         transformed_data = self.umap.transform(data_array)
-        plt.title("Validation")
-        for label in np.unique(dataset[1].numpy()):
-            mask = (label == dataset[1].numpy())
-            plt.scatter(transformed_data[mask,0], transformed_data[mask,1])
-        plt.savefig("val_plot.png")
-        plt.close()
         return super().evaluate_on_data((transformed_data, dataset[1]))
 
     def train_on_data(self, dataset):
         data_array = torch.cat(dataset[0]).numpy()
         self.umap = umap.UMAP(n_components=self.n_components).fit(data_array, dataset[1])
-        plt.title("Training")
-        for label in np.unique(dataset[1].numpy()):
-            mask = (label == dataset[1].numpy())
-            plt.scatter(self.umap.embedding_[mask,0], self.umap.embedding_[mask,1])
-        plt.savefig("train_plot.png")
-        plt.close()
         return super().train_on_data((self.umap.embedding_, dataset[1]))
 
-def cross_validate_svm(svm: SVMClassifier, main_dataset: LMDBDataset, n_folds: int = 5, metric: BaseMetric = DefaultMetric()):
+def cross_validate_svm(svm: SVMClassifier, main_dataset: LMDBDataset, n_folds: int = 5, 
+                       metric: BaseMetric = DefaultMetric()):
     N = main_dataset.size()
 
     kfold = StratifiedKFold(n_splits=n_folds)
@@ -89,8 +78,8 @@ def cross_validate_svm(svm: SVMClassifier, main_dataset: LMDBDataset, n_folds: i
         val_dataset = main_dataset.get_pairs(val_ids)
         validation_predictions = svm.evaluate_on_data(val_dataset)
         val_metrics_fold = metric.extract_values(validation_predictions, val_dataset[1])
-        #train_predictions = svm.evaluate_on_data(train_dataset)
-        #train_metrics_fold = metric.extract_values(train_predictions, train_dataset[1])
+        train_predictions = svm.evaluate_on_data(train_dataset)
+        train_metrics_fold = metric.extract_values(train_predictions, train_dataset[1])
 
         print(f"Validation AUC over #{fold + 1}, with other corresponding metrics:")
         metric.print_metric(val_metrics_fold)
@@ -100,12 +89,12 @@ def cross_validate_svm(svm: SVMClassifier, main_dataset: LMDBDataset, n_folds: i
         print(f"N.o. decoys: {main_dataset.get_num_decoys(val_ids)}.")
 
         val_metrics[fold,:] = val_metrics_fold
-        #train_metrics[fold,:] = train_metrics_fold
+        train_metrics[fold,:] = train_metrics_fold
         print(f"{fold}/{n_folds}")
 
     print(f"### Average best validation AUC and corresponding validation metrics over all {n_folds} folds: ###")
     metric.print_metric_series(val_metrics)
-    #print(f"### Average corresponding training metrics over all {n_folds} folds: ###")
-    #metric.print_metric_series(train_metrics)
+    print(f"### Average corresponding training metrics over all {n_folds} folds: ###")
+    metric.print_metric_series(train_metrics)
 
     print(f"")

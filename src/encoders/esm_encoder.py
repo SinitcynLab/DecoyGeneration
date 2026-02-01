@@ -1,13 +1,12 @@
 import torch
 
 from transformers import EsmTokenizer, EsmForMaskedLM
-from typing import Iterable
 
 from src.encoders.transformer_encoder import TransformerEncoder
 
 class EsmEncoder(TransformerEncoder):
     def __init__(self, max_tokenized_length : int = 256, device : torch.device = 'cpu', constant_length : bool = True, flatten : bool = True):
-        TransformerEncoder.__init__(self, max_tokenized_length, device, constant_length)
+        TransformerEncoder.__init__(self, max_tokenized_length, device, constant_length, flatten)
         LOCAL_PATH = "models/esm2_t6_8M_UR50D"
         self.model = EsmForMaskedLM.from_pretrained(LOCAL_PATH, local_files_only=True)
         self.tokenizer = EsmTokenizer.from_pretrained(LOCAL_PATH, local_files_only=True)
@@ -15,13 +14,3 @@ class EsmEncoder(TransformerEncoder):
         self.flatten = flatten
         self.model.eval()
         self.model.to(self.device)
-
-    def __call__(self, sequences : Iterable[str]):
-        embeddings = self._embed_batched_constant_length(sequences) # [n.o. sequences, max_tokenized_length, 320]
-        if self.constant_length:
-            embeddings = self._embed_batched_constant_length(sequences, batch_size = 1) # [Batch, max_tokenized_length, 1024]
-        else:
-            embeddings = self._embed_batched_varied_length(sequences)
-        if self.flatten:
-            embeddings = embeddings.flatten(start_dim=1, end_dim=2) # [Batch, max_tokenized_length * 1024]
-        return embeddings

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=test_smart_mlp_%j
-#SBATCH --output=test_smart_mlp_%j.txt
-#SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
-#SBATCH --time=10:00:00
+#SBATCH --job-name=gen_rel_diff_new_%j
+#SBATCH --output=gen_rel_diff_new_.txt
+#SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
+#SBATCH --time=8:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/run/cross_val_mlp.py
+python -u src/decoy_gen.py --command generate --generators rel_diff_smart_esm --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys

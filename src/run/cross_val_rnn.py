@@ -1,13 +1,13 @@
 import torch
 
+from typing import Iterable
+
 from src.peptide_classifiers.recurrent_nn_classifier import RecurrentNNClassifier
 from src.peptide_classifiers.nn_classifier import cross_validate_nn
 from src.encoders.protbert_encoder import ProtBertEncoder
 from src.io.fasta import read_fasta_file
-from src.io.utils import split_targets
 from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
 from src.io.lmdb_dataset import LMDBDataset
-import shutil
 import datetime
 import time
 
@@ -20,17 +20,14 @@ def get_rnn_net():
     )
     return net, rnn
 
-if __name__ == "__main__":
-    # define MLP classifier
+def cross_val_rnn(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
+    # define RNN classifier
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(device)
-    print(torch.get_num_threads())
+    print(f"Using {device}...")
     encoder = ProtBertEncoder(device=device, constant_length=False, flatten=False)
     net, rnn = get_rnn_net()
     classifier = RecurrentNNClassifier(rnn=rnn, network=net, encoder=encoder, device=device, name="rnn", resetter=get_rnn_net)
 
-    base = 'UP000002311_559292'
-    target_file = f"data/targets/{base}.fasta"
     timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
     temp_encoding_dir = f"data/encodings/temp_rnn_{timestamp}"
 
@@ -41,11 +38,6 @@ if __name__ == "__main__":
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
 
-    decoy_files = [f'data/decoys/{base}.reverse.fasta',
-                   f'data/decoys/{base}.diann_C.fasta', f'data/decoys/{base}.esm8M.best.c1.0.fasta',
-                   f'data/decoys/{base}.esm650M.best.c1.0.fasta']
-    decoy_ids = ['reverse', 'diann_C', 'esm 8M, count=1, 32bit', 'esm 650M, count=1, 32bit']
-    
     print("Cross validation of the RNN:")
     for i, decoy_file in enumerate(decoy_files):
         if decoy_file == 'target':

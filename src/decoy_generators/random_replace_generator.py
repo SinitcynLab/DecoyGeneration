@@ -28,6 +28,7 @@ class RandomReplaceGenerator(DecoyGenerator):
 
                 if sequence[random_pos] in current_valid_aa_choices: # if the currently-present aa is in the list of choices
                     current_valid_aa_choices.remove(sequence[random_pos]) # then remove it
+                
                 if sequence[random_pos] == 'L' and 'I' in current_valid_aa_choices: # handle I/L-dilemma
                     current_valid_aa_choices.remove('I')
                 elif sequence[random_pos] == 'I' and 'L' in current_valid_aa_choices:

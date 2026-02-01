@@ -1,9 +1,8 @@
 import torch
-import numpy as np
 
 from src.decoy_generators.ml_generator import MlGeneratorType, MaskingType
 from src.decoy_generators.esm_generator import EsmGenerator
-from typing import List, Iterator, Tuple, NamedTuple
+from typing import List, Iterator, Tuple
 
 from time import time
 from random import Random
@@ -24,97 +23,67 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
         EsmGenerator.__init__(self, local_path, random, special_amino_acids, sort_optimization,
                              batch_size, ml_generator_type, device, MaskingType.COUNT, 0, 1, weight_type)
         self.k: int = len(self.canonical_amino_acids) # you want to compute scores over all amino acids
-        self.aa_ids = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
+        self.aa_ids: List[int] = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
         
     def __str__(self):
-        param_count = self.local_path.split('/')[-1].split('_')[2]
-        out = f"smart_masking_esm_{param_count}"
+        param_count: str = self.local_path.split('/')[-1].split('_')[2]
+        out: str = f"smart_masking_esm_{param_count}"
         
         if self.weight_type == torch.float16:
             out = out + ".16b"
 
         return out
-            
-    def get_all_peptides(self, sequence: str):
-        positions: List[int] = list(self.get_positions_special_aas(sequence))
-        for i in range(1, len(positions)):
-            start: int = positions[i - 1] + 1
-            end: int = positions[i]
-            if start == end:
-                continue
-            else:
-                yield range(start, end)
-    
-    def _get_current_val_aa_ids(self, og_aa_id: int):
-        # get all 'valid' aa's that could fill the spot (exclude special aas and the original aa):
-        current_valid_aa_ids = list(self.valid_aa_ids)
-        if og_aa_id in current_valid_aa_ids: current_valid_aa_ids.remove(og_aa_id)
-        return current_valid_aa_ids
 
-    def _get_score_and_token_choice(self, probs: Tensor, position: int, original_aa: str) -> Tuple[float, Tensor]:
+    def _get_score_and_token_choice(self, probs: Tensor, pos: int, original_aa: str) -> Tuple[float, Tensor]:
         raise NotImplementedError()
         
     def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
         for sequence in target_batch:
-            max_pos_and_choices: List[Tuple[int, NamedTuple[Tensor, Tensor]]] = []
-            sav_list = []
+            max_pos_and_choices: List[Tuple[int, str]] = []
             # Tokenize sequence:
             input = self.tokenizer(sequence, return_tensors="pt", padding=True)
             input.to(self.device)
             # Save original input ids:
-            modified_input_ids = torch.clone(input["input_ids"])
+            modified_input_ids: Tensor = torch.clone(input["input_ids"])
             for peptide in self.get_all_peptides(sequence):
                 max_score: float = -torch.inf
                 max_score_pos: int = 0
-                token_choice_at_max = None
-                sav_arr_at_max = None
-                og_aa_id_at_max = None
+                aa_choice_at_max: str = ""
                 for pos in peptide:
                     input["input_ids"] = torch.clone(modified_input_ids)
                     # Mask out  position in the peptide:
-                    input["input_ids"][0][pos] = self.tokenizer.mask_token_id
+                    input["input_ids"][0][pos + 1] = self.tokenizer.mask_token_id # increment by one to account for [cls]
                     # obtain token probabilities:
                     with torch.no_grad():
                         outputs = self.model(**input)
                     probs: Tensor = torch.softmax(outputs.logits, dim=-1)
-                    # compute difference between top-2 most likely tokens:
-                    score, token_choice, sav_arr, og_aa_id = self._get_score_and_token_choice(probs, pos, sequence[pos])
-                    # if new smallest found, save position and choice:
+                    probs = probs[:, 1:, :] # drop the entries corresponding to [cls]
+                    # compute score:
+                    score, aa_choice = self._get_score_and_token_choice(probs, pos, sequence[pos])
+                    # if new best found, save position and choice:
                     if score > max_score:
                         max_score = score
                         max_score_pos = pos
-                        token_choice_at_max = token_choice
-                        sav_arr_at_max = sav_arr
-                        og_aa_id_at_max = og_aa_id
+                        aa_choice_at_max = aa_choice
                 # save position and token choice for this peptide:
-                max_pos_and_choices.append((max_score_pos, token_choice_at_max))
-                sav_list.append((sav_arr_at_max, og_aa_id_at_max))
+                max_pos_and_choices.append((max_score_pos, aa_choice_at_max))
 
                 # we now have the position and token choice for this peptide
                 # we immediately put in the most-easily substituted aa and then proceed to next peptide, 
                 # taking this new aa into account:
-                modified_input_ids[0][max_score_pos] = token_choice_at_max
+                modified_input_ids = self._update_input_ids(modified_input_ids, max_score_pos+1, aa_choice_at_max) # add one for [cls]
 
             new_sequence: List[str] = list(sequence)
-            for mask_position, token_choice in max_pos_and_choices:
-                new_sequence[mask_position] = self.canonical_amino_acids[token_choice]
-            with open(f'token_choices_{self}.txt', 'a') as file:
-                for _, token_choice in max_pos_and_choices:
-                    file.write(f"{token_choice}\n")
-            with open(f'og_aa_{self}.txt', 'a') as file:
-                for _, og_aa in sav_list:
-                    file.write(f"{og_aa}\n")
-            with open(f'prob_distr_{self}.txt', 'a') as file:
-                for sav_arr, _ in sav_list:
-                    np.savetxt(file, sav_arr_at_max.cpu().numpy())
-                    file.write('\n')
+            for mask_position, aa_choice in max_pos_and_choices:
+                new_sequence[mask_position] = aa_choice
 
             yield "".join(new_sequence)
+    
+    def _get_feasible_token_with_max_score(self, original_aa: str, scores: Tensor, amino_acids: List[str]):
+        sort_idx = torch.argsort(scores, descending=True)
 
-    # should be in parent class, but kept it here because I'm not 1000% sure of correctness
-    def _get_first_feasible_index(self, original_aa: str, top_tokens: Tensor):
-        for idx in top_tokens:
-            new_aa: str = self.canonical_amino_acids[idx]
+        aa_choice = 'A' # if no aa satisfies constraints, default to A (first amino acid in list)
+        for new_aa in [amino_acids[idx] for idx in sort_idx]:
             if new_aa == original_aa:
                 continue
             if new_aa in self.special_amino_acids:
@@ -122,11 +91,18 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             if (new_aa == 'I' and original_aa == 'L') or (
                     new_aa == 'L' and original_aa == 'I'):
                 continue
-            return idx
-        # if no aa satisfies constraints, default to original (esm gen itself does this too):
-        return self.canonical_amino_acids.index(original_aa)
+            aa_choice = new_aa
+            break
+        
+        # recover the index of aa_choice among the unsorted amino acid list:
+        pos_aa_choice: int = amino_acids.index(aa_choice)
+        # use aforementioned position to get score corresponding to chosen token:
+        return scores[pos_aa_choice], aa_choice
     
-    def _get_feasible_token_with_max_score(self, original_aa: str, scores: Tensor, tokens: Tensor):
-        sort_idx = torch.argsort(scores, descending=True)
-        token_choice = self._get_first_feasible_index(original_aa, tokens[sort_idx])
-        return scores[torch.where(tokens == token_choice)[0]], token_choice
+    def _update_input_ids(self, input_ids: Tensor, max_score_pos: int, aa_choice_at_max: str):
+        # get the id of the token corresponding to the best amino acid (different than its index in self.canonical_amino_acids):
+        token_choice_at_max_id: int = self.tokenizer.convert_tokens_to_ids(aa_choice_at_max)
+        # update the token in the amino acid chain:
+        input_ids[0][max_score_pos] = token_choice_at_max_id
+        # return the updated tokenization:
+        return input_ids

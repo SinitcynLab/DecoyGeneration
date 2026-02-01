@@ -1,33 +1,32 @@
 import torch
-import numpy as np
+import time
+import datetime
 
+from torch import Tensor
 from sklearn.metrics.pairwise import cosine_similarity
-
+from typing import Iterable, List
 from src.peptide_classifiers.svm_classifier import SVMClassifier, cross_validate_svm
-from src.encoders.protbert_cls_encoder import ProtBertClsEncoder
-from src.encoders.spectrum_encoder import VectorSpectrumEncoder, SmoothVectorSpectrumEncoder
+from src.encoders.spectrum_encoder import VectorSpectrumEncoder
 from src.io.fasta import read_fasta_file
 from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
 from src.io.lmdb_dataset import LMDBDataset
 
-def cos_sim_kernel(x, y):
+def cos_sim_kernel(x: List[Tensor], y: List[Tensor]):
     x = torch.cat(x, dim=0)
     y = torch.cat(y, dim=0)
     return cosine_similarity(x, y)
 
-if __name__ == "__main__":
-    # define MLP classifier
+def cross_val_svm(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
+    # define SVM classifier
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(device)
-    print(torch.get_num_threads())
+    print(f"Using {device}...")
     special_amino_acids = ['R', 'K']
     encoder = VectorSpectrumEncoder(special_amino_acids)
     classifier = SVMClassifier(encoder=encoder, device=device, name="svm", kernel_function=cos_sim_kernel)
 
     # define MLP classifier
-    base = 'UP000000625_83333'
-    target_file = f"data/targets/{base}.fasta"
-    temp_encoding_dir = f"data/encodings/temp_mlp"
+    timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
+    temp_encoding_dir = f"data/encodings/temp_svm_{timestamp}"
 
     # target data:
     target_records = read_fasta_file(target_file)
@@ -36,9 +35,6 @@ if __name__ == "__main__":
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path, 512)
 
-    decoy_files = [f'data/decoys/{base}.shuffle.0.fasta', f'data/decoys/{base}.esm650M.best.c1.0.fasta']
-    decoy_ids = ['shuffle', 'esm650M, count=1']
-    
     print("Cross validation of the SVM:")
     for i, decoy_file in enumerate(decoy_files):
         if decoy_file == 'target':

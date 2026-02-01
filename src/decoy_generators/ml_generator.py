@@ -1,6 +1,5 @@
 import math
 import torch
-import numpy as np
 
 from typing import Iterator, List, Tuple
 from random import Random
@@ -98,21 +97,24 @@ class MlGenerator(DecoyGenerator):
                 yield from self._batch_convert(fasta_records_batch)
 
     def _mask_and_get_probs(self, target_batch: List[str]) -> (Tuple[Tensor, List[List[int]]]):
+        # prepare inputs:
         inputs = self.tokenizer(target_batch, return_tensors="pt", padding=True)  # [batch_size, L, vocab]
         if self.weight_type != torch.float32:
             for k, v in inputs.data.items():
                 if k != 'input_ids': inputs.data[k] = v.to(self.weight_type)
         inputs.to(self.device)
+        # apply mask:
         mask_positions: List[List[int]] = [[] for _ in range(len(target_batch))]
         for sequence_idx, sequence in enumerate(target_batch):
             for mask_idx in self._get_masked_positions(sequence):
-                inputs["input_ids"][sequence_idx][mask_idx] = self.tokenizer.mask_token_id
+                inputs["input_ids"][sequence_idx][mask_idx + 1] = self.tokenizer.mask_token_id # take into account [cls] at start
                 mask_positions[sequence_idx].append(mask_idx)
-
+        # run inference and return:
         with torch.no_grad():
             with torch.autocast("cuda"): 
                 outputs = self.model(**inputs)
         probs: Tensor = torch.softmax(outputs.logits, dim=-1)  # [batch_size, L, vocab]
+        probs = probs[:, 1:, :] # remove [cls]-entry
         return (probs, mask_positions)
 
     def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
@@ -121,7 +123,7 @@ class MlGenerator(DecoyGenerator):
 
         k: int = 2 + len(self.special_amino_acids)  # why 2 - aa itself and I/L dillema
 
-        probs, mask_positions = self._mask_and_get_probs(target_batch)
+        probs, mask_positions = self._mask_and_get_probs(target_batch) # get the mask positions and probabilities from batch inference
 
         for sequence_idx, sequence in enumerate(target_batch):
             new_sequence: List[str] = list(sequence)
@@ -143,16 +145,7 @@ class MlGenerator(DecoyGenerator):
                     if (new_aa == 'I' and original_aa == 'L') or (
                             new_aa == 'L' and original_aa == 'I'):
                         continue
-                    with open(f'token_choices_{self}.txt', 'a') as file:
-                        file.write(f"{idx}\n")
-                    with open(f'og_aa_{self}.txt', 'a') as file:
-                        file.write(f'{self.canonical_amino_acids.index(original_aa)}\n')
-                    og_aa_id = self.tokenizer.convert_tokens_to_ids(original_aa)
-                    new_aa_id = self.tokenizer.convert_tokens_to_ids(new_aa)
-                    sav_arr = torch.tensor((probs[sequence_idx, mask_position, og_aa_id], probs[sequence_idx, mask_position, new_aa_id]))
-                    with open(f'prob_distr_{self}.txt', 'a') as file:
-                        np.savetxt(file, sav_arr.cpu().numpy())
-                        file.write('\n')
                     new_sequence[mask_position] = new_aa
                     break
+                
             yield "".join(new_sequence)
