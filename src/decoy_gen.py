@@ -21,7 +21,6 @@ def collect_args():
     parser.add_argument("--seed", type=int, default=42, help="Random seed to use for generation (defaults to 42).")
     parser.add_argument("--mask_count", type=int, default=1, help="The masking count to use for ESM generators (defaults to 1).")
     parser.add_argument("--gen_count", type=int, default=1, help="The number of decoy files to generate if a decoy method is one-to-many (defaults to 1).")
-    parser.add_argument("--param_count", type=int)
 
     parser.add_argument("--timing_sample", type=int, default=100, help="The number of sequences from the target file to use for timing measurements, taken from the start of the file (defaults to 100).")
 

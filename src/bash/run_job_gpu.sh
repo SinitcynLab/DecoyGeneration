@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=mlp_rel_diff_inter_%j
-#SBATCH --output=mlp_rel_diff_inter_%j.txt
+#SBATCH --job-name=random_smart_gen_%j
+#SBATCH --output=random_smart_gen_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=8:00:00
 #SBATCH --nodes=1
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python src/decoy_gen.py --command evaluate --classifier mlp --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.rel_diff_smart_masking_esm_8M.0.fasta --decoy_ids rel_diff_smart
+python src/decoy_gen.py --command generator --generators random_smart_esm --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
