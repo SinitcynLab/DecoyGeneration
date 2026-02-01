@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=mlp_crap_4_%j
 #SBATCH --output=mlp_crap_4_%j.txt
-#SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
+#SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=1:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
