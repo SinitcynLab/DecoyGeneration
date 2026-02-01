@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=mlp_novel_%j
-#SBATCH --output=mlp_novel_%j.txt
-#SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
-#SBATCH --time=1:00:00
+#SBATCH --job-name=gen_rel_diff_new_%j
+#SBATCH --output=gen_rel_diff_new_.txt
+#SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
+#SBATCH --time=8:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
