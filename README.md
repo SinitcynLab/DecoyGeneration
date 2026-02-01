@@ -20,10 +20,13 @@ To obtain more information on parameters and their use, please run 'python src/d
 Below, we provide some example uses of the codebase.
 
 *Generate decoys from UP000002311_559292.fasta using the reverse decoy generation method*:
+
 python src/decoy_gen.py --command generate --generators reverse --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
 
 *Have the MLP try to tell apart the sequences in UP000002311_559292.fasta from the sequences in UP000002311_559292.reverse.fasta*:
+
 python src/decoy_gen.py --command classify --classifier mlp --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.reverse.fasta --decoy_ids reverse
 
 *Time how quickly the generation methods reverse, esm8M_32bit and max_prob_smart_esm are able to convert the first 200 sequences in UP000002311_559292.fasta*:
+
 python src/decoy_gen.py --command time --generators reverse esm8M_32bit max_prob_smart_esm --target_file data/targets/UP000002311_559292.fasta --timing_sample 200
