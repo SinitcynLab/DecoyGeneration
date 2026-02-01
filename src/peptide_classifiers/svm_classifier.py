@@ -59,16 +59,15 @@ class SVMClassifierUMAP(SVMClassifier):
         return super().train_on_data((self.umap.embedding_, dataset[1]))
 
 def cross_validate_svm(svm: SVMClassifier, main_dataset: LMDBDataset, n_folds: int = 5, 
-                       metric: BaseMetric = DefaultMetric(), seed: int = random.getrandbits(32)):
-    random_state = np.random.RandomState(seed=seed)
+                       metric: BaseMetric = DefaultMetric()):
     N = main_dataset.size()
 
     kfold = StratifiedKFold(n_splits=n_folds)
     val_metrics = np.zeros((n_folds, metric.dim))
     train_metrics = np.zeros((n_folds, metric.dim))
     for fold, (train_ids, val_ids) in enumerate(kfold.split(torch.zeros(N), main_dataset.get_labels())):
-        train_ids = shuffle(train_ids, random_state=random_state)
-        val_ids = shuffle(val_ids, random_state=random_state)
+        train_ids = shuffle(train_ids)
+        val_ids = shuffle(val_ids)
         
         # reset and train:
         svm.reset()

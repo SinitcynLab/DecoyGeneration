@@ -23,7 +23,7 @@ def get_mlp_net():
     )
     return net
 
-def cross_val_mlp(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str], seed: int = None):
+def cross_val_mlp(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
         # define MLP classifier
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(device)
@@ -59,7 +59,7 @@ def cross_val_mlp(target_file: str, decoy_files: Iterable[str], decoy_ids: Itera
             # cross-validate MLP:
             n_epochs = 10
             batch_size = 10
-            cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i], seed=seed)
+            cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i])
             if decoy_file != 'target':
                 delete_lmdb(decoy_lmdb_path) # clear temporary data
         delete_lmdb(target_lmdb_path)
