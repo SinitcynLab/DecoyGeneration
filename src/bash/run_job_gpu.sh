@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=mlp_crap_4_%j
-#SBATCH --output=mlp_crap_4_%j.txt
+#SBATCH --job-name=mlp_novel_%j
+#SBATCH --output=mlp_novel_%j.txt
 #SBATCH --partition=tue.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=1:00:00
 #SBATCH --nodes=1

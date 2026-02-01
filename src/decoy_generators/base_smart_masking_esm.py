@@ -57,7 +57,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                     with torch.no_grad():
                         outputs = self.model(**input)
                     probs: Tensor = torch.softmax(outputs.logits, dim=-1)
-                    probs = probs[:, 1:, :] # drop the first dimension (batch_size is always 1 here) and drop entries corresponding to [cls]
+                    probs = probs[:, 1:, :] # drop the entries corresponding to [cls]
                     # compute score:
                     score, aa_choice = self._get_score_and_token_choice(probs, pos, sequence[pos])
                     # if new best found, save position and choice:
