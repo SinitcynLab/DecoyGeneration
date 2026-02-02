@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/decoy_gen.py --command evaluate --classifier mlp --target_file data/targets/UP000002311_559292.fasta --deocy_file data/decoys/UP000002311_559292.random_pos_smart_masking_esm_8M.0.fasta
+python -u src/decoy_gen.py --command evaluate --classifier mlp --target_file data/targets/UP000002311_559292.fasta --deocy_files data/decoys/UP000002311_559292.random_pos_smart_masking_esm_8M.0.fasta --decoy_ids random_smart
