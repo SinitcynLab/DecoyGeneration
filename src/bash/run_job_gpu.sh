@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=random_smart_gen_%j
-#SBATCH --output=random_smart_gen_%j.txt
+#SBATCH --job-name=n_c_gen_%j
+#SBATCH --output=n_c_gen_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=8:00:00
 #SBATCH --nodes=1
