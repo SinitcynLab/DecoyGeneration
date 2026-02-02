@@ -40,6 +40,6 @@ class TerminusEsmGenerator(EsmGenerator):
     
     def _select_mask(self, start: int, end: int, size: int):
         if self.terminus == 'N':
-            return start
+            return [start]
         elif self.terminus == 'C':
-            return end - 1
+            return [end - 1]
