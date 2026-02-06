@@ -1,5 +1,6 @@
 import math
 import torch
+import numpy as np
 
 from typing import Iterator, List, Tuple
 from random import Random
@@ -146,6 +147,25 @@ class MlGenerator(DecoyGenerator):
                             new_aa == 'L' and original_aa == 'I'):
                         continue
                     new_sequence[mask_position] = new_aa
+                    self._log_data(probs, sequence_idx, mask_position, original_aa, new_aa, self.canonical_amino_acids[top_idx[0]]) # for visualization
                     break
                 
             yield "".join(new_sequence)
+
+    def _log_data(self, probs: Tensor, sequence_idx: int, mask_position: int, og_aa: str, chosen_aa: str, top_aa: str):
+        relevant_aa_ids = self.tokenizer.convert_tokens_to_ids([og_aa, chosen_aa, top_aa])
+        relevant_aa_probs = probs[sequence_idx, mask_position, relevant_aa_ids] # [prob_og_aa, prob_chosen_aa, prob_top_aa]
+        # log the original token:
+        with open(f'og_aa_{self}.txt', 'a') as file:
+            file.write(f"{og_aa}\n")
+        # log the most-probable token:
+        with open(f'most_probable_aa_{self}.txt', 'a') as file:
+            file.write(f"{top_aa}\n")
+        # log the chosen token:
+        with open(f'token_choices_{self}.txt', 'a') as file:
+            file.write(f"{chosen_aa}\n")
+        # log associated probabilities:
+        save_array = relevant_aa_probs.cpu().numpy()
+        with open(f'prob_distr_{self}.txt', 'a') as file:
+            np.savetxt(file, save_array)
+            file.write("\n")
