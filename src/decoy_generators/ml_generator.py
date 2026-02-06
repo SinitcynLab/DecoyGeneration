@@ -155,7 +155,10 @@ class MlGenerator(DecoyGenerator):
     def _log_data(self, probs: Tensor, sequence_idx: int, mask_position: int, sequence: str, chosen_aa: str, top_aa: str):
         aa_i = sequence[mask_position]
         aa_i_min_1 = sequence[mask_position - 1]
-        aa_i_plus_1 = sequence[mask_position + 1]
+        if mask_position + 1 < len(sequence):
+            aa_i_plus_1 = sequence[mask_position + 1]
+        else:
+            aa_i_plus_1 = ""
         relevant_aa_ids = self.tokenizer.convert_tokens_to_ids([aa_i, chosen_aa, top_aa])
         relevant_aa_probs = probs[sequence_idx, mask_position, relevant_aa_ids] # [prob_og_aa, prob_chosen_aa, prob_top_aa]
         # log the original token:
@@ -163,7 +166,7 @@ class MlGenerator(DecoyGenerator):
             file.write(f"{aa_i}\n")
         # log the offset tokens:
         with open(f'aa_offset_{self}.txt', 'a') as file:
-            file.write(f"{aa_i_min_1},{aa_i_plus_1}")
+            file.write(f"{aa_i_min_1},{aa_i_plus_1}\n")
         # log the most-probable token:
         with open(f'most_probable_aa_{self}.txt', 'a') as file:
             file.write(f"{top_aa}\n")
