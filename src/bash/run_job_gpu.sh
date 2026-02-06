@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=mlp_n_terminus_%j
-#SBATCH --output=mlp_n_terminus_%j.txt
+#SBATCH --job-name=gen_650_8_for_vis_%j
+#SBATCH --output=gen_650_8_for_vis_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=8:00:00
 #SBATCH --nodes=1
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/decoy_gen.py --command evaluate --classifier mlp --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.N_terminus_esm650M.best.c1.0.fasta --decoy_ids esm_n_terminus
+python -u src/decoy_gen.py --command generate --generators esm650M_32bit esm8M_32bit --target_file data/targets/UP000002311_559292.fasta --output_directory data/trash
