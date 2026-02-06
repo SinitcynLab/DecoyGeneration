@@ -147,7 +147,7 @@ class MlGenerator(DecoyGenerator):
                             new_aa == 'L' and original_aa == 'I'):
                         continue
                     new_sequence[mask_position] = new_aa
-                    self._log_data(probs, sequence_idx, mask_position, original_aa, new_aa, self.canonical_amino_acids[top_idx[0]]) # for visualization
+                    self._log_data(probs, sequence_idx, mask_position, sequence, new_aa, self.canonical_amino_acids[top_idx[0]]) # for visualization
                     break
                 
             yield "".join(new_sequence)
@@ -162,7 +162,7 @@ class MlGenerator(DecoyGenerator):
         with open(f'og_aa_{self}.txt', 'a') as file:
             file.write(f"{aa_i}\n")
         # log the offset tokens:
-        with open(f'aa_min_offset_{self}.txt', 'a') as file:
+        with open(f'aa_offset_{self}.txt', 'a') as file:
             file.write(f"{aa_i_min_1},{aa_i_plus_1}")
         # log the most-probable token:
         with open(f'most_probable_aa_{self}.txt', 'a') as file:

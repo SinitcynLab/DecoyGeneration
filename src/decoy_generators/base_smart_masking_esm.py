@@ -49,7 +49,6 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                 max_score: float = -torch.inf
                 max_score_pos: int = 0
                 aa_choice_at_max: str = ""
-                selected_pos = self.random.randint(peptide[0], peptide[-1])
                 for pos in peptide:
                     input["input_ids"] = torch.clone(modified_input_ids)
                     # Mask out  position in the peptide:
@@ -62,7 +61,7 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                     # compute score:
                     score, aa_choice = self._get_score_and_token_choice(probs, pos, sequence[pos])
                     # if new best found, save position and choice:
-                    if pos == selected_pos:
+                    if score > max_score:
                         max_score = score
                         max_score_pos = pos
                         aa_choice_at_max = aa_choice
