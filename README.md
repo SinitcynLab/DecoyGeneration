@@ -25,7 +25,7 @@ python src/decoy_gen.py --command generate --generators reverse --target_file da
 
 *Have the MLP try to tell apart the sequences in UP000002311_559292.fasta from the sequences in UP000002311_559292.reverse.fasta*:
 
-python src/decoy_gen.py --command classify --classifier mlp --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.reverse.fasta --decoy_ids reverse
+python src/decoy_gen.py --command evaluate --classifier mlp --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.reverse.fasta --decoy_ids reverse
 
 *Time how quickly the generation methods reverse, esm8M_32bit and max_prob_smart_esm are able to convert the first 200 sequences in UP000002311_559292.fasta*:
 
