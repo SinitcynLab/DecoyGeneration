@@ -4,7 +4,7 @@ from src.decoy_generators.decoy_generator import DecoyGenerator
 from src.visualization.histogram import get_histogram_data
 
 if __name__ == "__main__":
-    generator = "esm8M.best.c1"
+    generator = "esm650M.best.c1"
     type = "most_probable_aa" # token_choices or most_probable_aa
     token_choice_file = f"data/visualization/distr_generators/{type}_{generator}.txt"
     offset_file = f"data/visualization/distr_generators/aa_offset_{generator}.txt"
@@ -27,7 +27,7 @@ if __name__ == "__main__":
         # make plot:
         fig, ax = plt.subplots(figsize=(9,9))
         plt.imshow(
-            histogram_data,
+            histogram_data.T,
             origin='lower',
             interpolation='nearest'
         )
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         ax.set_xticklabels(labels)
         ax.set_yticklabels(labels)
         ax.set_xlabel(f"Originally present amino acid at position i {name} 1")
-        ax.set_ylabel("Amino acid substituted in")
+        ax.set_ylabel("Amino acid judged to be most likely at position")
 
         for i in range(histogram_data.shape[0]):
             for j in range(histogram_data.shape[1]):

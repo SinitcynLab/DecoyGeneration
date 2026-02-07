@@ -4,29 +4,19 @@ from collections import Counter
 from src.decoy_generators.decoy_generator import DecoyGenerator
 
 if __name__ == "__main__":
-    generator = "rel_diff_smart_masking_esm_8M"
+    generator = "esm8M.best.c1"
     data_file = f"data/visualization/distr_generators/token_choices_{generator}.txt"
     target_file = f"src/visualization/images/token_choices_{generator}.png"
     ordering = DecoyGenerator.canonical_amino_acids
 
-    token_choices = np.loadtxt(data_file, dtype=int)
+    token_choices = np.loadtxt(data_file, dtype=str)
     freqs = Counter(token_choices)
     freqs = dict(freqs)
     for k in freqs.keys():
         freqs[k] /= len(token_choices) # get relative frequencies
     
-    values = list(freqs.values())
-    labels = []
-    for k in freqs.keys():
-        label = DecoyGenerator.canonical_amino_acids[k]
-        labels.append(label)
-        
-    for aa in DecoyGenerator.canonical_amino_acids:
-        if aa not in labels:
-            labels.append(aa)
-            values.append(0.)
-    permutation = [labels.index(aa) for aa in ordering]
-    bars = plt.bar([labels[i] for i in permutation], [values[i] for i in permutation])
+    # cart the dictionary:
+    bars = plt.bar(freqs.keys(), freqs.values())
 
     plt.bar_label(bars, fmt="%.2f", padding=5, fontsize=6)
     plt.xlabel("Amino acid")

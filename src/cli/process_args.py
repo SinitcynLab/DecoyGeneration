@@ -10,7 +10,7 @@ from src.decoy_generators.esm_generator import EsmGenerator, MaskingType, MlGene
 from src.decoy_generators.terminus_esm_generator import TerminusEsmGenerator
 from src.decoy_generators.reverse_generator import ReverseGenerator
 from src.decoy_generators.shuffle_generator import ShuffleGenerator
-from src.decoy_generators.smart_masking_esm import MaxProbMaskingEsmGenerator, RelDiffMaskingEsmGenerator
+from src.decoy_generators.smart_masking_esm import MaxProbMaskingEsmGenerator, RelDiffMaskingEsmGenerator, MaxEntropyEsmGenerator
 from src.decoy_generators.random_replace_generator import RandomReplaceGenerator
 from src.run.cross_val_mlp import cross_val_mlp
 from src.run.cross_val_rnn import cross_val_rnn
@@ -163,5 +163,15 @@ def create_generator_from_string(generator_string: str, seed: int, mask_count: i
             masking_type=MaskingType.COUNT,
             mask_count=mask_count,
             terminus='C'
+        )
+    elif generator_string == "max_entropy_esm":
+        generator = MaxEntropyEsmGenerator(
+            local_path="models/esm2_t6_8M_UR50D",
+            random=random,
+            special_amino_acids=special_amino_acids,
+            sort_optimization=True,
+            batch_size=1,
+            ml_generator_type=MlGeneratorType.BEST,
+            device=device,
         )
     return generator

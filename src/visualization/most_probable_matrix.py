@@ -4,7 +4,7 @@ from src.decoy_generators.decoy_generator import DecoyGenerator
 from src.visualization.histogram import get_histogram_data
 
 if __name__ == "__main__":
-    generator = "esm8M.best.c1"
+    generator = "esm650M.best.c1"
     token_choice_file = f"data/visualization/distr_generators/most_probable_aa_{generator}.txt"
     og_aa_file = f"data/visualization/distr_generators/og_aa_{generator}.txt"
     target_file = f"src/visualization/images/most_probable_matrix_{generator}.png"
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     # make plot:
     fig, ax = plt.subplots(figsize=(9,9))
     plt.imshow(
-        histogram_data,
+        histogram_data.T,
         origin='lower',
         interpolation='nearest'
     )

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 if __name__ == "__main__":
-    generator = "rel_diff_smart_masking_esm_8M"
+    generator = "esm650M.best.c1"
     data_file = f"data/visualization/distr_generators/prob_distr_{generator}.txt"
     target_file = f"src/visualization/images/prob_distr_{generator}.png"
 
@@ -24,11 +24,10 @@ if __name__ == "__main__":
     mean_chosen /= len(blocks)
     mean_max /= len(blocks)
 
-    labels = ['Mean mass original acid', 'Mean mass substituted acid', 'Mean mass max probability amino acid']
+    labels = ['Mean probability \noriginal acid', 'Mean probability\n substituted acid', 'Mean probability amino\n acid with max prob.']
     values = [mean_og, mean_chosen, mean_max]
     bars = plt.bar(labels, values)
     plt.bar_label(bars, padding=-20)
-    plt.xlabel("Type of amino acid")
     plt.ylabel("Probability mass")
     plt.title(f"Mean probability masses of various AAs, using {generator}")
     plt.savefig(target_file)
