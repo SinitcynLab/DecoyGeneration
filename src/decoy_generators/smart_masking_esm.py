@@ -22,7 +22,7 @@ class MaxProbMaskingEsmGenerator(BaseSmartMaskingEsmGenerator):
 class MaxEntropyEsmGenerator(MaxProbMaskingEsmGenerator):
     def _get_score_and_token_choice(self, probs, pos, original_aa):
         # get the aa_choice as the feasible token with max probability (just like in default ESM):
-        _, aa_choice = MaxEntropyEsmGenerator._get_score_and_token_choice(self, probs, pos, original_aa)
+        _, aa_choice = MaxProbMaskingEsmGenerator._get_score_and_token_choice(self, probs, pos, original_aa)
         # get the distribution over feasible tokens:
         token_prob, _ = torch.topk(probs[0, pos, self.aa_ids], k=self.k, largest=True)
         # compute entropy of distribution (this scipy function normalizes by default):
