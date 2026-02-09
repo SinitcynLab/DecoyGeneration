@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=gen_max_entropy_unmasked_%j
-#SBATCH --output=gen_max_entropy_unmasked_%j.txt
+#SBATCH --job-name=mlp_max_entropy_unmasked_%j
+#SBATCH --output=mlp_max_entropy_unmasked_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=8:00:00
 #SBATCH --nodes=1
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python src/decoy_gen.py --command generate --generators max_entropy_esm --target_file data/targets/UP000002311_559292.fasta --output_directory data/targets
+python -u src/decoy_gen.py --command evaluate --classifier mlp --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.max_entropy_smart_masking_esm_650M.0.unmasked.fasta --decoy_ids max_entropy_mask
