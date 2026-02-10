@@ -17,5 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/decoy_gen.py --command generate --generator protbert --parameter_precision 32 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
 python -u src/decoy_gen.py --command generate --generator protbert --parameter_precision 16 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
