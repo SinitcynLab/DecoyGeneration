@@ -15,8 +15,10 @@ def collect_args():
     parser.add_argument("--decoy_ids", nargs="+", 
                         help="String names for the provided decoy files.")
     
-    parser.add_argument("--generators", nargs="+",
-                        help=f"Generators to execute command with. (Choose from {GENERATOR_LIST}.)")
+    parser.add_argument("--generator", help=f"Generators to execute command with. (Choose from {GENERATOR_LIST}.)")
+    parser.add_argument("--parameter_count", type=str, default="650M", 
+                        help="The number of parameters to use when ESM is used as a generator (defaults to 650M).")
+    parser.add_argument("--parameter_precision", type=int, default=32, help="The precision to use for the parameters of the generator in bits (defaults to 32).")
     parser.add_argument("--output_directory", help="Output directory to write into.")
     parser.add_argument("--seed", type=int, default=42, help="Random seed to use for generation (defaults to 42).")
     parser.add_argument("--mask_count", type=int, default=1, help="The masking count to use for ESM generators (defaults to 1).")

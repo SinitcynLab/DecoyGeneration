@@ -97,13 +97,17 @@ class MlGenerator(DecoyGenerator):
             for fasta_records_batch in self._batch(targets, self.batch_size):
                 yield from self._batch_convert(fasta_records_batch)
 
-    def _mask_and_get_probs(self, target_batch: List[str]) -> (Tuple[Tensor, List[List[int]]]):
-        # prepare inputs:
+    def _prepare_inputs(self, target_batch: List[str]) -> dict:
         inputs = self.tokenizer(target_batch, return_tensors="pt", padding=True)  # [batch_size, L, vocab]
         if self.weight_type != torch.float32:
             for k, v in inputs.data.items():
                 if k != 'input_ids': inputs.data[k] = v.to(self.weight_type)
         inputs.to(self.device)
+        return inputs
+
+    def _mask_and_get_probs(self, target_batch: List[str]) -> (Tuple[Tensor, List[List[int]]]):
+        # prepare inputs:
+        inputs = self._prepare_inputs(target_batch)
         # apply mask:
         mask_positions: List[List[int]] = [[] for _ in range(len(target_batch))]
         for sequence_idx, sequence in enumerate(target_batch):

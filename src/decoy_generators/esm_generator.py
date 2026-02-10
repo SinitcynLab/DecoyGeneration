@@ -52,5 +52,7 @@ class EsmGenerator(MlGenerator):
 
         if self.weight_type == torch.float16:
             out = out + ".16b"
+        elif self.weight_type == torch.float32:
+            out = out + ".32b"
         
         return out

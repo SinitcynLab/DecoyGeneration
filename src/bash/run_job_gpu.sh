@@ -17,4 +17,12 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/decoy_gen.py --command evaluate --classifier mlp --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.max_entropy_smart_masking_esm_650M.0.unmasked.fasta --decoy_ids max_entropy_mask
+python -u src/decoy_gen.py --command generate --generator esm --parameter_count 8M --parameter_precision 32 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
+python -u src/decoy_gen.py --command generate --generator esm --parameter_count 8M --parameter_precision 16 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
+python -u src/decoy_gen.py --command generate --generator esm --parameter_count 650M --parameter_precision 32 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
+python -u src/decoy_gen.py --command generate --generator esm --parameter_count 650M --parameter_precision 16 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
+python -u src/decoy_gen.py --command generate --generator esm --parameter_count 35M --parameter_precision 32 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
+python -u src/decoy_gen.py --command generate --generator esm --parameter_count 35M --parameter_precision 16 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
+python -u src/decoy_gen.py --command generate --generator esm --parameter_count 150M --parameter_precision 32 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
+python -u src/decoy_gen.py --command generate --generator esm --parameter_count 150M --parameter_precision 16 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
+python -u src/decoy_gen.py --command generate --generator esm --parameter_count 3B --parameter_precision 16 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys

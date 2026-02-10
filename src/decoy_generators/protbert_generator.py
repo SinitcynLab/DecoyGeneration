@@ -4,14 +4,14 @@ import torch
 from src.decoy_generators.decoy_generator import DecoyGeneratorType
 from src.decoy_generators.ml_generator import MlGenerator, MaskingType, MlGeneratorType
 from typing import List
-from transformers import BertModel, BertTokenizer
+from transformers import BertForMaskedLM, AutoTokenizer
 
 from random import Random
 
 
 class ProtBertGenerator(MlGenerator):
-    model: BertModel
-    tokenize: BertTokenizer
+    model: BertForMaskedLM
+    tokenize: AutoTokenizer
     random: Random
     mask_percent: float
     sort_optimization: bool
@@ -36,10 +36,15 @@ class ProtBertGenerator(MlGenerator):
     ):
         MlGenerator.__init__(self, local_path, random, special_amino_acids, sort_optimization,
                              batch_size, ml_generator_type, device, masking_type, mask_percent, mask_count, weight_type)
-        self.model = BertModel.from_pretrained(local_path, local_files_only=True, torch_dtype=weight_type)
-        self.tokenizer = BertTokenizer.from_pretrained(local_path, local_files_only=True, torch_dtype=weight_type)
+        self.model = BertForMaskedLM.from_pretrained(local_path, local_files_only=True, torch_dtype=weight_type)
+        self.tokenizer = AutoTokenizer.from_pretrained(local_path, local_files_only=True, torch_dtype=weight_type)
+        self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
         self.model.eval()
         self.model.to(self.device)
+
+    def _prepare_inputs(self, target_batch: List[str]) -> dict:
+        target_batch = [" ".join(sequence) for sequence in target_batch]
+        return MlGenerator._prepare_inputs(self, target_batch)
 
     def __str__(self):
         out: str = "protbert"
@@ -52,5 +57,7 @@ class ProtBertGenerator(MlGenerator):
 
         if self.weight_type == torch.float16:
             out = out + ".16b"
-        
+        elif self.weight_type == torch.float32:
+            out = out + ".32b"
+
         return out
