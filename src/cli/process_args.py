@@ -39,19 +39,13 @@ def process_evaluate(classifier: str, target_file: str, decoy_files: str, decoy_
     elif classifier == "svm":
         cross_val_svm(target_file, decoy_files, decoy_ids)
 
-def process_generate(generator_strings: List[str], target_file: str, n: int, output_dir: str, seed: int, mask_count: int):
-    generators = create_generators_from_list(generator_strings, seed, mask_count)
-    generate_decoys(target_file, generators, n, output_dir)
+def process_generate(generator_strings: List[str], target_file: str, n: int, output_dir: str, seed: int, mask_count: int, param_count: str, param_precision: int):
+    generator = create_generator_from_parameters(generator_strings, seed, mask_count, param_count, param_precision)
+    generate_decoys(target_file, generator, n, output_dir)
 
-def process_timing(generator_strings: List[str], target_file: str, number_of_seqs_for_timing: int, seed:int, mask_count: int):
-    generators = create_generators_from_list(generator_strings, seed, mask_count, "cpu")
-    timing_test(target_file, number_of_seqs_for_timing, generators)
-
-def create_generators_from_list(generator_strings: List[str], seed: int, mask_count: int, device: torch.device = None):
-    generators: List[DecoyGenerator] = []
-    for generator_string in generator_strings:
-        generators.append(create_generator_from_parameters(generator_string, seed, mask_count, device))
-    return generators
+def process_timing(generator_string: str, target_file: str, number_of_seqs_for_timing: int, seed:int, mask_count: int, param_count: str, param_precision: int):
+    generator = create_generator_from_parameters(generator_string, seed, mask_count, param_count, param_precision, "cpu")
+    timing_test(target_file, number_of_seqs_for_timing, generator)
 
 def create_generator_from_parameters(generator_string: str, seed: int, mask_count: int, 
                                      param_count: str, param_precision: int, device: torch.device = None):
