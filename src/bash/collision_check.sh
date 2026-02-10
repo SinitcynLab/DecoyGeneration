@@ -16,8 +16,8 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/io/collision_checker.py -t data/targets/UP000002311_559292.fasta -d data/decoys/UP000002311_559292.esm650M.best.c1.0.fasta 
-python -u src/io/collision_checker.py -t data/targets/UP000002311_559292.fasta -d data/decoys/UP000002311_559292.esm8M.best.c1.0.fasta
+python -u src/io/collision_checker.py -t data/targets/UP000002311_559292.fasta -d data/decoys/UP000002311_559292.esm650M.best.c1.32b.0.fasta 
+python -u src/io/collision_checker.py -t data/targets/UP000002311_559292.fasta -d data/decoys/UP000002311_559292.esm8M.best.c1.32b.0.fasta
 python -u src/io/collision_checker.py -t data/targets/UP000002311_559292.fasta -d data/decoys/UP000002311_559292.shuffle.0.fasta
 python -u src/io/collision_checker.py -t data/targets/UP000002311_559292.fasta -d data/decoys/UP000002311_559292.reverse.fasta 
 python -u src/io/collision_checker.py -t data/targets/UP000002311_559292.fasta -d data/decoys/UP000002311_559292.diann.fasta 

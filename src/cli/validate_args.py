@@ -22,7 +22,7 @@ def validate_args(args: argparse.Namespace):
         raise ValueError(f"Please choose a command from {COMMAND_LIST}.")
 
 def validate_generators(args: argparse.Namespace):
-    if args.generators is None:
+    if args.generator is None:
         raise ValueError("Please provide generators which must create the files.")
     if args.generator not in GENERATOR_LIST:
         raise ValueError(f"Choose generators from {GENERATOR_LIST}.")
