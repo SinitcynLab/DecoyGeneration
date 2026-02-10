@@ -151,7 +151,7 @@ class MlGenerator(DecoyGenerator):
                             new_aa == 'L' and original_aa == 'I'):
                         continue
                     new_sequence[mask_position] = new_aa
-                    self._log_data(probs, sequence_idx, mask_position, sequence, new_aa, self.canonical_amino_acids[top_idx[0]]) # for visualization
+                    #self._log_data(probs, sequence_idx, mask_position, sequence, new_aa, self.canonical_amino_acids[top_idx[0]]) # for visualization
                     break
                 
             yield "".join(new_sequence)
