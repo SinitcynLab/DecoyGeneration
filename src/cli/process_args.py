@@ -12,7 +12,7 @@ from src.decoy_generators.reverse_generator import ReverseGenerator
 from src.decoy_generators.shuffle_generator import ShuffleGenerator
 from src.decoy_generators.protbert_generator import ProtBertGenerator
 from src.decoy_generators.random_replace_generator import RandomReplaceGenerator
-from src.run.cross_val_mlp import cross_val_mlp
+from src.run.cross_val_mlp_protbert import cross_val_mlp_protbert
 from src.run.cross_val_rnn import cross_val_rnn
 from src.run.cross_val_svm import cross_val_svm
 from src.run.generate import generate_decoys
@@ -38,7 +38,7 @@ def process_args(args: argparse.Namespace):
 
 def process_evaluate(classifier: str, target_file: str, decoy_files: str, decoy_ids: str):
     if classifier == "mlp":
-        cross_val_mlp(target_file, decoy_files, decoy_ids)
+        cross_val_mlp_protbert(target_file, decoy_files, decoy_ids)
     elif classifier == "rnn":
         cross_val_rnn(target_file, decoy_files, decoy_ids)
     elif classifier == "svm":
@@ -118,6 +118,7 @@ def create_generator_from_parameters(generator_string: str, seed: int, mask_coun
         )
     elif generator_string == "protbert":
         local_path = get_path(generator_string, param_count, tuned_model_path)
+        weight_type = PARAM_PRECISION_TO_TYPE[param_precision]
         generator = ProtBertGenerator(
             local_path=local_path,
             random=random,

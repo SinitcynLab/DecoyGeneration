@@ -23,7 +23,7 @@ def get_mlp_net():
     )
     return net
 
-def cross_val_mlp(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
+def cross_val_mlp_protbert(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
         # define MLP classifier
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(f"Using {device}...")
