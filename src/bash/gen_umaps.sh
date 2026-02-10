@@ -17,6 +17,6 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/visualization/umap_visualizer.py --files data/targets/UP000002311_559292.fasta data/decoys/UP000002311_559292.shuffle.0.fasta data/decoys/UP000002311_559292.esm650M.best.c1.0.fasta --identifiers "Target" "Shuffle" "ESM 650" -n 6059
-python -u src/visualization/umap_visualizer.py --files data/targets/UP000002311_559292.fasta data/decoys/UP000002311_559292.reverse.fasta data/decoys/UP000002311_559292.esm650M.best.c1.0.fasta --identifiers "Target" "Reverse" "ESM 650" -n 6059
-python -u src/visualization/umap_visualizer.py --files data/targets/UP000002311_559292.fasta data/decoys/UP000002311_559292.diann.fasta data/decoys/UP000002311_559292.esm650M.best.c1.0.fasta --identifiers "Target" "DIA-NN" "ESM 650" -n 6059
+python -u src/visualization/umap_visualizer.py --files data/targets/UP000002311_559292.fasta data/decoys/UP000002311_559292.shuffle.0.fasta data/decoys/UP000002311_559292.esm650M.best.c1.32b.0.fasta --identifiers "Target" "Shuffle" "ESM 650" -n 6059
+python -u src/visualization/umap_visualizer.py --files data/targets/UP000002311_559292.fasta data/decoys/UP000002311_559292.reverse.fasta data/decoys/UP000002311_559292.esm650M.best.c1.32b.0.fasta --identifiers "Target" "Reverse" "ESM 650" -n 6059
+python -u src/visualization/umap_visualizer.py --files data/targets/UP000002311_559292.fasta data/decoys/UP000002311_559292.diann.fasta data/decoys/UP000002311_559292.esm650M.best.c1.32b.0.fasta --identifiers "Target" "DIA-NN" "ESM 650" -n 6059

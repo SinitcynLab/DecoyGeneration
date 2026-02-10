@@ -16,3 +16,4 @@ bokeh
 holoviews
 scipy
 datasets
+tf-keras

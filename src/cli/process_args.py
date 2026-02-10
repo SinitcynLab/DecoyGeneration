@@ -122,7 +122,6 @@ def create_generator_from_parameters(generator_string: str, seed: int, mask_coun
         )
     elif generator_string == "protbert":
         local_path = get_path(generator_string, param_count, tuned_model_path)
-        weight_type = PARAM_PRECISION_TO_TYPE[param_precision]
         generator = ProtBertGenerator(
             local_path=local_path,
             random=random,
@@ -132,7 +131,6 @@ def create_generator_from_parameters(generator_string: str, seed: int, mask_coun
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
             masking_type=MaskingType.COUNT,
-            mask_count=mask_count,
-            weight_type=weight_type
+            mask_count=mask_count
         )
     return generator

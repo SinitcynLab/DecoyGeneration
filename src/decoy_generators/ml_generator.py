@@ -101,11 +101,11 @@ class MlGenerator(DecoyGenerator):
             for fasta_records_batch in self._batch(targets, self.batch_size):
                 yield from self._batch_convert(fasta_records_batch)
 
-    def _prepare_inputs(self, target_batch: List[str], dict_name_for_tokens: str = "input_ids") -> dict:
+    def _prepare_inputs(self, target_batch: List[str]) -> dict:
         inputs = self.tokenizer(target_batch, return_tensors="pt", padding=True)  # [batch_size, L, vocab]
         if self.weight_type != torch.float32:
             for k, v in inputs.data.items():
-                if k != dict_name_for_tokens: inputs.data[k] = v.to(self.weight_type)
+                if k != 'input_ids': inputs.data[k] = v.to(self.weight_type)
         inputs.to(self.device)
         return inputs
 
