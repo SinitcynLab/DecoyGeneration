@@ -2,7 +2,7 @@ import argparse
 
 from src.cli.process_args import process_args
 from src.cli.validate_args import validate_args
-from src.cli.option_lists import CLASSIFIER_LIST, COMMAND_LIST, GENERATOR_LIST
+from src.cli.option_lists import CLASSIFIER_LIST, COMMAND_LIST, GENERATOR_LIST, ENCODER_LIST
 
 def collect_args():
     parser = argparse.ArgumentParser()
@@ -14,6 +14,8 @@ def collect_args():
                         help="Decoy files to execute command on.")
     parser.add_argument("--decoy_ids", nargs="+", 
                         help="String names for the provided decoy files.")
+    parser.add_argument("--encoder_model", type=str, default="protbert", 
+                        help=f"Which model to use for encoding sequences before classification (defaults to protbert). (Choose from {ENCODER_LIST}).")
     
     parser.add_argument("--generator", help=f"Generator to execute command with. (Choose from {GENERATOR_LIST}.)")
     parser.add_argument("--parameter_count", type=str, default="650M", 

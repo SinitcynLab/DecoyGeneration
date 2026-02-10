@@ -12,7 +12,7 @@ from src.decoy_generators.reverse_generator import ReverseGenerator
 from src.decoy_generators.shuffle_generator import ShuffleGenerator
 from src.decoy_generators.protbert_generator import ProtBertGenerator
 from src.decoy_generators.random_replace_generator import RandomReplaceGenerator
-from src.run.cross_val_mlp_protbert import cross_val_mlp_protbert
+from src.run.cross_val_mlp import cross_val_mlp_protbert, cross_val_mlp_esm
 from src.run.cross_val_rnn import cross_val_rnn
 from src.run.cross_val_svm import cross_val_svm
 from src.run.generate import generate_decoys
@@ -25,7 +25,7 @@ def process_args(args: argparse.Namespace):
     command = args.command
     seed_all(args.seed)
     if command == "evaluate":
-        process_evaluate(args.classifier, args.target_file, args.decoy_files, args.decoy_ids)
+        process_evaluate(args.classifier, args.encoder_model, args.target_file, args.decoy_files, args.decoy_ids)
     elif command == "generate":
         process_generate(args.generator, args.target_file, args.gen_count, args.output_directory, args.seed, args.mask_count,
                          args.parameter_count, args.parameter_precision, args.tuned_model_path)
@@ -36,9 +36,11 @@ def process_args(args: argparse.Namespace):
         process_tune(args.generator, args.training_files, args.output_directory, args.num_epochs, args.batch_size, args.seed, args.mask_count,
                      args.parameter_count, args.parameter_precision, args.tuned_model_path)
 
-def process_evaluate(classifier: str, target_file: str, decoy_files: str, decoy_ids: str):
-    if classifier == "mlp":
+def process_evaluate(classifier: str, encoder_model: str, target_file: str, decoy_files: str, decoy_ids: str):
+    if classifier == "mlp" and encoder_model == "protbert":
         cross_val_mlp_protbert(target_file, decoy_files, decoy_ids)
+    elif classifier == "mlp" and encoder_model == "esm":
+        cross_val_mlp_esm(target_file, decoy_files, decoy_ids)
     elif classifier == "rnn":
         cross_val_rnn(target_file, decoy_files, decoy_ids)
     elif classifier == "svm":
