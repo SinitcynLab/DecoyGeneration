@@ -1,8 +1,7 @@
 import torch
 
 CLASSIFIER_LIST = ["mlp", "rnn", "svm"]
-GENERATOR_LIST = ["reverse", "shuffle", "diann", "esm650M_32bit", "esm650M_16bit", "protbert_32bit", "protbert_16bit",
-                  "esm8M_32bit", "esm8M_16bit", "max_prob_smart_esm", "rel_diff_smart_esm", "random_replace",
+GENERATOR_LIST = ["reverse", "shuffle", "diann", "esm", "protbert", "protbert_32bit", "protbert_16bit",
                   "esm_c_terminus", "esm_n_terminus"]
 COMMAND_LIST = ["evaluate", "generate", "time"]
 

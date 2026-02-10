@@ -26,3 +26,5 @@ python -u src/decoy_gen.py --command generate --generator esm --parameter_count 
 python -u src/decoy_gen.py --command generate --generator esm --parameter_count 150M --parameter_precision 32 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
 python -u src/decoy_gen.py --command generate --generator esm --parameter_count 150M --parameter_precision 16 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
 python -u src/decoy_gen.py --command generate --generator esm --parameter_count 3B --parameter_precision 16 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
+python -u src/decoy_gen.py --command generate --generator protbert --parameter_precision 32 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
+python -u src/decoy_gen.py --command generate --generator protbert --parameter_precision 16 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys
