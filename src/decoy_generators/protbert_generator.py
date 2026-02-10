@@ -44,7 +44,7 @@ class ProtBertGenerator(MlGenerator):
 
     def _prepare_inputs(self, target_batch: List[str]) -> dict:
         target_batch = [" ".join(sequence) for sequence in target_batch]
-        return MlGenerator._prepare_inputs(self, target_batch)
+        return MlGenerator._prepare_inputs(self, target_batch, 'indices')
 
     def __str__(self):
         out: str = "protbert"
