@@ -13,15 +13,15 @@ def validate_args(args: argparse.Namespace):
         if len(args.decoy_files) != len(args.decoy_ids):
             raise ValueError("Please ensure that the list of decoy files is as long as the list of decoy ids.")
     elif args.command == "generate":
-        validate_generators(args)
+        validate_generator(args)
         if args.output_directory is None:
             raise ValueError("Please provide an output directory for the decoy .fasta files.")
     elif args.command == "time":
-        validate_generators(args)
+        validate_generator(args)
     else:
         raise ValueError(f"Please choose a command from {COMMAND_LIST}.")
 
-def validate_generators(args: argparse.Namespace):
+def validate_generator(args: argparse.Namespace):
     if args.generator is None:
         raise ValueError("Please provide generators which must create the files.")
     if args.generator not in GENERATOR_LIST:
