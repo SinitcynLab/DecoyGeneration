@@ -10,6 +10,7 @@ from src.io.utils import remove_long_sequences
 def generate_decoys(target_file: str, generator: DecoyGenerator, n: int, destination_dir: str):
     filename, extension = os.path.splitext(target_file)
     filename = os.path.join(destination_dir, os.path.basename(filename))
+    print(f"Generating output of {generator} for file {target_file}.")
     if issubclass(type(generator), MlGenerator):
         for i in range(n):
             filename_out = f"{filename}.{generator}.{i}{extension}"
