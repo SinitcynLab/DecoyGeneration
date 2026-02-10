@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=mlp_max_entropy_unmasked_%j
-#SBATCH --output=mlp_max_entropy_unmasked_%j.txt
+#SBATCH --job-name=gen_all_ml_%j
+#SBATCH --output=gen_all_ml_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
-#SBATCH --time=8:00:00
+#SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
