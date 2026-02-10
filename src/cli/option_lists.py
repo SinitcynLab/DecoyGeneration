@@ -5,8 +5,15 @@ GENERATOR_LIST = ["reverse", "shuffle", "diann", "esm", "protbert", "protbert_32
                   "esm_c_terminus", "esm_n_terminus"]
 PARAMETER_COUNT_LIST = ["8M", "35M", "150M", "650M", "3B"]
 PARAMETER_PRECISION_LIST = [16, 32]
-COMMAND_LIST = ["evaluate", "generate", "time"]
+COMMAND_LIST = ["evaluate", "generate", "time", "tune"]
 
+def get_path(generator_string: str, param_count: str, custom_model_path: str):
+    if custom_model_path != None:
+        return custom_model_path
+    elif generator_string == "protbert":
+        return "models/prot_bert"
+    else:
+        return PARAM_COUNT_TO_PATH[param_count]
 PARAM_COUNT_TO_PATH: dict = {"8M": "models/esm2_t6_8M_UR50D",
                              "35M": "models/esm2_t12_35M_UR50D",
                              "150M": "models/esm2_t30_150M_UR50D",

@@ -6,6 +6,7 @@ from typing import Iterator, List, Tuple
 from random import Random
 from enum import Enum
 from torch import Tensor
+from transformers import PreTrainedTokenizerBase, PreTrainedModel
 
 from src.decoy_generators.decoy_generator import DecoyGenerator
 
@@ -18,6 +19,9 @@ class MlGeneratorType(Enum):
     WORST = 2
 
 class MlGenerator(DecoyGenerator):
+    model: PreTrainedModel
+    tokenizer: PreTrainedTokenizerBase
+
     def __init__(
             self,
             local_path: str,
