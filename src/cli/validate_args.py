@@ -1,6 +1,6 @@
 import argparse
 
-from src.cli.option_lists import CLASSIFIER_LIST, COMMAND_LIST, GENERATOR_LIST
+from src.cli.option_lists import CLASSIFIER_LIST, COMMAND_LIST, GENERATOR_LIST, PARAMETER_COUNT_LIST, PARAMETER_PRECISION_LIST
 
 def validate_args(args: argparse.Namespace):
     if args.target_file is None:
@@ -24,6 +24,10 @@ def validate_args(args: argparse.Namespace):
 def validate_generators(args: argparse.Namespace):
     if args.generators is None:
         raise ValueError("Please provide generators which must create the files.")
-    for generator_str in args.generators:
-        if generator_str not in GENERATOR_LIST:
-            raise ValueError(f"Choose generators from {GENERATOR_LIST}.")
+    if args.generator not in GENERATOR_LIST:
+        raise ValueError(f"Choose generators from {GENERATOR_LIST}.")
+    if args.parameter_count not in PARAMETER_COUNT_LIST:
+        raise ValueError(f"Choose a parameter count for esm from {PARAMETER_COUNT_LIST}.")
+    if args.parameter_precision not in PARAMETER_PRECISION_LIST:
+        raise ValueError(f"Choose a parameter precision from {PARAMETER_PRECISION_LIST} (measured in bits).")
+    

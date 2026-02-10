@@ -3,6 +3,8 @@ import torch
 CLASSIFIER_LIST = ["mlp", "rnn", "svm"]
 GENERATOR_LIST = ["reverse", "shuffle", "diann", "esm", "protbert", "protbert_32bit", "protbert_16bit",
                   "esm_c_terminus", "esm_n_terminus"]
+PARAMETER_COUNT_LIST = ["8M", "35M", "150M", "650M", "3B"]
+PARAMETER_PRECISION_LIST = [16, 32]
 COMMAND_LIST = ["evaluate", "generate", "time"]
 
 PARAM_COUNT_TO_PATH: dict = {"8M": "models/esm2_t6_8M_UR50D",
