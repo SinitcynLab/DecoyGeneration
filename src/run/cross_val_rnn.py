@@ -1,32 +1,44 @@
 import torch
 
-from typing import Iterable
+from typing import Iterable, Callable
 
 from src.peptide_classifiers.recurrent_nn_classifier import RecurrentNNClassifier
 from src.peptide_classifiers.nn_classifier import cross_validate_nn
 from src.encoders.protbert_encoder import ProtBertEncoder
+from src.encoders.esm_encoder import EsmEncoder
+from src.encoders.peptide_encoder import PeptideEncoder
 from src.io.fasta import read_fasta_file
 from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
 from src.io.lmdb_dataset import LMDBDataset
 import datetime
 import time
 
-def get_rnn_net():
+def get_rnn(dim: int):
     out_size = 2048
-    rnn = torch.nn.RNN(1024, out_size, bidirectional=False)
+    rnn = torch.nn.RNN(dim, out_size, bidirectional=False)
     net = torch.nn.Sequential( # each character (amino acid) is encoded using 1024 numbers
         torch.nn.Linear(out_size, 1),
         torch.nn.Sigmoid()
     )
     return net, rnn
 
-def cross_val_rnn(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
-    # define RNN classifier
+def cross_val_rnn_esm(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using {device}...")
+    encoder = EsmEncoder(device=device, constant_length=False, flatten=False)
+    get_rnn_esm = lambda : get_rnn(1280)
+    cross_val_rnn(target_file, decoy_files, decoy_ids, encoder, get_rnn_esm, device)
+
+def cross_val_rnn_protbert(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     encoder = ProtBertEncoder(device=device, constant_length=False, flatten=False)
-    net, rnn = get_rnn_net()
-    classifier = RecurrentNNClassifier(rnn=rnn, network=net, encoder=encoder, device=device, name="rnn", resetter=get_rnn_net)
+    get_rnn_protbert = lambda : get_rnn(1024)
+    cross_val_rnn(target_file, decoy_files, decoy_ids, encoder, get_rnn_protbert, device)
+
+def cross_val_rnn(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str], encoder: PeptideEncoder, resetter: Callable, device: torch.device):
+    # define RNN classifier
+    print(f"Using {device}...")
+    net, rnn = resetter()
+    classifier = RecurrentNNClassifier(rnn=rnn, network=net, encoder=encoder, device=device, name="rnn", resetter=resetter)
 
     timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
     temp_encoding_dir = f"data/encodings/temp_rnn_{timestamp}"

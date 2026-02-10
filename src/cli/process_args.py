@@ -13,7 +13,7 @@ from src.decoy_generators.shuffle_generator import ShuffleGenerator
 from src.decoy_generators.protbert_generator import ProtBertGenerator
 from src.decoy_generators.random_replace_generator import RandomReplaceGenerator
 from src.run.cross_val_mlp import cross_val_mlp_protbert, cross_val_mlp_esm
-from src.run.cross_val_rnn import cross_val_rnn
+from src.run.cross_val_rnn import cross_val_rnn_protbert, cross_val_rnn_esm
 from src.run.cross_val_svm import cross_val_svm
 from src.run.generate import generate_decoys
 from src.run.timing_test import timing_test
@@ -41,8 +41,10 @@ def process_evaluate(classifier: str, encoder_model: str, target_file: str, deco
         cross_val_mlp_protbert(target_file, decoy_files, decoy_ids)
     elif classifier == "mlp" and encoder_model == "esm":
         cross_val_mlp_esm(target_file, decoy_files, decoy_ids)
-    elif classifier == "rnn":
-        cross_val_rnn(target_file, decoy_files, decoy_ids)
+    elif classifier == "rnn" and encoder_model == "protbert":
+        cross_val_rnn_protbert(target_file, decoy_files, decoy_ids)
+    elif classifier == "rnn" and encoder_model == "esm":
+        cross_val_rnn_esm(target_file, decoy_files, decoy_ids)
     elif classifier == "svm":
         cross_val_svm(target_file, decoy_files, decoy_ids)
 

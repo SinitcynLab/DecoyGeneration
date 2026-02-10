@@ -29,16 +29,16 @@ def cross_val_mlp_esm(target_file: str, decoy_files: Iterable[str], decoy_ids: I
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     encoder = EsmClsEncoder(device)
     get_mlp_esm = lambda : get_mlp(1280)
-    __cross_val_mlp(target_file, decoy_files, decoy_ids, encoder, get_mlp_esm, device)
+    cross_val_mlp(target_file, decoy_files, decoy_ids, encoder, get_mlp_esm, device)
 
 def cross_val_mlp_protbert(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     encoder = ProtBertClsEncoder(device)
     get_mlp_protbert = lambda : get_mlp(1024)
-    __cross_val_mlp(target_file, decoy_files, decoy_ids, encoder, get_mlp_protbert, device)
+    cross_val_mlp(target_file, decoy_files, decoy_ids, encoder, get_mlp_protbert, device)
      
 
-def __cross_val_mlp(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str], encoder: PeptideEncoder, resetter: Callable, device: torch.device):
+def cross_val_mlp(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str], encoder: PeptideEncoder, resetter: Callable, device: torch.device):
         # define MLP classifier
         print(f"Using {device}...")
         classifier = FeedForwardNNClassifier(network=resetter(), encoder=encoder, device=device, name="mlp", resetter=resetter)
