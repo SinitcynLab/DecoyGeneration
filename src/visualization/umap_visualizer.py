@@ -33,8 +33,8 @@ def generate_umap_image(files: Iterable[str], seq_ids: Iterable[str], number: in
         data_list.append(file_data)
         label_list.append(file_labels)
         print(f"{i+1}/{len(files)}")
-    plot_data = np.concat(data_list, axis=0)
-    labels = np.concat(label_list, axis=0)
+    plot_data = np.concatenate(data_list, axis=0)
+    labels = np.concatenate(label_list, axis=0)
     embedding = umap.UMAP().fit_transform(X=plot_data, y=labels)
 
     plt.style.use("bmh") # professional look
