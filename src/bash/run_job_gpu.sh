@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=eval_nov_%j
-#SBATCH --output=eval_nov_%j.txt
+#SBATCH --job-name=mlp_random_replace_%j
+#SBATCH --output=mlp_random_replace_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=1:00:00
 #SBATCH --nodes=1
