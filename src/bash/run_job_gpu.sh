@@ -17,6 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/decoy_gen.py --command evaluate --classifier mlp --encoder_model esm --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.protbert.best.c1.32b.0.fasta --decoy_ids protbert_32bit
-python -u src/decoy_gen.py --command evaluate --classifier mlp --encoder_model protbert --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.esm35M.best.c1.32b.0.fasta data/decoys/UP000002311_559292.esm150M.best.c1.32b.0.fasta --decoy_ids esm35M_32bit esm150M_32bit
-python -u src/decoy_gen.py --command evaluate --classifier mlp --encoder_model protbert --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.esm8M.best.c1.16b.0.fasta data/decoys/UP000002311_559292.esm35M.best.c1.16b.0.fasta data/decoys/UP000002311_559292.esm150M.best.c1.16b.0.fasta data/decoys/UP000002311_559292.esm650M.best.c1.16b.0.fasta data/decoys/UP000002311_559292.esm3B.best.c1.16b.0.fasta --decoy_ids esm8M_16bit esm35M_16bit esm150M_16bit esm650M_16bit esm3B_16bit
+python -u src/decoy_gen.py --command evaluate --classifier mlp --encoder_model protbert --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.protbert.best.c1.32b.0.fasta --decoy_ids protbert_32bit
