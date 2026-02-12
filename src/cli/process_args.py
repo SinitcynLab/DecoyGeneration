@@ -78,7 +78,7 @@ def create_generator_from_parameters(generator_string: str, seed: int, mask_coun
     elif generator_string == "diann":
         generator = DiannGenerator(special_amino_acids=special_amino_acids)
     elif generator_string == "random_replace":
-        generator_string = RandomReplaceGenerator(special_amino_acids=special_amino_acids, random=random)
+        generator = RandomReplaceGenerator(special_amino_acids=special_amino_acids, random=random)
     elif generator_string == "esm":
         local_path = get_path(generator_string, param_count, tuned_model_path)
         weight_type = PARAM_PRECISION_TO_TYPE[param_precision]

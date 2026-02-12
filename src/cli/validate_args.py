@@ -3,7 +3,7 @@ import argparse
 from src.cli.option_lists import CLASSIFIER_LIST, COMMAND_LIST, GENERATOR_LIST, PARAMETER_COUNT_LIST, PARAMETER_PRECISION_LIST
 
 def validate_args(args: argparse.Namespace):
-    if args.target_file is None:
+    if args.command != "tune" and args.target_file is None:
         raise ValueError("Please provide a target file as input.")
     if args.command == "evaluate":
         if args.classifier not in CLASSIFIER_LIST:
@@ -18,7 +18,7 @@ def validate_args(args: argparse.Namespace):
             raise ValueError("Please provide an output directory for the decoy .fasta files.")
     elif args.command == "time":
         validate_generator(args)
-    else:
+    elif args.command not in COMMAND_LIST:
         raise ValueError(f"Please choose a command from {COMMAND_LIST}.")
 
 def validate_generator(args: argparse.Namespace):

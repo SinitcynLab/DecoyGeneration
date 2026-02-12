@@ -11,15 +11,15 @@ MODEL_TYPE_TO_PARAMS: dict = {EsmGenerator: {"learning_rate": 4e-4, "weight_deca
                          ProtBertGenerator: {"learning_rate": 2e-3, "weight_decay": 0.01}} # source: https://ieeexplore.ieee.org/ielaam/34/9893033/9477085-aam.pdf, https://huggingface.co/Rostlab/prot_bert#model-description
 
 def get_training_arguments(ml_generator: MlGenerator, model_save_dir: str, num_epochs: int, batch_size: int):
-    param_dict = MODEL_TYPE_TO_PARAMS(type(ml_generator))
+    param_dict = MODEL_TYPE_TO_PARAMS[type(ml_generator)]
     log_dir = model_save_dir + "/mlm_results"
     return TrainingArguments(
         output_dir=log_dir,
         overwrite_output_dir=True,
-        num_train_epoch=num_epochs,
+        num_train_epochs=num_epochs,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size,
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         save_strategy="epoch",
         logging_steps=50,
         learning_rate=param_dict["learning_rate"],

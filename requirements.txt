@@ -11,9 +11,7 @@ seaborn
 koinapy
 pandas
 umap-learn
-datashader
-bokeh
-holoviews
 scipy
 datasets
 tf-keras
+accelerate>=0.26.0
