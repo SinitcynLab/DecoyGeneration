@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=mlp_protbert_w_protbert_encoder_%j
-#SBATCH --output=mlp_protbert_w_protbert_encoder_%j.txt
+#SBATCH --job-name=eval_nov_%j
+#SBATCH --output=eval_nov_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
-#SBATCH --time=12:00:00
+#SBATCH --time=1:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/decoy_gen.py --command evaluate --classifier mlp --encoder_model protbert --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.random_replace.0.nov.fasta --decoy_ids protbert_32bit
+python -u src/decoy_gen.py --command evaluate --classifier mlp --encoder_model protbert --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.new.0.nov.fasta --decoy_ids nov
