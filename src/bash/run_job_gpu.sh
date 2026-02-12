@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH --job-name=eval_nov_%j
-#SBATCH --output=eval_nov_%j.txt
+#SBATCH --job-name=rnn_random_replace_%j
+#SBATCH --output=rnn_random_replace_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
-#SBATCH --time=1:00:00
+#SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
