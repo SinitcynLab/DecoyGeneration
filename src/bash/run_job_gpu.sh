@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=eval_mlp_all_%j
-#SBATCH --output=eval_mlp_all_%j.txt
+#SBATCH --job-name=mlp_protbert_w_protbert_encoder_%j
+#SBATCH --output=mlp_protbert_w_protbert_encoder_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
