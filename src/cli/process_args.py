@@ -56,11 +56,6 @@ def process_timing(generator_string: str, target_file: str, number_of_seqs_for_t
                                                  tuned_model_path, "cpu")
     timing_test(target_file, number_of_seqs_for_timing, generator)
 
-def process_tune(generator_string: str, training_files: List[str], model_save_dir: str, num_epochs: int, batch_size: int,
-                 seed: int, mask_count: int, param_count: str, param_precision: int, tuned_model_path: str):
-    generator = create_generator_from_parameters(generator_string, seed, mask_count, param_count, param_precision, tuned_model_path)
-    fine_tune(generator, training_files, model_save_dir, num_epochs, batch_size)
-
 def create_generator_from_parameters(generator_string: str, seed: int, mask_count: int, 
                                      param_count: str, param_precision: int, tuned_model_path: str, device: torch.device = None):
     if device == None:

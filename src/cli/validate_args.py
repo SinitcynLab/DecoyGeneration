@@ -3,8 +3,6 @@ import argparse
 from src.cli.option_lists import CLASSIFIER_LIST, COMMAND_LIST, GENERATOR_LIST, PARAMETER_COUNT_LIST, PARAMETER_PRECISION_LIST
 
 def validate_args(args: argparse.Namespace):
-    if args.command != "tune" and args.target_file is None:
-        raise ValueError("Please provide a target file as input.")
     if args.command == "evaluate":
         if args.classifier not in CLASSIFIER_LIST:
             raise ValueError(f"Choose classifiers from {CLASSIFIER_LIST}.")
@@ -23,11 +21,13 @@ def validate_args(args: argparse.Namespace):
 
 def validate_generator(args: argparse.Namespace):
     if args.generator is None:
-        raise ValueError("Please provide generators which must create the files.")
+        raise ValueError("Please provide a generator which must create the files.")
     if args.generator not in GENERATOR_LIST:
         raise ValueError(f"Choose generators from {GENERATOR_LIST}.")
     if args.parameter_count not in PARAMETER_COUNT_LIST:
         raise ValueError(f"Choose a parameter count for esm from {PARAMETER_COUNT_LIST}.")
     if args.parameter_precision not in PARAMETER_PRECISION_LIST:
         raise ValueError(f"Choose a parameter precision from {PARAMETER_PRECISION_LIST} (measured in bits).")
+    if args.generator == "protbert" and args.parameter_precision == 16:
+        raise ValueError(f"The protbert generator only supports 32-bit parameter precision.")
     
