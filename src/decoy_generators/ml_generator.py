@@ -1,10 +1,12 @@
 import math
 import torch
+import numpy as np
 
 from typing import Iterator, List, Tuple
 from random import Random
 from enum import Enum
 from torch import Tensor
+from transformers import PreTrainedTokenizerBase, PreTrainedModel
 
 from src.decoy_generators.decoy_generator import DecoyGenerator
 
@@ -17,6 +19,9 @@ class MlGeneratorType(Enum):
     WORST = 2
 
 class MlGenerator(DecoyGenerator):
+    model: PreTrainedModel
+    tokenizer: PreTrainedTokenizerBase
+
     def __init__(
             self,
             local_path: str,
@@ -96,13 +101,17 @@ class MlGenerator(DecoyGenerator):
             for fasta_records_batch in self._batch(targets, self.batch_size):
                 yield from self._batch_convert(fasta_records_batch)
 
-    def _mask_and_get_probs(self, target_batch: List[str]) -> (Tuple[Tensor, List[List[int]]]):
-        # prepare inputs:
+    def _prepare_inputs(self, target_batch: List[str]) -> dict:
         inputs = self.tokenizer(target_batch, return_tensors="pt", padding=True)  # [batch_size, L, vocab]
         if self.weight_type != torch.float32:
             for k, v in inputs.data.items():
                 if k != 'input_ids': inputs.data[k] = v.to(self.weight_type)
         inputs.to(self.device)
+        return inputs
+
+    def _mask_and_get_probs(self, target_batch: List[str]) -> (Tuple[Tensor, List[List[int]]]):
+        # prepare inputs:
+        inputs = self._prepare_inputs(target_batch)
         # apply mask:
         mask_positions: List[List[int]] = [[] for _ in range(len(target_batch))]
         for sequence_idx, sequence in enumerate(target_batch):
@@ -146,6 +155,34 @@ class MlGenerator(DecoyGenerator):
                             new_aa == 'L' and original_aa == 'I'):
                         continue
                     new_sequence[mask_position] = new_aa
+                    #self._log_data(probs, sequence_idx, mask_position, sequence, new_aa, self.canonical_amino_acids[top_idx[0]]) # for visualization
                     break
                 
             yield "".join(new_sequence)
+
+    def _log_data(self, probs: Tensor, sequence_idx: int, mask_position: int, sequence: str, chosen_aa: str, top_aa: str):
+        aa_i = sequence[mask_position]
+        aa_i_min_1 = sequence[mask_position - 1]
+        if mask_position + 1 < len(sequence):
+            aa_i_plus_1 = sequence[mask_position + 1]
+        else:
+            aa_i_plus_1 = ""
+        relevant_aa_ids = self.tokenizer.convert_tokens_to_ids([aa_i, chosen_aa, top_aa])
+        relevant_aa_probs = probs[sequence_idx, mask_position, relevant_aa_ids] # [prob_og_aa, prob_chosen_aa, prob_top_aa]
+        # log the original token:
+        with open(f'og_aa_{self}.txt', 'a') as file:
+            file.write(f"{aa_i}\n")
+        # log the offset tokens:
+        with open(f'aa_offset_{self}.txt', 'a') as file:
+            file.write(f"{aa_i_min_1},{aa_i_plus_1}\n")
+        # log the most-probable token:
+        with open(f'most_probable_aa_{self}.txt', 'a') as file:
+            file.write(f"{top_aa}\n")
+        # log the chosen token:
+        with open(f'token_choices_{self}.txt', 'a') as file:
+            file.write(f"{chosen_aa}\n")
+        # log associated probabilities:
+        save_array = relevant_aa_probs.cpu().numpy()
+        with open(f'prob_distr_{self}.txt', 'a') as file:
+            np.savetxt(file, save_array)
+            file.write("\n")

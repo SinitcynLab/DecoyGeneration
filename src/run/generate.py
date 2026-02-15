@@ -7,13 +7,10 @@ from src.decoy_generators.ml_generator import MlGenerator
 from src.io.fasta import write_fasta_file, read_fasta_file
 from src.io.utils import remove_long_sequences
 
-def generate_decoys(target_file: str, generator_list: List[DecoyGenerator], n: int, destination_dir: str):
-    for generator in generator_list:
-        branch_on_generator(target_file, generator, n, destination_dir)
-
-def branch_on_generator(target_file: str, generator: DecoyGenerator, n: int, destination_dir: str):
+def generate_decoys(target_file: str, generator: DecoyGenerator, n: int, destination_dir: str):
     filename, extension = os.path.splitext(target_file)
     filename = os.path.join(destination_dir, os.path.basename(filename))
+    print(f"Generating output of {generator} for file {target_file}.")
     if issubclass(type(generator), MlGenerator):
         for i in range(n):
             filename_out = f"{filename}.{generator}.{i}{extension}"
