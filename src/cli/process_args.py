@@ -17,7 +17,6 @@ from src.run.cross_val_rnn import cross_val_rnn_protbert, cross_val_rnn_esm
 from src.run.cross_val_svm import cross_val_svm
 from src.run.generate import generate_decoys
 from src.run.timing_test import timing_test
-from src.run.fine_tune import fine_tune
 from src.io.utils import seed_all
 from src.cli.option_lists import get_path, PARAM_PRECISION_TO_TYPE
 
@@ -32,9 +31,6 @@ def process_args(args: argparse.Namespace):
     elif command == "time":
         process_timing(args.generator, args.target_file, args.timing_sample, args.seed, args.mask_count,
                        args.parameter_count, args.parameter_precision, args.tuned_model_path)
-    elif command == "tune":
-        process_tune(args.generator, args.training_files, args.output_directory, args.num_epochs, args.batch_size, args.seed, args.mask_count,
-                     args.parameter_count, args.parameter_precision, args.tuned_model_path)
 
 def process_evaluate(classifier: str, encoder_model: str, target_file: str, decoy_files: str, decoy_ids: str):
     if classifier == "mlp" and encoder_model == "protbert":

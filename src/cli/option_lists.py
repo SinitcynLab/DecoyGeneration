@@ -6,7 +6,7 @@ GENERATOR_LIST = ["reverse", "shuffle", "diann", "esm", "protbert", "protbert_32
                   "esm_c_terminus", "esm_n_terminus", "random_replace"]
 PARAMETER_COUNT_LIST = ["8M", "35M", "150M", "650M", "3B"]
 PARAMETER_PRECISION_LIST = [16, 32]
-COMMAND_LIST = ["evaluate", "generate", "time", "tune"]
+COMMAND_LIST = ["evaluate", "generate", "time"]
 
 def get_path(generator_string: str, param_count: str, custom_model_path: str):
     if custom_model_path != None:
