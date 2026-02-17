@@ -6,7 +6,6 @@ scikit-learn~=1.7.2
 torch-pca~=1.1.0
 matplotlib
 lmdb
-pickle
 seaborn
 koinapy
 pandas
