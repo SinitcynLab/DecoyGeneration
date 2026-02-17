@@ -15,21 +15,21 @@ Together, these two types of evidence lend strong credence to the claim that PLM
 ## Brief Manual
 This respository constitutes a first exploration of the project stipulated above. It can be entirely run for the CLI and its main entry point is src/decoy_gen.py, referenced from the root of the repository.
 
-To obtain more information on parameters and their use, please run 'python src/decoy_gen.py --help'. The parameters of the classifiers in this project can be examined by reviewing the manuscript associated with this project at [CITATION].
+To obtain more information on parameters and their use, please run 'python -m src.decoy_gen --help'. The parameters of the classifiers in this project can be examined by reviewing the manuscript associated with this project at [CITATION].
 
 Below, we provide some example uses of the codebase.
 
 *Generate decoys from UP000002311_559292.fasta using the reverse decoy generation method*:<br>
-`python src/decoy_gen.py --command generate --generators reverse --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys`
+`python -m src.decoy_gen --command generate --generator reverse --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys`
 
 *Generate decoys from UP000002311_559292.fasta using the ESM-based generator with 650M parameters at a parameter precision of 32 bits*:<br>
-`python src/decoy_gen.py --command generate --generators esm --parameter_count 650M --parameter_precision 32 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys`
+`python -m src.decoy_gen --command generate --generator esm --parameter_count 650M --parameter_precision 32 --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys`
 
 *Have the MLP try to tell apart the sequences in UP000002311_559292.fasta from the sequences in UP000002311_559292.reverse.fasta*:<br>
-`python src/decoy_gen.py --command evaluate --classifier mlp --encoder_model protbert --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.reverse.fasta --decoy_ids reverse`
+`python -m src.decoy_gen --command evaluate --classifier mlp --encoder_model protbert --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.reverse.fasta --decoy_ids reverse`
 
 *Time how quickly the generation methods reverse, esm8M_32bit and max_prob_smart_esm are able to convert the first 200 sequences in UP000002311_559292.fasta*:<br>
-`python src/decoy_gen.py --command time --generators reverse esm8M_32bit max_prob_smart_esm --target_file data/targets/UP000002311_559292.fasta --timing_sample 200`
+`python -m src.decoy_gen --command time --generator reverse esm8M_32bit max_prob_smart_esm --target_file data/targets/UP000002311_559292.fasta --timing_sample 200`
 
 ## Note on the data/encodings/temp directory:
 The directory data/encodings/temp temporarily stores the sequence-level embeddings for the purpose of classification. Each time you run the command 'evaluate' with the classifier 'mlp' or 'rnn', a new directory will be created in data/encodings/temp. This design choice was made because the repository was intended to run on a cluster with tight RAM constraints, meaning that loading all embeddings into memory simultaneously would have been infeasible.
