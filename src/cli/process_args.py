@@ -27,7 +27,7 @@ def process_args(args: argparse.Namespace):
         process_evaluate(args.classifier, args.encoder_model, args.target_file, args.decoy_files, args.decoy_ids)
     elif command == "generate":
         process_generate(args.generator, args.terminus, args.target_file, args.gen_count, args.output_directory, args.seed, args.mask_count,
-                         args.parameter_count, args.terminus, args.parameter_precision, args.tuned_model_path)
+                         args.parameter_count, args.parameter_precision, args.tuned_model_path)
     elif command == "time":
         process_timing(args.generator, args.terminus, args.target_file, args.timing_sample, args.seed, args.mask_count,
                        args.parameter_count, args.parameter_precision, args.tuned_model_path)

@@ -24,8 +24,9 @@ class TerminusEsmGenerator(EsmGenerator):
         dtype: torch.dtype = torch.float32,
         terminus: str = 'C'
     ):
-        EsmGenerator.__init__(self, model_name, random, special_amino_acids, sort_optimization,
-                             batch_size, ml_generator_type, device, dtype)
+        EsmGenerator.__init__(self, model_name=model_name, random=random, special_amino_acids=special_amino_acids, 
+                              sort_optimization=sort_optimization, batch_size=batch_size, 
+                              ml_generator_type=ml_generator_type, device=device, dtype=dtype)
         if terminus not in ['N', 'C', 'NC']:
             raise ValueError("Please provide valid terminus")
         self.terminus = terminus
