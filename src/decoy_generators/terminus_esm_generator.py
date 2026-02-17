@@ -21,15 +21,12 @@ class TerminusEsmGenerator(EsmGenerator):
         batch_size: int = 64,
         ml_generator_type: MlGeneratorType = MlGeneratorType.BEST,
         device: torch.device = 'cpu',
-        masking_type: MaskingType = MaskingType.PERCENT,
-        mask_percent: float = 0.3,
-        mask_count: int = 1,
         dtype: torch.dtype = torch.float32,
         terminus: str = 'C'
     ):
         EsmGenerator.__init__(self, model_name, random, special_amino_acids, sort_optimization,
-                             batch_size, ml_generator_type, device, masking_type, mask_percent, mask_count, dtype)
-        if terminus not in ['N', 'C']:
+                             batch_size, ml_generator_type, device, dtype)
+        if terminus not in ['N', 'C', 'NC']:
             raise ValueError("Please provide valid terminus")
         self.terminus = terminus
 
@@ -43,3 +40,5 @@ class TerminusEsmGenerator(EsmGenerator):
             return [start]
         elif self.terminus == 'C':
             return [end - 1]
+        elif self.terminus == 'NC':
+            return [start, end - 1]

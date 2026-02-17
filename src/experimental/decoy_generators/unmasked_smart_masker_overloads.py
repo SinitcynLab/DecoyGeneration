@@ -1,11 +1,11 @@
 import torch
 
 from scipy.stats import entropy
-from src.decoy_generators.base_smart_masking_esm import BaseSmartMaskingEsmGenerator
+from src.experimental.decoy_generators.unmasked_smart_masker_base import UnmaskedSmartMaskingEsmGenerator
 
 from torch import Tensor
 
-class UnmaskedMaxProbSmartMasker(BaseSmartMaskingEsmGenerator):
+class UnmaskedMaxProbSmartMasker(UnmaskedSmartMaskingEsmGenerator):
     def _get_score(self, probs: Tensor, pos: int, original_aa: str):
         # find the top probability of aa's:
         token_prob, amino_acid_indices = torch.topk(probs[0, pos, self.aa_ids], k=self.k, largest=True)
@@ -19,7 +19,7 @@ class UnmaskedMaxProbSmartMasker(BaseSmartMaskingEsmGenerator):
     def __str__(self):
         return f"max_prob_{super().__str__()}"
     
-class UnmaskedMaxEntropySmartMasker(BaseSmartMaskingEsmGenerator):
+class UnmaskedMaxEntropySmartMasker(UnmaskedSmartMaskingEsmGenerator):
     def _get_score(self, probs, pos, original_aa):
         # get the distribution over feasible tokens:
         token_prob, _ = torch.topk(probs[0, pos, self.aa_ids], k=self.k, largest=True)
