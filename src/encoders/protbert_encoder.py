@@ -5,11 +5,19 @@ from typing import Iterable, List
 from transformers import BertModel, BertTokenizer
 
 class ProtBertEncoder(TransformerEncoder):
-    def __init__(self, max_tokenized_length : int = 64, device='cpu', constant_length : bool = True, flatten : bool = True):
+    def __init__(
+        self,
+        model_name: str = "Rostlab/prot_bert",
+        dtype: torch.dtype = torch.float32,
+        max_tokenized_length: int = 64,
+        device='cpu',
+        constant_length: bool = True,
+        flatten: bool = True
+    ):
         TransformerEncoder.__init__(self, max_tokenized_length, device, constant_length, flatten)
-        LOCAL_PATH = "models/prot_bert"
-        self.model = BertModel.from_pretrained(LOCAL_PATH, local_files_only=True)
-        self.tokenizer = BertTokenizer.from_pretrained(LOCAL_PATH, local_files_only=True)
+
+        self.model = BertModel.from_pretrained(model_name, dtype=dtype)
+        self.tokenizer = BertTokenizer.from_pretrained(model_name)
         self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
         self.model.eval()
         self.model.to(self.device)

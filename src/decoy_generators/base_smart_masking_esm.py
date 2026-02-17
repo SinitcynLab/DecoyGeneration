@@ -10,29 +10,23 @@ from torch import Tensor
 
 class BaseSmartMaskingEsmGenerator(EsmGenerator):
     def __init__(
-            self,
-            local_path: str,
-            random: Random,
-            special_amino_acids: List[str],
-            sort_optimization: bool = True,
-            batch_size: int = 64,
-            ml_generator_type: MlGeneratorType = MlGeneratorType.BEST,
-            device: torch.device = 'cpu',
-            weight_type: torch.dtype = torch.float32
+        self,
+        model_name: str,
+        random: Random,
+        special_amino_acids: List[str],
+        sort_optimization: bool = True,
+        batch_size: int = 64,
+        ml_generator_type: MlGeneratorType = MlGeneratorType.BEST,
+        device: torch.device = 'cpu',
+        dtype: torch.dtype = torch.float32
     ):
-        EsmGenerator.__init__(self, local_path, random, special_amino_acids, sort_optimization,
-                             batch_size, ml_generator_type, device, MaskingType.COUNT, 0, 1, weight_type)
+        EsmGenerator.__init__(self, model_name, random, special_amino_acids, sort_optimization,
+                             batch_size, ml_generator_type, device, MaskingType.COUNT, 0, 1, dtype)
         self.k: int = len(self.canonical_amino_acids) # you want to compute scores over all amino acids
         self.aa_ids: List[int] = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
         
     def __str__(self):
-        param_count: str = self.local_path.split('/')[-1].split('_')[2]
-        out: str = f"smart_masking_esm_{param_count}"
-        
-        if self.weight_type == torch.float16:
-            out = out + ".16b"
-
-        return out
+        return f"smart_masking_esm_{super().__str__()}"
 
     def _get_score_and_token_choice(self, probs: Tensor, pos: int, original_aa: str) -> Tuple[float, Tensor]:
         raise NotImplementedError()

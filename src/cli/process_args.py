@@ -18,7 +18,7 @@ from src.run.cross_val_svm import cross_val_svm
 from src.run.generate import generate_decoys
 from src.run.timing_test import timing_test
 from src.io.utils import seed_all
-from src.cli.option_lists import get_path, PARAM_PRECISION_TO_TYPE
+from src.cli.option_lists import get_model_name, PARAM_PRECISION_TO_TYPE
 
 def process_args(args: argparse.Namespace):
     command = args.command
@@ -71,10 +71,10 @@ def create_generator_from_parameters(generator_string: str, seed: int, mask_coun
     elif generator_string == "random_replace":
         generator = RandomReplaceGenerator(special_amino_acids=special_amino_acids, random=random)
     elif generator_string == "esm":
-        local_path = get_path(generator_string, param_count, tuned_model_path)
-        weight_type = PARAM_PRECISION_TO_TYPE[param_precision]
+        model_name = get_model_name(model_type=generator_string, model_size=param_count, custom_model_path=tuned_model_path)
+        dtype = PARAM_PRECISION_TO_TYPE[param_precision]
         generator = EsmGenerator(
-            local_path=local_path,
+            model_name=model_name,
             random=random,
             special_amino_acids=special_amino_acids,
             sort_optimization=True,
@@ -83,11 +83,13 @@ def create_generator_from_parameters(generator_string: str, seed: int, mask_coun
             device=device,
             masking_type=MaskingType.COUNT,
             mask_count=mask_count,
-            weight_type=weight_type
+            dtype=dtype
         )
     elif generator_string == "esm_n_terminus":
+        model_name = get_model_name(model_type="esm", model_size=param_count, custom_model_path=tuned_model_path)
+        dtype = PARAM_PRECISION_TO_TYPE[param_precision]
         generator = TerminusEsmGenerator(
-            local_path="models/esm2_t33_650M_UR50D",
+            model_name=model_name,
             random=random,
             special_amino_acids=special_amino_acids,
             sort_optimization=True,
@@ -99,8 +101,10 @@ def create_generator_from_parameters(generator_string: str, seed: int, mask_coun
             terminus='N'
         )
     elif generator_string == "esm_c_terminus":
+        model_name = get_model_name(model_type="esm", model_size=param_count, custom_model_path=tuned_model_path)
+        dtype = PARAM_PRECISION_TO_TYPE[param_precision]
         generator = TerminusEsmGenerator(
-            local_path="models/esm2_t33_650M_UR50D",
+            model_name=model_name,
             random=random,
             special_amino_acids=special_amino_acids,
             sort_optimization=True,
@@ -112,9 +116,10 @@ def create_generator_from_parameters(generator_string: str, seed: int, mask_coun
             terminus='C'
         )
     elif generator_string == "protbert":
-        local_path = get_path(generator_string, param_count, tuned_model_path)
+        model_name = get_model_name(model_type="protbert", model_size=param_count, custom_model_path=tuned_model_path)
+        dtype = PARAM_PRECISION_TO_TYPE[param_precision]
         generator = ProtBertGenerator(
-            local_path=local_path,
+            model_name=model_name,
             random=random,
             special_amino_acids=special_amino_acids,
             sort_optimization=True,
@@ -122,6 +127,7 @@ def create_generator_from_parameters(generator_string: str, seed: int, mask_coun
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
             masking_type=MaskingType.COUNT,
-            mask_count=mask_count
+            mask_count=mask_count,
+            dtype=dtype,
         )
     return generator
