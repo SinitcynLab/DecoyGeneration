@@ -3,6 +3,9 @@ import torch
 
 from src.decoy_generators.decoy_generator import DecoyGeneratorType
 from src.decoy_generators.ml_generator import MlGenerator, MaskingType, MlGeneratorType
+
+from src.proteins.protease import Protease
+
 from typing import List
 from transformers import EsmTokenizer, EsmForMaskedLM
 
@@ -23,7 +26,7 @@ class EsmGenerator(MlGenerator):
         self,
         model_name: str,
         random: Random,
-        special_amino_acids: List[str],
+        protease: Protease,
         sort_optimization: bool = True,
         batch_size: int = 64,
         ml_generator_type: MlGeneratorType = MlGeneratorType.BEST,
@@ -33,8 +36,9 @@ class EsmGenerator(MlGenerator):
         mask_count: int = 1,
         dtype: torch.dtype = torch.float32 # source: https://huggingface.co/blog/accelerate-large-models
     ):
-        MlGenerator.__init__(self, model_name, random, special_amino_acids, sort_optimization,
+        MlGenerator.__init__(self, model_name, random, protease, sort_optimization,
                              batch_size, ml_generator_type, device, masking_type, mask_percent, mask_count, dtype)
+
         self.model = EsmForMaskedLM.from_pretrained(model_name, dtype=dtype)
         self.tokenizer = EsmTokenizer.from_pretrained(model_name, dtype=dtype)
         self.model.eval()

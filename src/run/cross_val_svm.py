@@ -11,17 +11,19 @@ from src.io.fasta import read_fasta_file
 from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
 from src.io.lmdb_dataset import LMDBDataset
 
+from src.proteins.protease import Protease
+
+
 def cos_sim_kernel(x: List[Tensor], y: List[Tensor]):
     x = torch.cat(x, dim=0)
     y = torch.cat(y, dim=0)
     return cosine_similarity(x, y)
 
-def cross_val_svm(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str]):
+def cross_val_svm(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str], protease: Protease):
     # define SVM classifier
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using {device}...")
-    special_amino_acids = ['R', 'K']
-    encoder = VectorSpectrumEncoder(special_amino_acids)
+    encoder = VectorSpectrumEncoder(protease)
     classifier = SVMClassifier(encoder=encoder, device=device, name="svm", kernel_function=cos_sim_kernel)
 
     # define MLP classifier

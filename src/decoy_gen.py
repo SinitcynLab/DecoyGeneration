@@ -4,6 +4,9 @@ from src.cli.process_args import process_args
 from src.cli.validate_args import validate_args
 from src.cli.option_lists import CLASSIFIER_LIST, COMMAND_LIST, GENERATOR_LIST, ENCODER_LIST
 
+from src.proteins.protease import list_proteases
+
+
 def collect_args():
     parser = argparse.ArgumentParser()
     # general:
@@ -29,6 +32,12 @@ def collect_args():
     parser.add_argument("--mask_count", type=int, default=1, help="The masking count to use for ESM generators (defaults to 1).")
     parser.add_argument("--gen_count", type=int, default=1, help="The number of decoy files to generate if a decoy method is one-to-many (defaults to 1).")
     parser.add_argument("--tuned_model_path", type=str, default=None, help="Path to a custom tuned model to use instead of the default model.")
+    parser.add_argument(
+        "--protease",
+        type=str,
+        default="trypsin",
+        help=f"If specified, the decoy generation will be done according to the cleavage rules of the specified protease. (Choose from {list_proteases()}).",
+    )
 
     # timing:
     parser.add_argument("--timing_sample", type=int, default=100, help="The number of sequences from the target file to use for timing measurements, taken from the start of the file (defaults to 100).")

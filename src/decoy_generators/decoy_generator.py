@@ -3,7 +3,8 @@ from enum import Enum
 from typing import Iterator, List
 
 from src.io.fasta import FastaRecord
-from src.io.peptide_processor import PeptideProcessor
+
+from src.proteins.protease import Protease
 
 
 class DecoyGeneratorType(Enum):
@@ -11,14 +12,13 @@ class DecoyGeneratorType(Enum):
     ONE2MANY = 2
 
 
-class DecoyGenerator(PeptideProcessor):
+class DecoyGenerator:
     canonical_amino_acids: List[str] = list("ACDEFGHIKLMNPQRSTVWY")
     decoy_generation_type: DecoyGeneratorType = DecoyGeneratorType.ONE2ONE
 
-    special_amino_acids: List[str]
 
-    def __init__(self, special_amino_acids: List[str]):
-        PeptideProcessor.__init__(self, special_amino_acids)
+    def __init__(self, protease: Protease):
+        self.protease = protease
 
     def convert(self, sequences: Iterator[str]) -> Iterator[str]:
         raise NotImplementedError()

@@ -10,6 +10,9 @@ from transformers import PreTrainedTokenizerBase, PreTrainedModel
 
 from src.decoy_generators.decoy_generator import DecoyGenerator
 
+from src.proteins.protease import Protease
+
+
 class MaskingType(Enum):
     COUNT = 1,
     PERCENT = 2
@@ -26,7 +29,7 @@ class MlGenerator(DecoyGenerator):
         self,
         model_name: str,
         random: Random,
-        special_amino_acids: List[str],
+        protease: Protease,
         sort_optimization: bool = True,
         batch_size: int = 64,
         ml_generator_type: MlGeneratorType = MlGeneratorType.BEST,
@@ -36,7 +39,7 @@ class MlGenerator(DecoyGenerator):
         mask_count: int = 1,
         dtype: torch.dtype = torch.float32
     ):
-        DecoyGenerator.__init__(self, special_amino_acids)
+        DecoyGenerator.__init__(self, protease)
     
         self.model_name = model_name
         self.random = random
@@ -50,19 +53,22 @@ class MlGenerator(DecoyGenerator):
         self.dtype = dtype
 
     def _get_masked_positions(self, sequence: str):
-        positions: List[int] = list(self.get_positions_special_aas(sequence))
-        for idx in range(1, len(positions)):
-            start: int = positions[idx - 1] + 1
-            end: int = positions[idx]
-            n: int = end - start
-            m: int = self._get_masking_count(n)
-            if m == 0:
-                continue
-            for i in sorted(self._select_mask(start, end, m)):
-                yield i
+        peptide_start_idx = 0
+        for peptide in self.protease.cleave(sequence):
+            peptide_length = len(peptide.sequence)
+            peptide_end_idx = peptide_start_idx + peptide_length
 
-    def _select_mask(self, start: int, end: int, size: int):
-        return self.random.sample(range(start, end), size)
+            mask_count = self._get_masking_count(peptide_length)
+            if mask_count > 0:
+                # TODO(Grigory, Fabrice): for now we mutate only uncontrained aminoacids, but
+                # we can also mutate constraned ones as long as we do not violate the cleavage constraints.
+                # For example, we can change K to R in a C terminus of a tryptic peptide
+                for peptide_mask_idx in self.random.sample(peptide.flexible_range, min(mask_count, len(peptide.flexible_range))):
+                    # Switch from peptide-relative to sequence-relative indexing
+                    yield peptide_start_idx + peptide_mask_idx
+
+            # Switch to next peptide
+            peptide_start_idx = peptide_end_idx
 
     def _get_masking_count(self, seq_len: int) -> int:
         if self.masking_type == MaskingType.PERCENT:
@@ -91,7 +97,7 @@ class MlGenerator(DecoyGenerator):
             sort_idx: List[int] = sorted(range(0, len(target_list)), key=lambda idx: len(target_list[idx]))
             for i in range(0, len(target_list), self.batch_size):
                 tmp: List[str] = [
-                    _ for _ in self._batch_convert([target_list[idx] for idx in sort_idx[i: i + self.batch_size]])
+                    _ for _ in self._convert_batch([target_list[idx] for idx in sort_idx[i: i + self.batch_size]])
                 ]
                 for idx, record in zip(sort_idx[i: i + self.batch_size], tmp):
                     target_out_list.append((idx, record))
@@ -100,7 +106,7 @@ class MlGenerator(DecoyGenerator):
                 yield record
         else:
             for fasta_records_batch in self._batch(targets, self.batch_size):
-                yield from self._batch_convert(fasta_records_batch)
+                yield from self._convert_batch(fasta_records_batch)
 
     def _prepare_inputs(self, target_batch: List[str]) -> dict:
         inputs = self.tokenizer(target_batch, return_tensors="pt", padding=True)  # [batch_size, L, vocab]
@@ -127,31 +133,35 @@ class MlGenerator(DecoyGenerator):
         probs = probs[:, 1:, :] # remove [cls]-entry
         return (probs, mask_positions)
 
-    def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
-
+    def _convert_batch(self, batch: List[str]) -> Iterator[str]:
         aa_ids = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
 
-        k: int = 2 + len(self.special_amino_acids)  # why 2 - aa itself and I/L dillema
+        probs, mask_positions = self._mask_and_get_probs(batch) # get the mask positions and probabilities from batch inference
 
-        probs, mask_positions = self._mask_and_get_probs(target_batch) # get the mask positions and probabilities from batch inference
-
-        for sequence_idx, sequence in enumerate(target_batch):
+        for sequence_idx, sequence in enumerate(batch):
             new_sequence: List[str] = list(sequence)
             for mask_position in mask_positions[sequence_idx]:
                 top_idx: Tensor = None
                 match self.ml_generator_type:
                     case MlGeneratorType.BEST:
-                        _, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=True)
+                        _, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=len(aa_ids), largest=True)
                     case MlGeneratorType.WORST:
-                        _, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=k, largest=False)
+                        _, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=len(aa_ids), largest=False)
 
                 original_aa: str = sequence[mask_position]
+
+                peptides = self.protease.cleave(sequence)
+                allowed_replacements = [replacements for peptide in peptides for replacements in peptide.allowed_replacements]
+
                 for idx in top_idx:
                     new_aa: str = self.canonical_amino_acids[idx]
+                    # We need to change something
                     if new_aa == original_aa:
                         continue
-                    if new_aa in self.special_amino_acids:
+                    # We should respect protease cleavage rules
+                    if new_aa not in allowed_replacements[mask_position]:
                         continue
+                    # I<->L mutations are not allowed since they are indistinguishable in MS
                     if (new_aa == 'I' and original_aa == 'L') or (
                             new_aa == 'L' and original_aa == 'I'):
                         continue

@@ -3,15 +3,17 @@ from typing import List, Iterator
 
 from src.decoy_generators.decoy_generator import DecoyGenerator, DecoyGeneratorType
 
+from src.proteins.protease import Protease
+
 
 class ShuffleGenerator(DecoyGenerator):
     random: Random
     decoy_generation_type: DecoyGeneratorType = DecoyGeneratorType.ONE2MANY
 
-    def __init__(self, special_amino_acids: List[str], random: Random, skip_prob : float = 0):
+    def __init__(self, protease: Protease, random: Random, skip_prob: float = 0):
         self.random = random
         self.skip_prob = skip_prob
-        super().__init__(special_amino_acids)
+        super().__init__(protease)
 
     def __str__(self):
         skip_prob: str = f"{self.skip_prob}".replace(".", "")
@@ -19,18 +21,17 @@ class ShuffleGenerator(DecoyGenerator):
 
     def convert(self, targets: Iterator[str]) -> Iterator[str]:
         for target in targets:
-            positions: List[int] = list(self.get_positions_special_aas(target))
-            sequence: List[str] = list(target)
-
-            for idx in range(1, len(positions)):
-                a: int = positions[idx - 1] + 1
-                b: int = positions[idx]
-                if b - a < 2 or self.random.uniform(0,1) < self.skip_prob: continue
-                if b - a == 2:
-                    sequence[a], sequence[a + 1] = sequence[a + 1], sequence[a]
-                else:
-                    ab: List[int] = list(range(a, b))
-                    self.random.shuffle(ab)
-                    for i, j in zip(range(a, b), ab):
-                        sequence[i] = target[j]
-            yield "".join(sequence)
+            new_sequence: List[str] = []
+            for peptide in self.protease.cleave(target):
+                flexible_range = peptide.flexible_range
+                constant_prefix = peptide.sequence[:flexible_range[0]]
+                constant_suffix = peptide.sequence[flexible_range[1]:]
+                mutable_part = list(peptide.sequence[flexible_range[0]:flexible_range[1]])
+                if len(mutable_part) > 1 and self.random.uniform(0, 1) >= self.skip_prob:
+                    if len(mutable_part) == 2:
+                        mutable_part[0], mutable_part[1] = mutable_part[1], mutable_part[0]
+                    else:
+                        self.random.shuffle(mutable_part)
+                new_peptide = constant_prefix + "".join(mutable_part) + constant_suffix
+                new_sequence.append(new_peptide)
+            yield "".join(new_sequence)

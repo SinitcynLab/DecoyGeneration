@@ -3,6 +3,9 @@ import torch
 
 from src.decoy_generators.decoy_generator import DecoyGeneratorType
 from src.decoy_generators.ml_generator import MlGenerator, MaskingType, MlGeneratorType
+
+from src.proteins.protease import Protease
+
 from typing import List
 from transformers import BertForMaskedLM, AutoTokenizer
 
@@ -24,7 +27,7 @@ class ProtBertGenerator(MlGenerator):
         self,
         model_name: str,
         random: Random,
-        special_amino_acids: List[str],
+        protease: Protease,
         sort_optimization: bool = True,
         batch_size: int = 64,
         ml_generator_type: MlGeneratorType = MlGeneratorType.BEST,
@@ -34,7 +37,7 @@ class ProtBertGenerator(MlGenerator):
         mask_count: int = 1,
         dtype: torch.dtype = torch.float32
     ):
-        MlGenerator.__init__(self, model_name, random, special_amino_acids, sort_optimization,
+        MlGenerator.__init__(self, model_name, random, protease, sort_optimization,
                              batch_size, ml_generator_type, device, masking_type, mask_percent, mask_count, dtype)
         self.model = BertForMaskedLM.from_pretrained(model_name, dtype=dtype)
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, torch_dtype=dtype)
