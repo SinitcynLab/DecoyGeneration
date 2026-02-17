@@ -10,13 +10,16 @@ from koinapy import Koina
 from torch import Tensor
 
 from src.encoders.peptide_encoder import PeptideEncoder
-from src.io.peptide_processor import PeptideProcessor
 
-class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
-    def __init__(self, special_amino_acids: List[str], add_channel: bool = False, charge_const: int = 2, collision_energy_const: int = 30,
+from src.proteins.protease import Protease
+
+
+class SpectrumEncoder(PeptideEncoder):
+    def __init__(self, protease: Protease, add_channel: bool = False, charge_const: int = 2, collision_energy_const: int = 30,
                  min_len: int = 8, max_len: int = 30, min_mz = 100, max_mz = 1000, bin_size = 2):
         PeptideEncoder.__init__(self)
-        PeptideProcessor.__init__(self, special_amino_acids)
+
+        self.protease = protease
         self.charge_const = charge_const
         self.collision_energy_const = collision_energy_const
         self.max_len = max_len
@@ -34,12 +37,11 @@ class SpectrumEncoder(PeptideEncoder, PeptideProcessor):
         peptide_list: List[str] = []
         charge_list: List[int] = []
         col_e_list: List[int] = []
-        translation = str.maketrans({c: " " for c in self.special_amino_acids})
 
         for sequence in sequences:
-            for peptide in sequence.translate(translation).split():
-                if self.min_len <= len(peptide) and len(peptide) <= self.max_len:
-                    peptide_list.append(peptide)
+            for peptide in self.protease.cleave(sequence):
+                if self.min_len <= len(peptide.sequence) and len(peptide.sequence) <= self.max_len:
+                    peptide_list.append(peptide.sequence)
                     charge_list.append(self.charge_const)
                     col_e_list.append(self.collision_energy_const)
         

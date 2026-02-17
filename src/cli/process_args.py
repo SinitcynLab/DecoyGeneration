@@ -20,114 +20,112 @@ from src.run.timing_test import timing_test
 from src.io.utils import seed_all
 from src.cli.option_lists import get_model_name, PARAM_PRECISION_TO_TYPE
 
+from src.proteins.protease import get_protease
+
+
 def process_args(args: argparse.Namespace):
     command = args.command
     seed_all(args.seed)
     if command == "evaluate":
-        process_evaluate(args.classifier, args.encoder_model, args.target_file, args.decoy_files, args.decoy_ids)
+        process_evaluate(args)
     elif command == "generate":
-        process_generate(args.generator, args.target_file, args.gen_count, args.output_directory, args.seed, args.mask_count,
-                         args.parameter_count, args.parameter_precision, args.tuned_model_path)
+        process_generate(args)
     elif command == "time":
-        process_timing(args.generator, args.target_file, args.timing_sample, args.seed, args.mask_count,
-                       args.parameter_count, args.parameter_precision, args.tuned_model_path)
+        process_timing(args)
 
-def process_evaluate(classifier: str, encoder_model: str, target_file: str, decoy_files: str, decoy_ids: str):
-    if classifier == "mlp" and encoder_model == "protbert":
-        cross_val_mlp_protbert(target_file, decoy_files, decoy_ids)
-    elif classifier == "mlp" and encoder_model == "esm":
-        cross_val_mlp_esm(target_file, decoy_files, decoy_ids)
-    elif classifier == "rnn" and encoder_model == "protbert":
-        cross_val_rnn_protbert(target_file, decoy_files, decoy_ids)
-    elif classifier == "rnn" and encoder_model == "esm":
-        cross_val_rnn_esm(target_file, decoy_files, decoy_ids)
-    elif classifier == "svm":
-        cross_val_svm(target_file, decoy_files, decoy_ids)
+def process_evaluate(args: argparse.Namespace):
+    if args.classifier == "mlp" and args.encoder_model == "protbert":
+        cross_val_mlp_protbert(args.target_file, args.decoy_files, args.decoy_ids)
+    elif args.classifier == "mlp" and args.encoder_model == "esm":
+        cross_val_mlp_esm(args.target_file, args.decoy_files, args.decoy_ids)
+    elif args.classifier == "rnn" and args.encoder_model == "protbert":
+        cross_val_rnn_protbert(args.target_file, args.decoy_files, args.decoy_ids)
+    elif args.classifier == "rnn" and args.encoder_model == "esm":
+        cross_val_rnn_esm(args.target_file, args.decoy_files, args.decoy_ids)
+    elif args.classifier == "svm":
+        protease = get_protease(args.protease)
+        cross_val_svm(args.target_file, args.decoy_files, args.decoy_ids, protease)
 
-def process_generate(generator_string: str, target_file: str, n: int, output_dir: str, seed: int, mask_count: int, 
-                     param_count: str, param_precision: int, tuned_model_path: str):
-    generator = create_generator_from_parameters(generator_string, seed, mask_count, param_count, param_precision, 
-                                                 tuned_model_path)
-    generate_decoys(target_file, generator, n, output_dir)
+def process_generate(args: argparse.Namespace):
+    generator = create_generator_from_parameters(args)
+    generate_decoys(args.target_file, generator, args.gen_count, args.output_directory)
 
-def process_timing(generator_string: str, target_file: str, number_of_seqs_for_timing: int, seed:int, mask_count: int, 
-                   param_count: str, param_precision: int, tuned_model_path: str):
-    generator = create_generator_from_parameters(generator_string, seed, mask_count, param_count, param_precision, 
-                                                 tuned_model_path, "cpu")
-    timing_test(target_file, number_of_seqs_for_timing, generator)
+def process_timing(args: argparse.Namespace):
+    generator = create_generator_from_parameters(args, device="cpu")
+    timing_test(args.target_file, args.timing_sample, generator)
 
-def create_generator_from_parameters(generator_string: str, seed: int, mask_count: int, 
-                                     param_count: str, param_precision: int, tuned_model_path: str, device: torch.device = None):
+def create_generator_from_parameters(args: argparse.Namespace, device: torch.device = None):
     if device == None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    random: Random = Random(seed)
-    special_amino_acids: List[str] = ['R', 'K']
-    if generator_string == "shuffle":
-        generator = ShuffleGenerator(special_amino_acids=special_amino_acids, random=random)
-    elif generator_string == "reverse":
-        generator = ReverseGenerator(special_amino_acids=special_amino_acids)
-    elif generator_string == "diann":
-        generator = DiannGenerator(special_amino_acids=special_amino_acids)
-    elif generator_string == "random_replace":
-        generator = RandomReplaceGenerator(special_amino_acids=special_amino_acids, random=random)
-    elif generator_string == "esm":
-        model_name = get_model_name(model_type=generator_string, model_size=param_count, custom_model_path=tuned_model_path)
-        dtype = PARAM_PRECISION_TO_TYPE[param_precision]
+    random: Random = Random(args.seed)
+    protease = get_protease(args.protease)
+    if args.generator == "shuffle":
+        generator = ShuffleGenerator(protease=protease, random=random)
+    elif args.generator == "reverse":
+        generator = ReverseGenerator(protease=protease)
+    elif args.generator == "diann":
+        generator = DiannGenerator(protease=protease)
+    elif args.generator == "random_replace":
+        generator = RandomReplaceGenerator(protease=protease, random=random)
+    elif args.generator == "esm":
+        model_name = get_model_name(model_type=args.generator, model_size=args.parameter_count, custom_model_path=args.tuned_model_path)
+        dtype = PARAM_PRECISION_TO_TYPE[args.parameter_precision]
         generator = EsmGenerator(
             model_name=model_name,
             random=random,
-            special_amino_acids=special_amino_acids,
+            protease=protease,
             sort_optimization=True,
             batch_size=1,
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
             masking_type=MaskingType.COUNT,
-            mask_count=mask_count,
+            mask_count=args.mask_count,
             dtype=dtype
         )
-    elif generator_string == "esm_n_terminus":
-        model_name = get_model_name(model_type="esm", model_size=param_count, custom_model_path=tuned_model_path)
-        dtype = PARAM_PRECISION_TO_TYPE[param_precision]
+    elif args.generator == "esm_n_terminus":
+        model_name = get_model_name(model_type="esm", model_size=args.parameter_count, custom_model_path=args.tuned_model_path)
+        dtype = PARAM_PRECISION_TO_TYPE[args.parameter_precision]
         generator = TerminusEsmGenerator(
             model_name=model_name,
             random=random,
-            special_amino_acids=special_amino_acids,
+            protease=protease,
             sort_optimization=True,
             batch_size=1,
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
             masking_type=MaskingType.COUNT,
-            mask_count=mask_count,
+            mask_count=args.mask_count,
             terminus='N'
         )
-    elif generator_string == "esm_c_terminus":
-        model_name = get_model_name(model_type="esm", model_size=param_count, custom_model_path=tuned_model_path)
-        dtype = PARAM_PRECISION_TO_TYPE[param_precision]
+    elif args.generator == "esm_c_terminus":
+        model_name = get_model_name(model_type="esm", model_size=args.parameter_count, custom_model_path=args.tuned_model_path)
+        dtype = PARAM_PRECISION_TO_TYPE[args.parameter_precision]
         generator = TerminusEsmGenerator(
             model_name=model_name,
             random=random,
-            special_amino_acids=special_amino_acids,
+            protease=protease,
             sort_optimization=True,
             batch_size=1,
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
             masking_type=MaskingType.COUNT,
-            mask_count=mask_count,
+            mask_count=args.mask_count,
             terminus='C'
         )
-    elif generator_string == "protbert":
-        model_name = get_model_name(model_type="protbert", model_size=param_count, custom_model_path=tuned_model_path)
-        dtype = PARAM_PRECISION_TO_TYPE[param_precision]
+    elif args.generator == "protbert":
+        model_name = get_model_name(model_type="protbert", model_size=args.parameter_count, custom_model_path=args.tuned_model_path)
+        dtype = PARAM_PRECISION_TO_TYPE[args.parameter_precision]
         generator = ProtBertGenerator(
             model_name=model_name,
             random=random,
-            special_amino_acids=special_amino_acids,
+            protease=protease,
             sort_optimization=True,
             batch_size=1,
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
             masking_type=MaskingType.COUNT,
-            mask_count=mask_count,
+            mask_count=args.mask_count,
             dtype=dtype,
         )
+
     return generator

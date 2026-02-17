@@ -2,6 +2,9 @@ import argparse
 
 from src.cli.option_lists import CLASSIFIER_LIST, COMMAND_LIST, GENERATOR_LIST, PARAMETER_COUNT_LIST, PARAMETER_PRECISION_LIST
 
+from src.proteins.protease import list_proteases
+
+
 def validate_args(args: argparse.Namespace):
     if args.command == "evaluate":
         if args.classifier not in CLASSIFIER_LIST:
@@ -18,6 +21,8 @@ def validate_args(args: argparse.Namespace):
         validate_generator(args)
     elif args.command not in COMMAND_LIST:
         raise ValueError(f"Please choose a command from {COMMAND_LIST}.")
+    if args.protease not in list_proteases():
+        raise ValueError(f"Please choose a protease from {list_proteases()}.")
 
 def validate_generator(args: argparse.Namespace):
     if args.generator is None:

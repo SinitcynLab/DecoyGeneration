@@ -2,7 +2,10 @@ import torch
 
 from src.decoy_generators.ml_generator import MlGeneratorType, MaskingType
 from src.decoy_generators.esm_generator import EsmGenerator
-from typing import List, Iterator, Tuple
+
+from src.proteins.protease import Protease
+
+from typing import List, Iterator, Tuple, Set
 
 from time import time
 from random import Random
@@ -13,14 +16,14 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
         self,
         model_name: str,
         random: Random,
-        special_amino_acids: List[str],
+        protease: Protease,
         sort_optimization: bool = True,
         batch_size: int = 64,
         ml_generator_type: MlGeneratorType = MlGeneratorType.BEST,
         device: torch.device = 'cpu',
         dtype: torch.dtype = torch.float32
     ):
-        EsmGenerator.__init__(self, model_name, random, special_amino_acids, sort_optimization,
+        EsmGenerator.__init__(self, model_name, random, protease, sort_optimization,
                              batch_size, ml_generator_type, device, MaskingType.COUNT, 0, 1, dtype)
         self.k: int = len(self.canonical_amino_acids) # you want to compute scores over all amino acids
         self.aa_ids: List[int] = self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
@@ -28,10 +31,16 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
     def __str__(self):
         return f"smart_masking_esm_{super().__str__()}"
 
-    def _get_score_and_token_choice(self, probs: Tensor, pos: int, original_aa: str) -> Tuple[float, Tensor]:
+    def _get_score_and_token_choice(
+        self,
+        probs: Tensor,
+        pos: int,
+        original_aa: str,
+        allowed_replacements: Set[str],
+    ) -> Tuple[float, Tensor]:
         raise NotImplementedError()
         
-    def _batch_convert(self, target_batch: List[str]) -> Iterator[str]:
+    def _convert_batch(self, target_batch: List[str]) -> Iterator[str]:
         for sequence in target_batch:
             max_pos_and_choices: List[Tuple[int, str]] = []
             # Tokenize sequence:
@@ -39,11 +48,16 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
             input.to(self.device)
             # Save original input ids:
             modified_input_ids: Tensor = torch.clone(input["input_ids"])
-            for peptide in self.get_all_peptides(sequence):
+
+            peptide_start_idx = 0
+            for peptide in self.protease.cleave(sequence):
+                peptide_length = len(peptide.sequence)
+                peptide_end_idx = peptide_start_idx + peptide_length
+
                 max_score: float = -torch.inf
                 max_score_pos: int = 0
                 aa_choice_at_max: str = ""
-                for pos in peptide:
+                for pos in range(peptide_start_idx, peptide_end_idx):
                     input["input_ids"] = torch.clone(modified_input_ids)
                     # Mask out  position in the peptide:
                     input["input_ids"][0][pos + 1] = self.tokenizer.mask_token_id # increment by one to account for [cls]
@@ -52,8 +66,10 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                         outputs = self.model(**input)
                     probs: Tensor = torch.softmax(outputs.logits, dim=-1)
                     probs = probs[:, 1:, :] # drop the entries corresponding to [cls]
+                    # Beware of peptide- and protein-indexations
+                    allowed_replacements = peptide.allowed_replacements[pos - peptide_start_idx]
                     # compute score:
-                    score, aa_choice = self._get_score_and_token_choice(probs, pos, sequence[pos])
+                    score, aa_choice = self._get_score_and_token_choice(probs, pos, sequence[pos], allowed_replacements)
                     # if new best found, save position and choice:
                     if score > max_score:
                         max_score = score
@@ -67,23 +83,27 @@ class BaseSmartMaskingEsmGenerator(EsmGenerator):
                 # taking this new aa into account:
                 modified_input_ids = self._update_input_ids(modified_input_ids, max_score_pos+1, aa_choice_at_max) # add one for [cls]
 
+                peptide_start_idx = peptide_end_idx
+
             new_sequence: List[str] = list(sequence)
             for mask_position, aa_choice in max_pos_and_choices:
                 new_sequence[mask_position] = aa_choice
 
             yield "".join(new_sequence)
     
-    def _get_feasible_token_with_max_score(self, original_aa: str, scores: Tensor, amino_acids: List[str]):
+    def _get_feasible_token_with_max_score(self, original_aa: str, scores: Tensor, amino_acids: List[str], allowed_replacements: Set[str]):
         sort_idx = torch.argsort(scores, descending=True)
 
         aa_choice = 'A' # if no aa satisfies constraints, default to A (first amino acid in list)
         for new_aa in [amino_acids[idx] for idx in sort_idx]:
+            # We need to change something
             if new_aa == original_aa:
                 continue
-            if new_aa in self.special_amino_acids:
+            # We should respect protease cleavage rules
+            if new_aa not in allowed_replacements:
                 continue
-            if (new_aa == 'I' and original_aa == 'L') or (
-                    new_aa == 'L' and original_aa == 'I'):
+            # I<->L mutations are not allowed since they are indistinguishable in MS
+            if (new_aa == 'I' and original_aa == 'L') or (new_aa == 'L' and original_aa == 'I'):
                 continue
             aa_choice = new_aa
             break

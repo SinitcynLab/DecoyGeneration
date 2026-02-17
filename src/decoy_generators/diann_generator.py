@@ -2,6 +2,8 @@ from typing import Iterator, List
 
 from src.decoy_generators.decoy_generator import DecoyGenerator
 
+from src.proteins.protease import Protease
+
 
 class DiannGenerator(DecoyGenerator):
     translation: dict[str, str] = {
@@ -12,8 +14,8 @@ class DiannGenerator(DecoyGenerator):
         )
     }
 
-    def __init__(self, special_amino_acids: List[str], terminus: str = 'C'):
-        DecoyGenerator.__init__(self, special_amino_acids)
+    def __init__(self, protease: Protease, terminus: str = 'C'):
+        super().__init__(protease)
         if terminus not in ['C', 'N']:
             raise ValueError("Terminus argument must be 'C' or 'N'.")
         self.terminus = terminus
@@ -23,15 +25,14 @@ class DiannGenerator(DecoyGenerator):
 
     def convert(self, targets: Iterator[str]) -> Iterator[str]:
         for target in targets:
-            positions: List[int] = list(self.get_positions_special_aas(target))
-            sequence: List[str] = list(target)
-            for idx in range(1, len(positions)):
-                a: int = positions[idx - 1] + 1
-                b: int = positions[idx]
-                if b - a < 1: continue
-                if self.terminus == 'C':
-                    pos = b - 1
-                else:
-                    pos = a
-                sequence[pos] = self.translation[sequence[pos]]
-            yield "".join(sequence)
+            new_sequence = []
+            for peptide in self.protease.cleave(target):
+                sequence = list(peptide.sequence)
+                if len(sequence) > 1:
+                    if self.terminus == 'C':
+                        pos = len(sequence) - 1
+                    else:
+                        pos = 0
+                    sequence[pos] = self.translation[sequence[pos]]
+                new_sequence.append("".join(sequence))
+            yield "".join(new_sequence)
