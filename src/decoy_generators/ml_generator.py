@@ -140,6 +140,9 @@ class MlGenerator(DecoyGenerator):
 
         for sequence_idx, sequence in enumerate(batch):
             new_sequence: List[str] = list(sequence)
+            peptides = self.protease.cleave(sequence)
+            allowed_replacements = [replacements for peptide in peptides for replacements in peptide.allowed_replacements]
+
             for mask_position in mask_positions[sequence_idx]:
                 top_idx: Tensor = None
                 match self.ml_generator_type:
@@ -149,9 +152,6 @@ class MlGenerator(DecoyGenerator):
                         _, top_idx = torch.topk(probs[sequence_idx, mask_position, aa_ids], k=len(aa_ids), largest=False)
 
                 original_aa: str = sequence[mask_position]
-
-                peptides = self.protease.cleave(sequence)
-                allowed_replacements = [replacements for peptide in peptides for replacements in peptide.allowed_replacements]
 
                 for idx in top_idx:
                     new_aa: str = self.canonical_amino_acids[idx]

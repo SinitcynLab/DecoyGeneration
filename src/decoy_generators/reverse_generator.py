@@ -17,12 +17,9 @@ class ReverseGenerator(DecoyGenerator):
             new_sequence: List[str] = []
             for peptide in self.protease.cleave(target):
                 flexible_range = peptide.flexible_range
-                if len(flexible_range) == 0:
-                    new_sequence.append(peptide.sequence)
-                    continue
-                constant_prefix = peptide.sequence[:flexible_range[0]]
-                constant_suffix = peptide.sequence[flexible_range[-1]:]
-                mutable_part = list(peptide.sequence[flexible_range[0]:flexible_range[-1]])
+                constant_prefix = peptide.sequence[:flexible_range.start]
+                constant_suffix = peptide.sequence[flexible_range.stop:]
+                mutable_part = list(peptide.sequence[flexible_range.start:flexible_range.stop])
                 mutable_part.reverse()
                 new_peptide = constant_prefix + "".join(mutable_part) + constant_suffix
                 new_sequence.append(new_peptide)

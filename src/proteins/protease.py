@@ -62,7 +62,10 @@ class TerminusProtease(Protease):
             current_sequence += sequence[i]
 
             # Do we cleave after the current position?
-            if i == len(sequence) - 1:
+            if i == 0 and sequence[i] == "M":
+                # We want to keep first M unchanged.
+                cleave = True
+            elif i == len(sequence) - 1:
                 cleave = True
             else:
                 n_residue = sequence[i]
@@ -121,7 +124,11 @@ class TerminusProtease(Protease):
                     # Peptides of length 1 are a bit special case so let's not call them flexible.
                     flexible_range = range(0, 0)
                 elif self.cleavage_side == "N":
-                    flexible_range = range(0, len(current_sequence) - 1)
+                    if i == len(sequence) - 1:
+                        # If the cleavage site is at the end of the sequence, then we can mutate all positions since we will not break any cleavage site.
+                        flexible_range = range(0, len(current_sequence))
+                    else:
+                        flexible_range = range(0, len(current_sequence) - 1)
                 else:
                     assert self.cleavage_side == "C"
                     flexible_range = range(1, len(current_sequence))
