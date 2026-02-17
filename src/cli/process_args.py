@@ -26,10 +26,10 @@ def process_args(args: argparse.Namespace):
     if command == "evaluate":
         process_evaluate(args.classifier, args.encoder_model, args.target_file, args.decoy_files, args.decoy_ids)
     elif command == "generate":
-        process_generate(args.generator, args.terminus, args.target_file, args.gen_count, args.output_directory, args.seed, args.mask_count,
-                         args.parameter_count, args.terminus, args.parameter_precision, args.tuned_model_path)
+        process_generate(args.generator, args.target_file, args.gen_count, args.output_directory, args.seed, args.mask_count,
+                         args.parameter_count, args.parameter_precision, args.tuned_model_path)
     elif command == "time":
-        process_timing(args.generator, args.terminus, args.target_file, args.timing_sample, args.seed, args.mask_count,
+        process_timing(args.generator, args.target_file, args.timing_sample, args.seed, args.mask_count,
                        args.parameter_count, args.parameter_precision, args.tuned_model_path)
 
 def process_evaluate(classifier: str, encoder_model: str, target_file: str, decoy_files: str, decoy_ids: str):
@@ -44,19 +44,19 @@ def process_evaluate(classifier: str, encoder_model: str, target_file: str, deco
     elif classifier == "svm":
         cross_val_svm(target_file, decoy_files, decoy_ids)
 
-def process_generate(generator_string: str, terminus: str, target_file: str, n: int, output_dir: str, seed: int, mask_count: int, 
+def process_generate(generator_string: str, target_file: str, n: int, output_dir: str, seed: int, mask_count: int, 
                      param_count: str, param_precision: int, tuned_model_path: str):
-    generator = create_generator_from_parameters(generator_string, terminus, seed, mask_count, param_count, param_precision, 
+    generator = create_generator_from_parameters(generator_string, seed, mask_count, param_count, param_precision, 
                                                  tuned_model_path)
     generate_decoys(target_file, generator, n, output_dir)
 
-def process_timing(generator_string: str, terminus: str, target_file: str, number_of_seqs_for_timing: int, seed:int, mask_count: int, 
+def process_timing(generator_string: str, target_file: str, number_of_seqs_for_timing: int, seed:int, mask_count: int, 
                    param_count: str, param_precision: int, tuned_model_path: str):
-    generator = create_generator_from_parameters(generator_string, terminus, seed, mask_count, param_count, param_precision, 
+    generator = create_generator_from_parameters(generator_string, seed, mask_count, param_count, param_precision, 
                                                  tuned_model_path, "cpu")
     timing_test(target_file, number_of_seqs_for_timing, generator)
 
-def create_generator_from_parameters(generator_string: str, terminus: str, seed: int, mask_count: int, 
+def create_generator_from_parameters(generator_string: str, seed: int, mask_count: int, 
                                      param_count: str, param_precision: int, tuned_model_path: str, device: torch.device = None):
     if device == None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -70,20 +70,6 @@ def create_generator_from_parameters(generator_string: str, terminus: str, seed:
         generator = DiannGenerator(special_amino_acids=special_amino_acids)
     elif generator_string == "random_replace":
         generator = RandomReplaceGenerator(special_amino_acids=special_amino_acids, random=random)
-    elif generator_string == "esm" and terminus != None:
-        model_name = get_model_name(model_type=generator_string, model_size=param_count, custom_model_path=tuned_model_path)
-        dtype = PARAM_PRECISION_TO_TYPE[param_precision]
-        generator = TerminusEsmGenerator(
-            model_name=model_name,
-            random=random,
-            special_amino_acids=special_amino_acids,
-            sort_optimization=True,
-            batch_size=1,
-            ml_generator_type=MlGeneratorType.BEST,
-            device=device,
-            dtype=dtype,
-            terminus=terminus
-        )
     elif generator_string == "esm":
         model_name = get_model_name(model_type=generator_string, model_size=param_count, custom_model_path=tuned_model_path)
         dtype = PARAM_PRECISION_TO_TYPE[param_precision]
@@ -98,6 +84,36 @@ def create_generator_from_parameters(generator_string: str, terminus: str, seed:
             masking_type=MaskingType.COUNT,
             mask_count=mask_count,
             dtype=dtype
+        )
+    elif generator_string == "esm_n_terminus":
+        model_name = get_model_name(model_type="esm", model_size=param_count, custom_model_path=tuned_model_path)
+        dtype = PARAM_PRECISION_TO_TYPE[param_precision]
+        generator = TerminusEsmGenerator(
+            model_name=model_name,
+            random=random,
+            special_amino_acids=special_amino_acids,
+            sort_optimization=True,
+            batch_size=1,
+            ml_generator_type=MlGeneratorType.BEST,
+            device=device,
+            masking_type=MaskingType.COUNT,
+            mask_count=mask_count,
+            terminus='N'
+        )
+    elif generator_string == "esm_c_terminus":
+        model_name = get_model_name(model_type="esm", model_size=param_count, custom_model_path=tuned_model_path)
+        dtype = PARAM_PRECISION_TO_TYPE[param_precision]
+        generator = TerminusEsmGenerator(
+            model_name=model_name,
+            random=random,
+            special_amino_acids=special_amino_acids,
+            sort_optimization=True,
+            batch_size=1,
+            ml_generator_type=MlGeneratorType.BEST,
+            device=device,
+            masking_type=MaskingType.COUNT,
+            mask_count=mask_count,
+            terminus='C'
         )
     elif generator_string == "protbert":
         model_name = get_model_name(model_type="protbert", model_size=param_count, custom_model_path=tuned_model_path)

@@ -2,11 +2,11 @@ import torch
 
 CLASSIFIER_LIST = ["mlp", "rnn", "svm"]
 ENCODER_LIST = ["esm", "protbert"]
-GENERATOR_LIST = ["reverse", "shuffle", "diann", "esm", "protbert", "random_replace"]
+GENERATOR_LIST = ["reverse", "shuffle", "diann", "esm", "protbert", "protbert_32bit", "protbert_16bit",
+                  "esm_c_terminus", "esm_n_terminus", "random_replace"]
 PARAMETER_COUNT_LIST = ["8M", "35M", "150M", "650M", "3B"]
 PARAMETER_PRECISION_LIST = [16, 32]
 COMMAND_LIST = ["evaluate", "generate", "time"]
-TERMINUS_LIST = ["N", "C", "NC"]
 
 PARAM_PRECISION_TO_TYPE: dict = {
     16: torch.float16,
