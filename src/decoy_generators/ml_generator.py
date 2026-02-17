@@ -23,30 +23,31 @@ class MlGenerator(DecoyGenerator):
     tokenizer: PreTrainedTokenizerBase
 
     def __init__(
-            self,
-            local_path: str,
-            random: Random,
-            special_amino_acids: List[str],
-            sort_optimization: bool = True,
-            batch_size: int = 64,
-            ml_generator_type: MlGeneratorType = MlGeneratorType.BEST,
-            device : torch.device = 'cpu',
-            masking_type: MaskingType = MaskingType.PERCENT,
-            mask_percent: float = 0.3,
-            mask_count: int = 1,
-            weight_type: torch.dtype = torch.float32
+        self,
+        model_name: str,
+        random: Random,
+        special_amino_acids: List[str],
+        sort_optimization: bool = True,
+        batch_size: int = 64,
+        ml_generator_type: MlGeneratorType = MlGeneratorType.BEST,
+        device : torch.device = 'cpu',
+        masking_type: MaskingType = MaskingType.PERCENT,
+        mask_percent: float = 0.3,
+        mask_count: int = 1,
+        dtype: torch.dtype = torch.float32
     ):
         DecoyGenerator.__init__(self, special_amino_acids)
+    
+        self.model_name = model_name
         self.random = random
         self.sort_optimization = sort_optimization
         self.batch_size = batch_size
         self.ml_generator_type = ml_generator_type
-        self.local_path = local_path
         self.device = device
         self.masking_type = masking_type
         self.mask_percent = mask_percent
         self.mask_count = mask_count
-        self.weight_type = weight_type
+        self.dtype = dtype
 
     def _get_masked_positions(self, sequence: str):
         positions: List[int] = list(self.get_positions_special_aas(sequence))
@@ -103,9 +104,9 @@ class MlGenerator(DecoyGenerator):
 
     def _prepare_inputs(self, target_batch: List[str]) -> dict:
         inputs = self.tokenizer(target_batch, return_tensors="pt", padding=True)  # [batch_size, L, vocab]
-        if self.weight_type != torch.float32:
-            for k, v in inputs.data.items():
-                if k != 'input_ids': inputs.data[k] = v.to(self.weight_type)
+        for k, v in inputs.data.items():
+            if k != 'input_ids':
+                inputs.data[k] = v.to(self.dtype)
         inputs.to(self.device)
         return inputs
 
@@ -186,3 +187,23 @@ class MlGenerator(DecoyGenerator):
         with open(f'prob_distr_{self}.txt', 'a') as file:
             np.savetxt(file, save_array)
             file.write("\n")
+
+    def __str__(self) -> str:
+        name = self.model_name.replace("/", "_")
+
+        if self.masking_type == MaskingType.PERCENT:
+            mask_percent: str = f"{self.mask_percent}".replace(".", "") # avoid also using '.' for decimal point
+            name += f".{self.ml_generator_type.name.lower()}.p{mask_percent}"
+        elif self.masking_type == MaskingType.COUNT:
+            name += f".{self.ml_generator_type.name.lower()}.c{self.mask_count}"
+        else:
+            raise ValueError(f"Unsupported masking type: {self.masking_type}")
+
+        if self.dtype == torch.float16:
+            name += ".f16"
+        elif self.dtype == torch.float32:
+            name += ".f32"
+        else:
+            raise ValueError(f"Unsupported dtype: {self.dtype}")
+
+        return name

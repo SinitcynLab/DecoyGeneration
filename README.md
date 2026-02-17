@@ -35,9 +35,3 @@ Below, we provide some example uses of the codebase.
 The directory data/encodings/temp temporarily stores the sequence-level embeddings for the purpose of classification. Each time you run the command 'evaluate' with the classifier 'mlp' or 'rnn', a new directory will be created in data/encodings/temp. This design choice was made because the repository was intended to run on a cluster with tight RAM constraints, meaning that loading all embeddings into memory simultaneously would have been infeasible.
 
 If you prematuraly stop any taks with command 'evaluate' and classifiers 'mlp' or 'rnn', then a directory with encodings will be left in the data/encodings/temp directory. Hence, if you do, it is important to clear said directory.
-
-## Note on installing required models
-In order to install the models used in this codebase, navigate to the root directory and run:<br>
-`python src/io/download_models.py`
-
-Running this command will isntall the 'prot_bert' model and various ESM-2 versions under the models directory.

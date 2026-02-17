@@ -5,7 +5,6 @@
 _pycache__/
 *.pyc
 pyproject.toml
-models/
 src/bash/run_job.sh
 data/encodings/*
 data/visualization/*
