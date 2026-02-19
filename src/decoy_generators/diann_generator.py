@@ -30,7 +30,7 @@ class DiannGenerator(DecoyGenerator):
                 sequence = list(peptide.sequence)
                 if len(sequence) > 1:
                     if self.terminus == 'C':
-                        pos = len(sequence) - 1
+                        pos = len(sequence) - 2
                     else:
                         pos = 0
                     sequence[pos] = self.translation[sequence[pos]]

@@ -1,8 +1,6 @@
 from random import Random
 from typing import Iterator, List, Set
 
-from sympy import sequence
-
 from src.decoy_generators.decoy_generator import DecoyGenerator, DecoyGeneratorType
 
 from src.proteins.protease import Protease
@@ -22,9 +20,9 @@ class RandomReplaceGenerator(DecoyGenerator):
         for target in targets:
             new_sequence = []
             for peptide in self.protease.cleave(target):
-                if len(peptide) > 1:
+                if len(peptide.sequence) > 1:
                     sequence = list(peptide.sequence)
-                    random_pos = self.random.randint(0, len(peptide) - 1)
+                    random_pos = self.random.randint(0, len(peptide.sequence) - 1)
                     allowed_replacements = peptide.allowed_replacements[random_pos].copy()
 
                     # Do not replace amino acid with itself
