@@ -16,6 +16,10 @@ class DecoyGenerator:
     canonical_amino_acids: List[str] = list("ACDEFGHIKLMNPQRSTVWY")
     decoy_generation_type: DecoyGeneratorType = DecoyGeneratorType.ONE2ONE
 
+    # Some generators are non-deterministic, but we want to ensure that the same
+    # peptide is always converted to the same decoy even across different proteins.
+    peptide_cache: dict[str, List[str]] = {}
+
 
     def __init__(self, protease: Protease):
         self.protease = protease

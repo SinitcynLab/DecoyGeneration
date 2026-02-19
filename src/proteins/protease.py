@@ -17,6 +17,10 @@ class Peptide:
     # Note, that even for these positions not all amino acid replacements may be allowed but most of the modifications are allowed here.
     flexible_range: range = None
 
+    # Position of the peptide in the original protein sequence.
+    start_index: int = 0
+    end_index: int = 0
+
 
 class Protease(ABC):
     @abstractmethod
@@ -133,7 +137,15 @@ class TerminusProtease(Protease):
                     assert self.cleavage_side == "C"
                     flexible_range = range(1, len(current_sequence))
 
-                peptides.append(Peptide(current_sequence, allowed_replacement_list, flexible_range))
+                peptides.append(
+                    Peptide(
+                        current_sequence,
+                        allowed_replacement_list,
+                        flexible_range,
+                        start_index=i - len(current_sequence) + 1,
+                        end_index=i + 1,
+                    )
+                )
                 current_sequence = ""
 
         return peptides

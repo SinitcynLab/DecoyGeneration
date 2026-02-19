@@ -168,6 +168,18 @@ class MlGenerator(DecoyGenerator):
                     new_sequence[mask_position] = new_aa
                     #self._log_data(probs, sequence_idx, mask_position, sequence, new_aa, self.canonical_amino_acids[top_idx[0]]) # for visualization
                     break
+
+            # Always report the same decoy for the same peptide, even across different proteins.
+            for peptide in peptides:
+                old_peptide = peptide.sequence
+                new_peptide = "".join(new_sequence[peptide.start_index:peptide.end_index])
+                if old_peptide in self.peptide_cache:
+                    new_peptide = self.peptide_cache[old_peptide][0]
+                else:
+                    self.peptide_cache[old_peptide] = [new_peptide]
+
+                for i in range(peptide.start_index, peptide.end_index):
+                    new_sequence[i] = new_peptide[i - peptide.start_index]
                 
             yield "".join(new_sequence)
 
