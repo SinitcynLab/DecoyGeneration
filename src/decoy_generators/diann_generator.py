@@ -33,6 +33,8 @@ class DiannGenerator(DecoyGenerator):
                         pos = len(sequence) - 2
                     else:
                         pos = 0
-                    sequence[pos] = self.translation[sequence[pos]]
+                    old = sequence[pos]
+                    if old in self.translation:
+                        sequence[pos] = self.translation[old]
                 new_sequence.append("".join(sequence))
             yield "".join(new_sequence)

@@ -3,7 +3,7 @@ import torch
 CLASSIFIER_LIST = ["mlp", "rnn", "svm", "plm_free"]
 ENCODER_LIST = ["esm", "protbert"]
 GENERATOR_LIST = ["reverse", "shuffle", "diann", "esm", "protbert", "protbert_32bit", "protbert_16bit",
-                  "esm_terminus", "random_replace"]
+                  "esm_terminus", "random_replace", "dummy", "hardcore"]
 PARAMETER_COUNT_LIST = ["8M", "35M", "150M", "650M", "3B"]
 PARAMETER_PRECISION_LIST = [16, 32]
 COMMAND_LIST = ["evaluate", "generate", "time"]

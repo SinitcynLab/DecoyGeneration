@@ -6,7 +6,9 @@ from random import Random
 
 from src.decoy_generators.decoy_generator import DecoyGenerator
 from src.decoy_generators.diann_generator import DiannGenerator
+from src.decoy_generators.dummy_generator import DummyGenerator
 from src.decoy_generators.esm_generator import EsmGenerator, MaskingType, MlGeneratorType
+from src.decoy_generators.hardcore_generator import HardcoreGenerator
 from src.decoy_generators.terminus_esm_generator import TerminusEsmGenerator
 from src.decoy_generators.reverse_generator import ReverseGenerator
 from src.decoy_generators.shuffle_generator import ShuffleGenerator
@@ -71,6 +73,10 @@ def create_generator_from_parameters(args: argparse.Namespace, device: torch.dev
         generator = DiannGenerator(protease=protease)
     elif args.generator == "random_replace":
         generator = RandomReplaceGenerator(protease=protease, random=random)
+    elif args.generator == "dummy":
+        generator = DummyGenerator(protease=protease)
+    elif args.generator == "hardcore":
+        generator = HardcoreGenerator(protease=protease)
     elif args.generator == "esm":
         model_name = get_model_name(model_type=args.generator, model_size=args.parameter_count, custom_model_path=args.tuned_model_path)
         dtype = PARAM_PRECISION_TO_TYPE[args.parameter_precision]
@@ -82,8 +88,8 @@ def create_generator_from_parameters(args: argparse.Namespace, device: torch.dev
             batch_size=1,
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
-            masking_type=MaskingType.COUNT,
-            mask_count=args.mask_count,
+            masking_type=MaskingType.N_C_TERMINUS,
+            mask_count=0.3,
             dtype=dtype
         )
     elif args.generator == "esm_terminus":
@@ -97,7 +103,7 @@ def create_generator_from_parameters(args: argparse.Namespace, device: torch.dev
             batch_size=1,
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
-            masking_type=MaskingType.COUNT,
+            masking_type=MaskingType.N_C_TERMINUS,
             mask_count=args.mask_count,
             terminus=args.terminus
         )

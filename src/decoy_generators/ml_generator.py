@@ -12,10 +12,13 @@ from src.decoy_generators.decoy_generator import DecoyGenerator
 
 from src.proteins.protease import Protease
 
+from collections import Counter
+
 
 class MaskingType(Enum):
     COUNT = 1,
     PERCENT = 2
+    N_C_TERMINUS = 4
 
 class MlGeneratorType(Enum):
     BEST = 1,
@@ -52,11 +55,25 @@ class MlGenerator(DecoyGenerator):
         self.mask_count = mask_count
         self.dtype = dtype
 
+        self._c_replacements = {}
+        self._n_replacements = {}
+        self._n_c_replacements = {}
+
     def _get_masked_positions(self, sequence: str):
         peptide_start_idx = 0
         for peptide in self.protease.cleave(sequence):
             peptide_length = len(peptide.sequence)
             peptide_end_idx = peptide_start_idx + peptide_length
+
+            first_can_change = peptide.flexible_range[0] if len(peptide.flexible_range) > 0 else None
+            last_can_change = peptide.flexible_range[-1] if len(peptide.flexible_range) > 0 else None
+
+            if self.masking_type == MaskingType.N_C_TERMINUS:
+                if len(peptide.flexible_range) > 1:
+                    yield first_can_change + peptide_start_idx  # N-terminus
+                    yield last_can_change + peptide_start_idx  # C-terminus
+                peptide_start_idx = peptide_end_idx
+                continue
 
             mask_count = self._get_masking_count(peptide_length)
             if mask_count > 0:
@@ -218,6 +235,8 @@ class MlGenerator(DecoyGenerator):
             name += f".{self.ml_generator_type.name.lower()}.p{mask_percent}"
         elif self.masking_type == MaskingType.COUNT:
             name += f".{self.ml_generator_type.name.lower()}.c{self.mask_count}"
+        elif self.masking_type == MaskingType.N_C_TERMINUS:
+            name += f".{self.ml_generator_type.name.lower()}.n_c_term"
         else:
             raise ValueError(f"Unsupported masking type: {self.masking_type}")
 
