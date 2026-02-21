@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=rnn_random_replace_%j
-#SBATCH --output=rnn_random_replace_%j.txt
+#SBATCH --job-name=plm_free_test_%j
+#SBATCH --output=plm_free_test_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=12:00:00
 #SBATCH --nodes=1
