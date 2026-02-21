@@ -29,7 +29,8 @@ def get_plm_free(dim: int, pad_id: int):
     )
     return net, rnn, embedding
 
-def cross_val_rnn(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str], protease: Protease, device: torch.device):
+def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str], protease: Protease):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using {device}...")
 
     # define encoder:
@@ -51,7 +52,7 @@ def cross_val_rnn(target_file: str, decoy_files: Iterable[str], decoy_ids: Itera
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
     encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
 
-    print("Cross validation of the RNN:")
+    print("Cross validation of the PLM-free classifier:")
     for i, decoy_file in enumerate(decoy_files):
         if decoy_file == 'target':
             labels = torch.cat((torch.zeros(N//2), torch.ones(N - N//2)))

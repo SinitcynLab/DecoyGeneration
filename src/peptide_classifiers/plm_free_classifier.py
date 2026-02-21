@@ -28,8 +28,8 @@ class PlmFreeClassifier(RecurrentNNClassifier):
         h_fwd = h_n[-2]
         h_bwd = h_n[-1]
         h = torch.cat([h_fwd, h_bwd], dim=-1)
-        logits = self.net(h).squeeze(-1)
-        return logits
+        logits = self.network(h).squeeze(-1)
+        return torch.sigmoid(logits)
     
     def collate_pad(self, tensor_list: Iterable[torch.Tensor], pad_id: int):
         lengths: torch.Tensor = torch.tensor([len (t) for t in tensor_list], dtype=torch.long)

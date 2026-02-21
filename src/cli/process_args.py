@@ -14,6 +14,7 @@ from src.decoy_generators.protbert_generator import ProtBertGenerator
 from src.decoy_generators.random_replace_generator import RandomReplaceGenerator
 from src.run.cross_val_mlp import cross_val_mlp_protbert, cross_val_mlp_esm
 from src.run.cross_val_rnn import cross_val_rnn_protbert, cross_val_rnn_esm
+from src.run.cross_val_plm_free import cross_val_plm_free
 from src.run.cross_val_svm import cross_val_svm
 from src.run.generate import generate_decoys
 from src.run.timing_test import timing_test
@@ -45,6 +46,9 @@ def process_evaluate(args: argparse.Namespace):
     elif args.classifier == "svm":
         protease = get_protease(args.protease)
         cross_val_svm(args.target_file, args.decoy_files, args.decoy_ids, protease)
+    elif args.classifier == "plm_free":
+        protease = get_protease(args.protease)
+        cross_val_plm_free(args.target_file, args.decoy_files, args.decoy_ids, protease)
 
 def process_generate(args: argparse.Namespace):
     generator = create_generator_from_parameters(args)
