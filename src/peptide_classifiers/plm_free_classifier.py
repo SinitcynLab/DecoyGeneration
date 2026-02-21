@@ -31,7 +31,7 @@ class PlmFreeClassifier(RecurrentNNClassifier):
         logits = self.net(h).squeeze(-1)
         return logits
     
-    def pad_data(self, tensor_list: Iterable[torch.Tensor], pad_id: int):
+    def collate_pad(self, tensor_list: Iterable[torch.Tensor], pad_id: int):
         lengths: torch.Tensor = torch.tensor([len (t) for t in tensor_list], dtype=torch.long)
         max_len = int(lengths.max().item()) if len(lengths) else 0
         out: torch.Tensor = torch.full((len(tensor_list), max_len), pad_id, dtype=torch.long)
@@ -41,9 +41,7 @@ class PlmFreeClassifier(RecurrentNNClassifier):
     
     def evaluate_on_data(self, tensor_list: Iterable[torch.Tensor]) -> torch.Tensor:
         with torch.no_grad():
-            X, l = self.pad_data(tensor_list)
-            # note that the tensor list is converted to tensors only because it makes removal from VRAM simpler
-            # if you keep the tensors in the list instead, then having the list reference persists also keeps tensors in VRAM
+            X, l = self.collate_pad(tensor_list, self.encoder.pad_id)
             X, l = X.to(self.device), l.to(self.device)
             y_pred = self(X, l)
             del X, l
@@ -52,9 +50,7 @@ class PlmFreeClassifier(RecurrentNNClassifier):
     
     def train_on_data(self, tensor_list: Iterable[torch.Tensor], y: torch.Tensor, 
                     loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> torch.Tensor:
-        X, l = self.pad_data(tensor_list)
-        # note that the tensor list is converted to tensors only because it makes removal from VRAM simpler
-        # if you keep the tensors in the list instead, then having the list reference persists also keeps tensors in VRAM
+        X, l = self.collate_pad(tensor_list, self.encoder.pad_id)
         X, l, y = X.to(self.device), l.to(self.device), y.to(self.device)
         y_pred = self(X, l)
         loss = loss_fn(y_pred, y)

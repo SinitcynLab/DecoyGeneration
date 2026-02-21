@@ -13,6 +13,7 @@ class CustomTokenizer(PeptideEncoder):
         self.stoi = {t: i for i, t in enumerate(self.itos)}
         self.pad_id = self.stoi["<pad>"]
         self.unk_id = self.stoi["<unk>"]
+        self.vocab_size = len(self.itos)
 
     def __encode_peptide(self, peptide: str) -> Tensor:
         return torch.tensor([self.stoi.get(aa, self.unk_id) for aa in peptide])

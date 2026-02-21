@@ -4,29 +4,42 @@ from typing import Iterable, Callable
 
 from src.peptide_classifiers.plm_free_classifier import PlmFreeClassifier
 from src.peptide_classifiers.nn_classifier import cross_validate_nn
-from src.encoders.protbert_encoder import ProtBertEncoder
-from src.encoders.esm_encoder import EsmEncoder
-from src.encoders.peptide_encoder import PeptideEncoder
+from src.encoders.custom_tokenizer_encoder import CustomTokenizer
+from src.proteins.aminoacids import AMINOACIDS, EXTRA_AMINOACIDS
+from src.proteins.protease import Protease
 from src.io.fasta import read_fasta_file
 from src.io.lmdb_writer import encode_seqs_to_lmdb, delete_lmdb
 from src.io.lmdb_dataset import LMDBDataset
 import datetime
 import time
 
-def get_rnn(dim: int):
-    out_size = 2048
-    rnn = torch.nn.RNN(dim, out_size, bidirectional=False)
-    net = torch.nn.Sequential( # each character (amino acid) is encoded using 1024 numbers
-        torch.nn.Linear(out_size, 1),
-        torch.nn.Sigmoid()
+def get_plm_free(dim: int, pad_id: int):
+    embedding = torch.nn.Embedding(dim, 128, pad_id)
+    rnn = torch.nn.RNN(
+        input_size=128,
+        hidden_size=64,
+        num_layers=4,
+        nonlinearity="tanh",
+        batch_first=True,
+        bidirectional=True
     )
-    return net, rnn
+    net = torch.nn.Sequential(
+        torch.nn.Dropout(p=0.2),
+        torch.nn.Linear(128, 1)
+    )
+    return net, rnn, embedding
 
-def cross_val_rnn(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str], encoder: PeptideEncoder, resetter: Callable, device: torch.device):
-    # define RNN classifier
+def cross_val_rnn(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str], protease: Protease, device: torch.device):
     print(f"Using {device}...")
-    net, rnn = resetter()
-    classifier = RecurrentNNClassifier(rnn=rnn, network=net, encoder=encoder, device=device, name="rnn", resetter=resetter)
+
+    # define encoder:
+    amino_acids = list(AMINOACIDS + EXTRA_AMINOACIDS)
+    encoder = CustomTokenizer(amino_acids=amino_acids, protease=protease)
+
+    # define classifier:
+    resetter = lambda: get_plm_free(encoder.vocab_size, encoder.pad_id)
+    net, rnn, embedding = resetter()
+    classifier = PlmFreeClassifier(rnn=rnn, network=net, embedding=embedding, encoder=encoder, device=device, name="rnn", resetter=resetter)
 
     timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
     temp_encoding_dir = f"data/encodings/temp_rnn_{timestamp}"
