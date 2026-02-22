@@ -14,10 +14,10 @@ import datetime
 import time
 
 def get_plm_free(dim: int, pad_id: int):
-    embedding = torch.nn.Embedding(dim, 128, pad_id)
+    embedding = torch.nn.Embedding(dim, 256, pad_id)
     rnn = torch.nn.RNN(
-        input_size=128,
-        hidden_size=64,
+        input_size=256,
+        hidden_size=512,
         num_layers=4,
         nonlinearity="tanh",
         batch_first=True,
@@ -25,7 +25,7 @@ def get_plm_free(dim: int, pad_id: int):
     )
     net = torch.nn.Sequential(
         torch.nn.Dropout(p=0.2),
-        torch.nn.Linear(128, 1)
+        torch.nn.Linear(1024, 1)
     )
     return net, rnn, embedding
 

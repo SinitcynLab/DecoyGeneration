@@ -7,25 +7,34 @@ from src.encoders.peptide_encoder import PeptideEncoder
 from src.proteins.protease import Protease
 
 class CustomTokenizer(PeptideEncoder):
-    def __init__(self, amino_acids: List[str], protease: Protease):
+    def __init__(self, amino_acids: List[str], protease: Protease, peptide_level: bool = False):
         self.protease = protease
         self.itos = ["<pad>", "<unk>"] + amino_acids
         self.stoi = {t: i for i, t in enumerate(self.itos)}
         self.pad_id = self.stoi["<pad>"]
         self.unk_id = self.stoi["<unk>"]
         self.vocab_size = len(self.itos)
+        self.peptide_level = peptide_level
 
-    def __encode_peptide(self, peptide: str) -> Tensor:
+    def __encode_sequence(self, peptide: str) -> Tensor:
         return torch.tensor([self.stoi.get(aa, self.unk_id) for aa in peptide])
     
-    def __encode_protein(self, protein: str) -> List[Tensor]:
+    def __encode_protein_peptide_level(self, protein: str) -> List[Tensor]:
         out = []
         for peptide in self.protease.cleave(protein):
-            out.append(self.__encode_peptide(peptide.sequence))
+            out.append(self.__encode_sequence(peptide.sequence))
         return out
     
+    def __encode_protein_sequence_level(self, protein: str) -> List[Tensor]:
+        encoding = self.__encode_sequence(protein)
+        return [encoding]
+        
     def __call__(self, proteins: Iterable[str]) -> List[Tensor]:
         out = []
-        for protein in proteins:
-            out = out + self.__encode_protein(protein)
+        if self.peptide_level:
+            for protein in proteins:
+                out = out + self.__encode_protein_peptide_level(protein)
+        else:
+            for protein in proteins:
+                out = out + self.__encode_protein_sequence_level(protein)
         return out
