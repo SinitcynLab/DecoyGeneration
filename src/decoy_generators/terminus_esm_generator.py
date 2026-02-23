@@ -3,6 +3,7 @@ import torch
 
 from src.decoy_generators.esm_generator import EsmGenerator
 from src.decoy_generators.ml_generator import MlGeneratorType, MaskingType
+from src.cli.option_lists import TERMINUS_LIST
 
 from src.proteins.protease import Protease
 
@@ -32,7 +33,7 @@ class TerminusEsmGenerator(EsmGenerator):
     ):
         EsmGenerator.__init__(self, model_name, random, protease, sort_optimization,
                              batch_size, ml_generator_type, device, masking_type, mask_percent, mask_count, dtype)
-        if terminus not in ['N', 'C']:
+        if terminus not in TERMINUS_LIST:
             raise ValueError("Please provide valid terminus")
         self.terminus = terminus
 
@@ -46,3 +47,5 @@ class TerminusEsmGenerator(EsmGenerator):
             return [start]
         elif self.terminus == 'C':
             return [end - 1]
+        elif self.terminus == 'NC':
+            return list(set([start, end-1])) # removes duplicates

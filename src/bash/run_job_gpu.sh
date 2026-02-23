@@ -3,7 +3,7 @@
 #SBATCH --job-name=plm_free_test_%j
 #SBATCH --output=plm_free_test_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
-#SBATCH --time=6:00:00
+#SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2

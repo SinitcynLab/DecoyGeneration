@@ -86,7 +86,7 @@ def create_generator_from_parameters(args: argparse.Namespace, device: torch.dev
             mask_count=args.mask_count,
             dtype=dtype
         )
-    elif args.generator == "esm_n_terminus":
+    elif args.generator == "esm_terminus":
         model_name = get_model_name(model_type="esm", model_size=args.parameter_count, custom_model_path=args.tuned_model_path)
         dtype = PARAM_PRECISION_TO_TYPE[args.parameter_precision]
         generator = TerminusEsmGenerator(
@@ -99,22 +99,7 @@ def create_generator_from_parameters(args: argparse.Namespace, device: torch.dev
             device=device,
             masking_type=MaskingType.COUNT,
             mask_count=args.mask_count,
-            terminus='N'
-        )
-    elif args.generator == "esm_c_terminus":
-        model_name = get_model_name(model_type="esm", model_size=args.parameter_count, custom_model_path=args.tuned_model_path)
-        dtype = PARAM_PRECISION_TO_TYPE[args.parameter_precision]
-        generator = TerminusEsmGenerator(
-            model_name=model_name,
-            random=random,
-            protease=protease,
-            sort_optimization=True,
-            batch_size=1,
-            ml_generator_type=MlGeneratorType.BEST,
-            device=device,
-            masking_type=MaskingType.COUNT,
-            mask_count=args.mask_count,
-            terminus='C'
+            terminus=args.terminus
         )
     elif args.generator == "protbert":
         model_name = get_model_name(model_type="protbert", model_size=args.parameter_count, custom_model_path=args.tuned_model_path)

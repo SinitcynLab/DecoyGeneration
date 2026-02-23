@@ -1,6 +1,6 @@
 import argparse
 
-from src.cli.option_lists import CLASSIFIER_LIST, COMMAND_LIST, GENERATOR_LIST, PARAMETER_COUNT_LIST, PARAMETER_PRECISION_LIST
+from src.cli.option_lists import CLASSIFIER_LIST, COMMAND_LIST, GENERATOR_LIST, PARAMETER_COUNT_LIST, PARAMETER_PRECISION_LIST, TERMINUS_LIST
 
 from src.proteins.protease import list_proteases
 
@@ -35,4 +35,5 @@ def validate_generator(args: argparse.Namespace):
         raise ValueError(f"Choose a parameter precision from {PARAMETER_PRECISION_LIST} (measured in bits).")
     if args.generator == "protbert" and args.parameter_precision == 16:
         raise ValueError(f"The protbert generator only supports 32-bit parameter precision.")
-    
+    if args.terminus not in TERMINUS_LIST:
+        raise ValueError(f"Please select a valid terminus (choose from {TERMINUS_LIST}).")

@@ -2,7 +2,7 @@ import argparse
 
 from src.cli.process_args import process_args
 from src.cli.validate_args import validate_args
-from src.cli.option_lists import CLASSIFIER_LIST, COMMAND_LIST, GENERATOR_LIST, ENCODER_LIST
+from src.cli.option_lists import CLASSIFIER_LIST, COMMAND_LIST, GENERATOR_LIST, ENCODER_LIST, TERMINUS_LIST
 
 from src.proteins.protease import list_proteases
 
@@ -38,6 +38,8 @@ def collect_args():
         default="trypsin",
         help=f"If specified, the decoy generation will be done according to the cleavage rules of the specified protease. (Choose from {list_proteases()}).",
     )
+    parser.add_argument("--terminus", type=str, default="C", 
+                        help=f"The terminus at which a terminus-ESM generator must replace the amino acid (defautls to C). (Choose from {TERMINUS_LIST}.)")
 
     # timing:
     parser.add_argument("--timing_sample", type=int, default=100, help="The number of sequences from the target file to use for timing measurements, taken from the start of the file (defaults to 100).")
