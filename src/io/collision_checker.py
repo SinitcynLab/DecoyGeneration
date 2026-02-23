@@ -27,8 +27,8 @@ def main():
     target_sequences = [rec.sequence for rec in target_records]
     decoy_sequences = [rec.sequence for rec in decoy_records]
 
-    target_peptides = dict()
-    decoy_peptides = dict()
+    target_peptides = set()
+    decoy_peptides = list()
     for target_sequence in target_sequences:
         peptides = [pep.sequence for pep in protease.cleave(target_sequence)]
         target_peptides = target_peptides | set(peptides) # note '|' is the union operator
