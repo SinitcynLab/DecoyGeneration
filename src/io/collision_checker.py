@@ -3,6 +3,7 @@ import sys
 
 from typing import List, Tuple
 from statistics import mean
+from src.proteins.protease import PROTEASES
 
 from src.io.fasta import read_fasta_file
 
@@ -10,6 +11,7 @@ def collect_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--targets", help="The file holding the target sequences.")
     parser.add_argument("-d", "--decoys", help="The file holding the decoy sequences.")
+    parser.add_argument("-p", "--protease", default="trypsin", help="The protease used for splitting up the proteins.")
 
     return parser.parse_args()
 
@@ -17,22 +19,21 @@ def main():
     args = collect_args()
     target_file = args.targets
     decoy_file = args.decoys
-    special_amino_acids = ['R', 'K']
-    
+    protease = PROTEASES[args.protease]
+
     target_records = read_fasta_file(target_file)
     decoy_records = read_fasta_file(decoy_file)
     
     target_sequences = [rec.sequence for rec in target_records]
     decoy_sequences = [rec.sequence for rec in decoy_records]
 
-    target_peptides = set()
-    decoy_peptides = list()
-    translation = str.maketrans({c: " " for c in special_amino_acids})
+    target_peptides = dict()
+    decoy_peptides = dict()
     for target_sequence in target_sequences:
-        peptides = target_sequence.translate(translation).split()
+        peptides = [pep.sequence for pep in protease.cleave(target_sequence)]
         target_peptides = target_peptides | set(peptides) # note '|' is the union operator
     for decoy_sequence in decoy_sequences:
-        peptides = decoy_sequence.translate(translation).split()
+        peptides = [pep.sequence for pep in protease.cleave(decoy_sequence)]
         decoy_peptides += peptides
 
     result_list: List[dict] = []
