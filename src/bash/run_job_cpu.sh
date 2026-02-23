@@ -16,4 +16,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/run/cross_val_svm_umap_kernel.py
+python -u src/decoy_gen.py --command generate --generator esm_terminus --terminus NC --target_file data/targets/UP000002311_559292.fasta --output_directory data/decoys/
