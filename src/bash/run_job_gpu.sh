@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=plm_free_test_%j
-#SBATCH --output=plm_free_test_%j.txt
+#SBATCH --job-name=mlp_esm_NC_%j
+#SBATCH --output=mlp_esm_NC_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python src/decoy_gen.py --command evaluate --classifier plm_free --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.shuffle.0.fasta data/decoys/UP000002311_559292.esm650M.best.c1.32b.0.fasta --decoy_ids shuffle esm650M_32bit
+python src/decoy_gen.py --command evaluate --classifier mlp --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.NC_terminus_facebook_esm2_t33_650M_UR50D.best.c1.f32.0.fasta --decoy_ids esm_NC
