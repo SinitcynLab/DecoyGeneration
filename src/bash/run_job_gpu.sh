@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=mlp_esm_NC_%j
-#SBATCH --output=mlp_esm_NC_%j.txt
+#SBATCH --job-name=gen_esm_NC_%j
+#SBATCH --output=gen_esm_NC_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=3:00:00
 #SBATCH --nodes=1
