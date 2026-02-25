@@ -15,6 +15,7 @@ if __name__ == "__main__":
 
     # prepare histogram data:
     histogram_data = get_histogram_data(og_aas, token_choices, labels)
+    cols_to_mask = [labels.index(aa) for aa in ['K', 'R']]
 
     # make plot:
     fig, ax = plt.subplots(figsize=(9,9))
@@ -32,9 +33,13 @@ if __name__ == "__main__":
 
     for i in range(histogram_data.shape[0]):
         for j in range(histogram_data.shape[1]):
+            if i in cols_to_mask:
+                color = 'white'
+            else:
+                color='red'
             ax.text(
                 i, j, int(histogram_data[i,j]),
-                ha="center", va="center", color="red", size=8
+                ha="center", va="center", color=color, size=8
             )
     plt.title(f"20x20 Matrix showing most probable amino acid against \n original amino acid for {generator}")
     plt.savefig(target_file)

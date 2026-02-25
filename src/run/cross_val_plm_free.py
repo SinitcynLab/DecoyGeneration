@@ -29,13 +29,19 @@ def get_plm_free(dim: int, pad_id: int):
     )
     return net, rnn, embedding
 
+def get_peptide_number(sequences: Iterable[str], protease: Protease):
+    tot_peptide_num: int = 0
+    for sequence in sequences:
+        tot_peptide_num += len(protease.cleave(sequence))
+    return tot_peptide_num
+
 def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: Iterable[str], protease: Protease):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using {device}...")
 
     # define encoder:
     amino_acids = list(AMINOACIDS + EXTRA_AMINOACIDS)
-    encoder = CustomTokenizer(amino_acids=amino_acids, protease=protease)
+    encoder = CustomTokenizer(amino_acids=amino_acids, protease=protease, peptide_level=True)
 
     # define classifier:
     resetter = lambda: get_plm_free(encoder.vocab_size, encoder.pad_id)
@@ -49,9 +55,10 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
-    N = encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
+    N = get_peptide_number(target_sequences, protease=protease)
+    encode_seqs_to_lmdb(target_sequences, encoder, target_lmdb_path)
 
-    print("Cross validation of the PLM-free classifier:")
+    print(f"Cross validation of the PLM-free classifier (peptide_level={encoder.peptide_level}):")
     for i, decoy_file in enumerate(decoy_files):
         if decoy_file == 'target':
             labels = torch.cat((torch.zeros(N//2), torch.ones(N - N//2)))
@@ -60,7 +67,8 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
-            M = encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path)
+            M = get_peptide_number(decoy_sequences, protease=protease)
+            encode_seqs_to_lmdb(decoy_sequences, encoder, decoy_lmdb_path)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
 
