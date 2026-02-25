@@ -39,7 +39,7 @@ class EsmGenerator(MlGenerator):
         MlGenerator.__init__(self, model_name, random, protease, sort_optimization,
                              batch_size, ml_generator_type, device, masking_type, mask_percent, mask_count, dtype)
 
-        self.model = EsmForMaskedLM.from_pretrained(model_name, dtype=dtype)
-        self.tokenizer = EsmTokenizer.from_pretrained(model_name, dtype=dtype)
+        self.model = EsmForMaskedLM.from_pretrained(model_name, torch_dtype=dtype)
+        self.tokenizer = EsmTokenizer.from_pretrained(model_name, torch_dtype=dtype)
         self.model.eval()
         self.model.to(self.device)
