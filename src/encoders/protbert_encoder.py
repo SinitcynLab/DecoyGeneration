@@ -16,7 +16,7 @@ class ProtBertEncoder(TransformerEncoder):
         TransformerEncoder.__init__(self, max_tokenized_length, device, constant_length, flatten)
 
         self.model = BertModel.from_pretrained(model_name)
-        self.tokenizer = BertTokenizer.from_pretrained(model_name)
+        self.tokenizer = BertTokenizer.from_pretrained(model_name, do_lower_case=False)
         self.tokenizer.convert_tokens_to_ids(self.canonical_amino_acids)
         self.model.eval()
         self.model.to(self.device)
