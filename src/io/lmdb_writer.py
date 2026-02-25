@@ -15,12 +15,15 @@ def encode_seqs_to_lmdb(sequences: Iterable[str], encoder: PeptideEncoder, o_fil
         shutil.rmtree(o_file_name)
     os.makedirs(o_file_name)
     batch_starts: np.ndarray = np.arange(0, len(sequences), batch_size)
+    tot_encodings: int = 0
     for batch_start in batch_starts:
         batch_end = min(len(sequences), batch_start + batch_size)
         batch_encodings = encoder(sequences[batch_start:batch_end])
         if isinstance(batch_encodings, torch.Tensor):
             batch_encodings = list(batch_encodings.split(1, dim=0)) # if single tensor returned, unroll into a list of tensors
+        tot_encodings += len(batch_encodings) # add the number of encodings in batch to the total
         append_tensors_to_lmdb(batch_encodings, range(batch_start, batch_end), o_file_name)
+    return tot_encodings
 
 def append_tensors_to_lmdb(tensors: Iterable[torch.Tensor], indices: Iterable[int], out_file: str):
     env: lmdb.Environment = lmdb.open(out_file, map_size=1024**4)

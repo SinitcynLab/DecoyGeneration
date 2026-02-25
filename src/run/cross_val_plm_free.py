@@ -14,10 +14,10 @@ import datetime
 import time
 
 def get_plm_free(dim: int, pad_id: int):
-    embedding = torch.nn.Embedding(dim, 256, pad_id)
+    embedding = torch.nn.Embedding(dim, 128, pad_id)
     rnn = torch.nn.RNN(
-        input_size=256,
-        hidden_size=512,
+        input_size=128,
+        hidden_size=64,
         num_layers=4,
         nonlinearity="tanh",
         batch_first=True,
@@ -25,7 +25,7 @@ def get_plm_free(dim: int, pad_id: int):
     )
     net = torch.nn.Sequential(
         torch.nn.Dropout(p=0.2),
-        torch.nn.Linear(1024, 1)
+        torch.nn.Linear(128, 1)
     )
     return net, rnn, embedding
 
@@ -48,9 +48,8 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
     # target data:
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
-    N = len(target_sequences)
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
-    encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
+    N = encode_seqs_to_lmdb(target_sequences[0:N], encoder, target_lmdb_path)
 
     print("Cross validation of the PLM-free classifier:")
     for i, decoy_file in enumerate(decoy_files):
@@ -61,8 +60,7 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
-            M = len(decoy_sequences)
-            encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path)
+            M = encode_seqs_to_lmdb(decoy_sequences[0:M], encoder, decoy_lmdb_path)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
 
