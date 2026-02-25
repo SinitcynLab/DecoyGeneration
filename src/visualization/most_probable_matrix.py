@@ -16,6 +16,7 @@ if __name__ == "__main__":
     # prepare histogram data:
     histogram_data = get_histogram_data(og_aas, token_choices, labels)
     cols_to_mask = [labels.index(aa) for aa in ['K', 'R']]
+    cols_to_mask = []
 
     # make plot:
     fig, ax = plt.subplots(figsize=(9,9))
