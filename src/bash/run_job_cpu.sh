@@ -3,7 +3,7 @@
 #SBATCH --job-name=svm_umap_%j
 #SBATCH --output=svm_umap_%j.txt
 #SBATCH --partition=tue.default.q      # Choose a partition that has GPUs
-#SBATCH --time=12:00:00
+#SBATCH --time=1:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=6
