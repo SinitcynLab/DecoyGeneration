@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=col_check_%j
-#SBATCH --output=col_check_%j.txt
+#SBATCH --job-name=shared_peptides_check_%j
+#SBATCH --output=shared_peptides_check_%j.txt
 #SBATCH --partition=tue.default.q      # Choose a partition that has GPUs
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
