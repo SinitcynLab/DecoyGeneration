@@ -52,7 +52,7 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
     temp_encoding_dir = f"data/encodings/temp_rnn_{timestamp}"
 
     # set sequence limit (hacky but we can improve it later)
-    K = 1000
+    K = 500
 
     # target data:
     target_records = read_fasta_file(target_file)
