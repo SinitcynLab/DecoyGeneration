@@ -24,16 +24,15 @@ def main():
     sequences = [rec.sequence for rec in records]
 
     match_dict = dict()
-    tot_peptides = 0
     for target_sequence in sequences:
         peptides = [pep.sequence for pep in protease.cleave(target_sequence)]
         for peptide in peptides:
-            tot_peptides += 1
             if peptide in match_dict:
                 match_dict[peptide] += 1
             else:
                 match_dict[peptide] = 1
     
+    tot_peptides = len(match_dict.keys())
     n_non_unique = sum([1 for _, v in match_dict.items() if v > 1])
     prob_non_unique = n_non_unique / tot_peptides
     print(f"sequence file: {sequence_file}")
