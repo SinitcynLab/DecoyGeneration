@@ -51,13 +51,9 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
     timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
     temp_encoding_dir = f"data/encodings/temp_rnn_{timestamp}"
 
-    # set sequence limit (hacky but we can improve it later)
-    K = 500
-
     # target data:
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
-    target_sequences = target_sequences[0:K]
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
     N = get_peptide_number(target_sequences, protease=protease)
     encode_seqs_to_lmdb(target_sequences, encoder, target_lmdb_path)
@@ -70,7 +66,6 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
         else:
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
-            decoy_sequences = decoy_sequences[0:K]
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
             M = get_peptide_number(decoy_sequences, protease=protease)
             encode_seqs_to_lmdb(decoy_sequences, encoder, decoy_lmdb_path)
