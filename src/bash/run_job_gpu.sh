@@ -17,4 +17,4 @@ source activate decoy_gen
 
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-python -u src/decoy_gen.py --command evaluate --classifier plm_free --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.esm650M.best.c1.32b.0.fasta data/decoys/UP000002311_559292.esm8M.best.c1.32b.0.fasta data/decoys/UP000002311_559292.shuffle.0.fasta data/decoys/UP000002311_559292.reverse.fasta data/decoys/UP000002311_559292.diann_C.fasta --decoy_ids esm650_32b esm8_32b shuffle reverse diann
+python -u src/decoy_gen.py --command evaluate --classifier plm_free --target_file data/targets/UP000002311_559292.fasta --decoy_files data/decoys/UP000002311_559292.esm650M.best.c1.32b.0.fasta data/decoys/UP000002311_559292.shuffle.0.fasta data/decoys/UP000002311_559292.reverse.fasta data/decoys/UP000002311_559292.diann_C.fasta data/decoys/UP000002311_559292.esm8M.best.c1.32b.0.fasta --decoy_ids esm650_32b shuffle reverse diann esm8_32b
