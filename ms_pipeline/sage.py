@@ -70,6 +70,8 @@ def load_or_create_sage_config(
             enz["min_len"] = protease_cfg.min_len
         if protease_cfg.max_len is not None:
             enz["max_len"] = protease_cfg.max_len
+        if protease_cfg.forbid_miscleavages:
+            enz["missed_cleavages"] = 0
 
     if entrap_cfg.mode == "paired_shuffled_peptides":
         # ensure enzyme exists

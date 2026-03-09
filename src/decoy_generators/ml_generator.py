@@ -19,6 +19,7 @@ class MaskingType(Enum):
     COUNT = 1,
     PERCENT = 2
     N_C_TERMINUS = 4
+    HLA = 5
 
 class MlGeneratorType(Enum):
     BEST = 1,
@@ -55,12 +56,20 @@ class MlGenerator(DecoyGenerator):
         self.mask_count = mask_count
         self.dtype = dtype
 
+        print(masking_type)
+
         self._c_replacements = {}
         self._n_replacements = {}
         self._n_c_replacements = {}
 
     def _get_masked_positions(self, sequence: str):
         peptide_start_idx = 0
+        if self.masking_type == MaskingType.HLA:
+            for i in range(len(sequence)):
+                if i % 8 == 7:
+                    yield i
+            return
+
         for peptide in self.protease.cleave(sequence):
             peptide_length = len(peptide.sequence)
             peptide_end_idx = peptide_start_idx + peptide_length
@@ -237,6 +246,8 @@ class MlGenerator(DecoyGenerator):
             name += f".{self.ml_generator_type.name.lower()}.c{self.mask_count}"
         elif self.masking_type == MaskingType.N_C_TERMINUS:
             name += f".{self.ml_generator_type.name.lower()}.n_c_term"
+        elif self.masking_type == MaskingType.HLA:
+            name += f".{self.ml_generator_type.name.lower()}.hla"
         else:
             raise ValueError(f"Unsupported masking type: {self.masking_type}")
 

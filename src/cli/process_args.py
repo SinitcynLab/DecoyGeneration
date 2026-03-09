@@ -88,7 +88,7 @@ def create_generator_from_parameters(args: argparse.Namespace, device: torch.dev
             batch_size=1,
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
-            masking_type=MaskingType.N_C_TERMINUS,
+            masking_type=MaskingType.HLA,
             mask_count=0.3,
             dtype=dtype
         )
@@ -103,7 +103,7 @@ def create_generator_from_parameters(args: argparse.Namespace, device: torch.dev
             batch_size=1,
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
-            masking_type=MaskingType.N_C_TERMINUS,
+            masking_type=MaskingType.PERCENT,
             mask_count=args.mask_count,
             terminus=args.terminus
         )
