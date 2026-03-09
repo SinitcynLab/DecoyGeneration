@@ -41,7 +41,7 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
 
     # define encoder:
     amino_acids = list(AMINOACIDS + EXTRA_AMINOACIDS)
-    encoder = CustomTokenizer(amino_acids=amino_acids, protease=protease, peptide_level=True)
+    encoder = CustomTokenizer(amino_acids=amino_acids, protease=protease, peptide_level=False)
 
     # define classifier:
     resetter = lambda: get_plm_free(encoder.vocab_size, encoder.pad_id)
@@ -55,7 +55,7 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
-    N = get_peptide_number(target_sequences, protease=protease)
+    N = len(target_sequences)
     encode_seqs_to_lmdb(target_sequences, encoder, target_lmdb_path)
 
     print(f"Cross validation of the PLM-free classifier (peptide_level={encoder.peptide_level}):")
@@ -67,7 +67,7 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
-            M = get_peptide_number(decoy_sequences, protease=protease)
+            M = len(decoy_sequences)
             encode_seqs_to_lmdb(decoy_sequences, encoder, decoy_lmdb_path)
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
