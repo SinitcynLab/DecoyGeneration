@@ -36,15 +36,15 @@ def main():
     check_len_le_8 = lambda k: len(k) <= 8
     check_len_gt_8 = lambda k: len(k) > 8
     prob_le_8 = compute_prob_cond(match_dict, check_len_le_8)
-    prob_ge_8 = compute_prob_cond(match_dict, check_len_gt_8)
+    prob_gt_8 = compute_prob_cond(match_dict, check_len_gt_8)
     print(f"sequence file: {sequence_file}")
     print(f"probability of non-uniqueness (len <= 8): {prob_le_8}")
-    print(f"probability of non-uniqueness (len > 8): {prob_ge_8}")
+    print(f"probability of non-uniqueness (len > 8): {prob_gt_8}")
 
 def compute_prob_cond(match_dict: dict, condition: Callable):
     thresh_dict = {k: v for (k, v) in match_dict.items() if condition(k)}
     tot_peptides = len(thresh_dict.keys())
-    n_non_unique = sum([1 for _, v in match_dict.items() if v > 1])
+    n_non_unique = sum([1 for _, v in thresh_dict.items() if v > 1])
     return n_non_unique / tot_peptides
 
 if __name__=="__main__":
