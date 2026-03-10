@@ -3,6 +3,7 @@ import argparse
 from src.proteins.protease import PROTEASES
 import matplotlib.pyplot as plt
 from collections import Counter
+from typing import Callable
 
 from src.io.fasta import read_fasta_file
 
@@ -32,21 +33,19 @@ def main():
             else:
                 match_dict[peptide] = 1
     
-    tot_peptides = len(match_dict.keys())
-    n_non_unique = sum([1 for _, v in match_dict.items() if v > 1])
-    prob_non_unique = n_non_unique / tot_peptides
+    check_len_le_8 = lambda k: len(k) <= 8
+    check_len_gt_8 = lambda k: len(k) > 8
+    prob_le_8 = compute_prob_cond(match_dict, check_len_le_8)
+    prob_ge_8 = compute_prob_cond(match_dict, check_len_gt_8)
     print(f"sequence file: {sequence_file}")
-    print(f"probability of non-uniqueness: {prob_non_unique}")
-    print()
-    if args.graph:
-        counts = Counter(match_dict.values())
-        x = [1, 2, 3, 4]
-        y = [counts[i] for i in x]
-        plt.bar(x, y, edgecolor='black')
-        plt.xlabel("Repeat count")
-        plt.ylabel("Number of peptides with this repeat count")
-        plt.title("Histogram of 'repeat count'")
-        plt.savefig("src/visualization/images/repeat_count_histogram.png")
+    print(f"probability of non-uniqueness (len <= 8): {prob_le_8}")
+    print(f"probability of non-uniqueness (len > 8): {prob_ge_8}")
+
+def compute_prob_cond(match_dict: dict, condition: Callable):
+    thresh_dict = {k: v for (k, v) in match_dict.items() if condition(k)}
+    tot_peptides = len(thresh_dict.keys())
+    n_non_unique = sum([1 for _, v in match_dict.items() if v > 1])
+    return n_non_unique / tot_peptides
 
 if __name__=="__main__":
     main()
