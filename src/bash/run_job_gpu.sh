@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=plm_free_eval_%j
-#SBATCH --output=plm_free_eval_%j.txt
+#SBATCH --job-name=plm_bug_fix_%j
+#SBATCH --output=plm_bug_fix_%j.txt
 #SBATCH --partition=mcs.gpu.q      # Choose a partition that has GPUs
 #SBATCH --time=16:00:00
 #SBATCH --nodes=1
