@@ -25,8 +25,8 @@ class PlmFreeClassifier(RecurrentNNClassifier):
         packed = nn.utils.rnn.pack_padded_sequence(emb, lengths.cpu(), batch_first=True, enforce_sorted=False)
         _, h_n = self.rnn(packed)
         # h_n: (num_layers * num_directions, batch, hidden)
-        h_fwd = h_n[-2]
-        h_bwd = h_n[-1]
+        h_fwd = h_n[0]
+        h_bwd = h_n[1]
         h = torch.cat([h_fwd, h_bwd], dim=-1)
         logits = self.network(h).squeeze(-1)
         return torch.sigmoid(logits)

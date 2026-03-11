@@ -41,7 +41,7 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
 
     # define encoder:
     amino_acids = list(AMINOACIDS + EXTRA_AMINOACIDS)
-    encoder = CustomTokenizer(amino_acids=amino_acids, protease=protease, peptide_level=False)
+    encoder = CustomTokenizer(amino_acids=amino_acids, protease=protease, peptide_level=True)
 
     # define classifier:
     resetter = lambda: get_plm_free(encoder.vocab_size, encoder.pad_id)
