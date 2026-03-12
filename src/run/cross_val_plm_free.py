@@ -24,7 +24,7 @@ def get_plm_free(dim: int, pad_id: int):
     )
     net = torch.nn.Sequential(
         torch.nn.Dropout(p=0.2),
-        torch.nn.Linear(128, 1)
+        torch.nn.Linear(512, 1)
     )
     return net, rnn, embedding
 
