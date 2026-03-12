@@ -15,10 +15,10 @@ import time
 
 def get_plm_free(dim: int, pad_id: int):
     embedding = torch.nn.Embedding(dim, 128, pad_id)
-    rnn = torch.nn.RNN(
-        input_size=128,
-        hidden_size=64,
-        num_layers=4,
+    rnn = torch.nn.GRU(
+        input_size=64,
+        hidden_size=256,
+        num_layers=3,
         nonlinearity="tanh",
         batch_first=True,
         bidirectional=True
