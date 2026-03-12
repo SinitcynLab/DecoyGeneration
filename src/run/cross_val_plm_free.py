@@ -19,7 +19,6 @@ def get_plm_free(dim: int, pad_id: int):
         input_size=64,
         hidden_size=256,
         num_layers=3,
-        nonlinearity="tanh",
         batch_first=True,
         bidirectional=True
     )
