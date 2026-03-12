@@ -29,7 +29,7 @@ class PlmFreeClassifier(RecurrentNNClassifier):
         h_bwd = h_n[1]
         h = torch.cat([h_fwd, h_bwd], dim=-1)
         logits = self.network(h).squeeze(-1)
-        return torch.sigmoid(logits)
+        return logits
     
     def collate_pad(self, tensor_list: Iterable[torch.Tensor], pad_id: int):
         lengths: torch.Tensor = torch.tensor([len (t) for t in tensor_list], dtype=torch.long)
@@ -43,23 +43,23 @@ class PlmFreeClassifier(RecurrentNNClassifier):
         with torch.no_grad():
             X, l = self.collate_pad(tensor_list, self.encoder.pad_id)
             X, l = X.to(self.device), l.to(self.device)
-            y_pred = self(X, l)
+            logits = self(X, l)
             del X, l
             torch.cuda.empty_cache()
-            return y_pred
+            return logits
     
     def train_on_data(self, tensor_list: Iterable[torch.Tensor], y: torch.Tensor, 
                     loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> torch.Tensor:
         X, l = self.collate_pad(tensor_list, self.encoder.pad_id)
         X, l, y = X.to(self.device), l.to(self.device), y.to(self.device)
-        y_pred = self(X, l)
-        loss = loss_fn(y_pred, y)
+        logits = self(X, l)
+        loss = loss_fn(logits, y)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         del X, l, y, loss
         torch.cuda.empty_cache()
-        return y_pred
+        return logits
     
     def set_device(self, device):
         RecurrentNNClassifier.set_device(self, device)
