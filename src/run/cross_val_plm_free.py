@@ -14,7 +14,7 @@ import datetime
 import time
 
 def get_plm_free(dim: int, pad_id: int):
-    embedding = torch.nn.Embedding(dim, 128, pad_id)
+    embedding = torch.nn.Embedding(dim, 64, pad_id)
     rnn = torch.nn.GRU(
         input_size=64,
         hidden_size=256,
