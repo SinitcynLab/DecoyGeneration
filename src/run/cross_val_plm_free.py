@@ -74,7 +74,7 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
 
         # cross-validate RNN:
         n_epochs = 5
-        batch_size = 10
+        batch_size = 1024
         cross_validate_nn(classifier, dataset, n_epochs, batch_size, learning_rate=1e-3, n_folds=5, decoy_id=decoy_ids[i])
         if decoy_ids[i] != 'target':
             delete_lmdb(decoy_lmdb_path) # clear temporary data
