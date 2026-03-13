@@ -43,7 +43,7 @@ def cross_validate_nn(nn: NNClassifier, main_dataset: LMDBDataset,
     print(f"*** *** RESULTS FOR DECOYS={decoy_id} *** ***")
     N = main_dataset.size()
 
-    loss_fn = torch.nn.BCEWithLogitsLoss()
+    loss_fn = torch.nn.BCELoss()
     best_val_metrics: np.ndarray = np.zeros((n_folds, metric.dim)) # [auc, acc, prec, rec], one for each fold
     corr_train_metrics: np.ndarray = np.zeros((n_folds, metric.dim))
 
@@ -116,7 +116,7 @@ def train_val_iteration(nn: NNClassifier, dataset: LMDBDataset, train_ids: Itera
         batch_ids = train_ids[batch_start:batch_end] # get the indices of training data
         t_list, y = dataset.get_pairs(batch_ids) # get tensors and targets for training
         y_pred = nn.train_on_data(t_list, y, loss_fn, optimizer) # train neural net on data
-        predictions[batch_start:batch_end] = torch.sigmoid(y_pred.cpu()) # save predictions in premade tensor
+        predictions[batch_start:batch_end] = y_pred.cpu() # save predictions in premade tensor
         del y_pred, t_list, y
         torch.cuda.empty_cache()
     avg_train_metrics = metric.extract_values(predictions, dataset.get_labels(train_ids)) # use predictions and labels to evaluate
@@ -132,7 +132,7 @@ def train_val_iteration(nn: NNClassifier, dataset: LMDBDataset, train_ids: Itera
         batch_ids = val_ids[batch_start:batch_end] # get the indices of evaluation data
         t_list, _ = dataset.get_pairs(batch_ids) # get the tensors and targets for evaluation
         y_pred = nn.evaluate_on_data(t_list) # evaluate neural net on data
-        predictions[batch_start:batch_end] = torch.sigmoid(y_pred.cpu()) # save predictions in premade tensor
+        predictions[batch_start:batch_end] = y_pred.cpu() # save predictions in premade tensor
         del y_pred, t_list
         torch.cuda.empty_cache()
     avg_val_metrics = metric.extract_values(predictions, dataset.get_labels(val_ids)) # use predictions and labels to evaluate

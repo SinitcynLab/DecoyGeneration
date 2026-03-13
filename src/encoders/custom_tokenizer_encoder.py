@@ -19,13 +19,13 @@ class CustomTokenizer(PeptideEncoder):
     def __encode_sequence(self, peptide: str) -> Tensor:
         return torch.tensor([self.stoi.get(aa, self.unk_id) for aa in peptide])
     
-    def __encode_peptide_level(self, protein: str) -> List[Tensor]:
+    def __encode_protein_peptide_level(self, protein: str) -> List[Tensor]:
         out = []
         for peptide in self.protease.cleave(protein):
             out.append(self.__encode_sequence(peptide.sequence))
         return out
     
-    def __encode_protein_level(self, protein: str) -> List[Tensor]:
+    def __encode_protein_sequence_level(self, protein: str) -> List[Tensor]:
         encoding = self.__encode_sequence(protein)
         return [encoding]
         
@@ -33,8 +33,8 @@ class CustomTokenizer(PeptideEncoder):
         out = []
         if self.peptide_level:
             for protein in proteins:
-                out = out + self.__encode_peptide_level(protein)
+                out = out + self.__encode_protein_peptide_level(protein)
         else:
             for protein in proteins:
-                out = out + self.__encode_protein_level(protein)
+                out = out + self.__encode_protein_sequence_level(protein)
         return out
