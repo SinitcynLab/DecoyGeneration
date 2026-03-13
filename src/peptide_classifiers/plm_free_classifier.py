@@ -52,9 +52,9 @@ class PlmFreeClassifier(RecurrentNNClassifier):
                     loss_fn: torch.nn.Module, optimizer: torch.optim.Optimizer) -> torch.Tensor:
         X, l = self.collate_pad(tensor_list, self.encoder.pad_id)
         X, l, y = X.to(self.device), l.to(self.device), y.to(self.device)
+        optimizer.zero_grad()
         y_pred = self(X, l)
         loss = loss_fn(y_pred, y)
-        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         del X, l, y, loss
