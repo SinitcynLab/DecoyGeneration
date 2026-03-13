@@ -15,6 +15,7 @@ class CustomTokenizer(PeptideEncoder):
         self.unk_id = self.stoi["<unk>"]
         self.vocab_size = len(self.itos)
         self.peptide_level = peptide_level
+        self.peptide_memory = set()
 
     def __encode_sequence(self, peptide: str) -> Tensor:
         return torch.tensor([self.stoi.get(aa, self.unk_id) for aa in peptide])
@@ -22,6 +23,11 @@ class CustomTokenizer(PeptideEncoder):
     def __encode_protein_peptide_level(self, protein: str) -> List[Tensor]:
         out = []
         for peptide in self.protease.cleave(protein):
+            # only encode UNIQUE peptides:
+            if peptide in self.peptide_memory:
+                continue
+            else:
+                self.peptide_memory.add(peptide)
             out.append(self.__encode_sequence(peptide.sequence))
         return out
     

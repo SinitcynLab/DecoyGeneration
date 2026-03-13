@@ -47,6 +47,9 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
     net, rnn, embedding = resetter()
     classifier = PlmFreeClassifier(rnn=rnn, network=net, embedding=embedding, encoder=encoder, device=device, name="rnn", resetter=resetter)
 
+    print("n.o. parameters in PlmFreeClassifier: ")
+    print("{0}", len(classifier.parameters()))
+
     timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
     temp_encoding_dir = f"data/encodings/temp_rnn_{timestamp}"
 
