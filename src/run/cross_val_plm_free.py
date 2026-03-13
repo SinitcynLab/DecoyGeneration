@@ -48,7 +48,7 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
     classifier = PlmFreeClassifier(rnn=rnn, network=net, embedding=embedding, encoder=encoder, device=device, name="rnn", resetter=resetter)
 
     print("n.o. parameters in PlmFreeClassifier: ")
-    print("{0}", len(classifier.parameters()))
+    print(sum(p.numel() for p in classifier.parameters()))
 
     timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H:%M:%S')
     temp_encoding_dir = f"data/encodings/temp_rnn_{timestamp}"
@@ -57,8 +57,9 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
     target_records = read_fasta_file(target_file)
     target_sequences = [record.sequence for record in target_records]
     target_lmdb_path = f"{temp_encoding_dir}/targets.lmdb"
-    N = get_peptide_number(target_sequences, protease)
     encode_seqs_to_lmdb(target_sequences, encoder, target_lmdb_path)
+    N = encoder.get_num_peptides()
+    encoder.print_seq_stats("target seqs")
 
     print(f"Cross validation of the PLM-free classifier (peptide_level={encoder.peptide_level}):")
     for i, decoy_file in enumerate(decoy_files):
@@ -69,8 +70,10 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
             decoy_records = read_fasta_file(decoy_file)
             decoy_sequences = [record.sequence for record in decoy_records]
             decoy_lmdb_path = f"{temp_encoding_dir}/{decoy_ids[i]}.lmdb"
-            M = get_peptide_number(decoy_sequences, protease)
+            encoder.reset()
             encode_seqs_to_lmdb(decoy_sequences, encoder, decoy_lmdb_path)
+            M = encoder.get_num_peptides()
+            encoder.print_seq_stats("decoy seqs")
             labels = torch.cat((torch.zeros(N), torch.ones(M)))
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels)
 

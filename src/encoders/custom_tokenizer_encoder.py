@@ -24,12 +24,24 @@ class CustomTokenizer(PeptideEncoder):
         out = []
         for peptide in self.protease.cleave(protein):
             # only encode UNIQUE peptides:
-            if peptide in self.peptide_memory:
+            if peptide.sequence in self.peptide_memory:
                 continue
             else:
-                self.peptide_memory.add(peptide)
+                self.peptide_memory.add(peptide.sequence)
             out.append(self.__encode_sequence(peptide.sequence))
         return out
+
+    def reset(self):
+        self.peptide_memory = set()
+
+    def print_seq_stats(self, preface: str):
+        print(preface)
+        print("n.o. sequences: {0}".format(len(self.peptide_memory)))
+        print("max_length: {0}".format(max(len(s) for s in self.peptide_memory)))
+        print("min_length: {0}".format(min(len(s) for s in self.peptide_memory)))
+
+    def get_num_peptides(self):
+        return len(self.peptide_memory)
     
     def __encode_protein_sequence_level(self, protein: str) -> List[Tensor]:
         encoding = self.__encode_sequence(protein)
