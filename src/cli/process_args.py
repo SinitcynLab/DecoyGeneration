@@ -88,8 +88,8 @@ def create_generator_from_parameters(args: argparse.Namespace, device: torch.dev
             batch_size=1,
             ml_generator_type=MlGeneratorType.BEST,
             device=device,
-            masking_type=MaskingType.N_C_TERMINUS,
-            mask_count=0.3,
+            masking_type=MaskingType.COUNT,
+            mask_count=1,
             dtype=dtype
         )
     elif args.generator == "esm_terminus":
