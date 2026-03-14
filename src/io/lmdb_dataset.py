@@ -1,23 +1,25 @@
 import lmdb
 import pickle
 import torch
+import sys
 
 from torch import Tensor
 from typing import Iterable, Tuple
 
 class LMDBDataset(object):
-    def __init__(self, lmdb_paths: Iterable[str], labels: Tensor):
+    def __init__(self, lmdb_paths: Iterable[str], labels: Tensor, max_len: int = ):
         self.envs: Iterable[Tuple[lmdb.Environment, int]] = []
         self.length: int = 0
         for path in lmdb_paths:
             env: lmdb.Environment = lmdb.open(path, readonly=True, lock=False)
             with env.begin() as txn:
-                env_length: int = txn.stat()['entries']
+                env_length: int = min(max_len, txn.stat()['entries'])
                 self.length += env_length
             self.envs.append((env, env_length))
         if len(labels) != self.length:
             raise ValueError("Ensure that there are as many labels as sequences in the given lmdb directories.")
         self.labels = labels
+        self.max_len = max_len
     
     def size(self):
         return self.length
