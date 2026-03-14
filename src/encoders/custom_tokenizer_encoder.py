@@ -46,8 +46,10 @@ class CustomTokenizer(PeptideEncoder):
         out = []
         for a, b in self.get_all_peptides(protein):
             sequence = protein[a:(b+1)]
-            # only encode UNIQUE peptides:
-            if sequence in self.peptide_memory:
+            # only encode UNIQUE peptides of SPECIFIED LENGTH:
+            if len(sequence) < 9 or 40 < len(sequence):
+                continue
+            elif sequence in self.peptide_memory:
                 continue
             else:
                 self.peptide_memory.add(sequence)
