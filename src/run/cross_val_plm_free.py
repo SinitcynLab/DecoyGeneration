@@ -76,6 +76,7 @@ def cross_val_plm_free(target_file: str, decoy_files: Iterable[str], decoy_ids: 
             encoder.print_seq_stats("decoy seqs")
             labels = torch.cat((torch.zeros(N), torch.ones(N)))
             dataset = LMDBDataset([target_lmdb_path, decoy_lmdb_path], labels, max_len=N)
+            print("final dataset length: {0}".format(dataset.length))
 
         # cross-validate RNN:
         n_epochs = 5
