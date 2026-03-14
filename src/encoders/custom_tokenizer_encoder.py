@@ -34,7 +34,6 @@ class CustomTokenizer(PeptideEncoder):
 
     def get_all_peptides(self, protein: str):
         positions: List[int] = list(self.get_positions_special_aas(protein))
-        print(sorted(positions) == sorted(list(set(positions))))
         for i in range(1, len(positions)):
             start: int = positions[i - 1] + 1
             end: int = positions[i]
