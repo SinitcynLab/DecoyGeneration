@@ -16,19 +16,43 @@ class CustomTokenizer(PeptideEncoder):
         self.vocab_size = len(self.itos)
         self.peptide_level = peptide_level
         self.peptide_memory = set()
+        self.special_amino_acids = ["K", "R"]
 
     def __encode_sequence(self, peptide: str) -> Tensor:
         return torch.tensor([self.stoi.get(aa, self.unk_id) for aa in peptide])
     
-    def __encode_protein_peptide_level(self, protein: str) -> List[Tensor]:
-        out = []
-        for peptide in self.protease.cleave(protein):
-            # only encode UNIQUE peptides:
-            if peptide.sequence in self.peptide_memory:
+    def get_positions_special_aas(self, protein: str):
+        if protein[0] == "M":
+            yield 0
+        else:
+            yield -1
+        for idx, aa in enumerate(protein):
+            if aa in self.special_amino_acids:
+                yield idx
+        if protein[-1] not in self.special_amino_acids:
+            yield len(protein) - 1
+
+    def get_all_peptides(self, protein: str):
+        positions: List[int] = list(self.get_positions_special_aas(protein))
+        print(sorted(positions) == sorted(list(set(positions))))
+        for i in range(1, len(positions)):
+            start: int = positions[i - 1] + 1
+            end: int = positions[i]
+            if start == end:
                 continue
             else:
-                self.peptide_memory.add(peptide.sequence)
-            out.append(self.__encode_sequence(peptide.sequence))
+                yield (start, end)
+    
+    def __encode_protein_peptide_level(self, protein: str) -> List[Tensor]:
+        out = []
+        for a, b in self.get_all_peptides(protein):
+            sequence = protein[a:(b+1)]
+            # only encode UNIQUE peptides:
+            if sequence in self.peptide_memory:
+                continue
+            else:
+                self.peptide_memory.add(sequence)
+            out.append(self.__encode_sequence(sequence))
         return out
 
     def reset(self):
