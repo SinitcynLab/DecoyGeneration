@@ -7,7 +7,7 @@ from torch import Tensor
 from typing import Iterable, Tuple
 
 class LMDBDataset(object):
-    def __init__(self, lmdb_paths: Iterable[str], labels: Tensor, max_len: int = ):
+    def __init__(self, lmdb_paths: Iterable[str], labels: Tensor, max_len: int = sys.maxsize):
         self.envs: Iterable[Tuple[lmdb.Environment, int]] = []
         self.length: int = 0
         for path in lmdb_paths:
