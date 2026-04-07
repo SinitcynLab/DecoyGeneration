@@ -17,10 +17,10 @@ from .cmd import run_cmd
 from .entrapment import EntrapmentConfig, EntrapmentLabeling, build_combined_fasta
 from .sage import load_or_create_sage_config, load_sage_results, aggregate_to_peptide_level_from_sage
 from .diann import DiannRunConfig, run_diann, load_diann_report, aggregate_to_peptide_level_from_diann
-from .util import sha256_file
+from .util import sha256_file, plot_ext
 from .ms2rescore import load_ms2rescore_results
-from .fdr_analysis import analyze_counts_and_entrapment, compute_r_effective
-from .plots import plot_counts_vs_q, plot_entrapment_bounds, run_all_length_distribution_plots, run_length_distribution_plots
+from .fdr_analysis import analyze_counts_and_entrapment, analyze_counts_and_entrapment_by_length, compute_r_effective, export_by_length_csv
+from .plots import plot_counts_vs_q, plot_counts_vs_q_by_length, plot_entrapment_bounds, run_all_length_distribution_plots, run_length_distribution_plots
 from .oktoberfest import OktoberfestRescoreConfig, run_oktoberfest_rescoring, load_oktoberfest_results
 
 @dataclass
@@ -32,11 +32,11 @@ class ProteaseConfig:
     diann_cut: Optional[str]             # DIA-NN --cut value (None = don't pass)
     min_len: Optional[int] = None        # Override enzyme.min_len (Sage) / --min-pep-len (DIA-NN)
     max_len: Optional[int] = None        # Override enzyme.max_len (Sage) / --max-pep-len (DIA-NN)
+    forbid_miscleavages: bool = False
 
 
 PROTEASE_CONFIGS = {
-    "trypsin": ProteaseConfig(cleave_at="KR", restrict="", c_terminal=True, diann_cut="K*,R*"),
-    "trypsin_p": ProteaseConfig(cleave_at="KR", restrict="P", c_terminal=True, diann_cut="K*,R*,!*P"),
+    "trypsin": ProteaseConfig(cleave_at="KR", restrict="P", c_terminal=True, diann_cut="K*,R*,!*P",),
     "chymotrypsin": ProteaseConfig(cleave_at="FWY", restrict="P", c_terminal=True, diann_cut="F*,W*,Y*,!*P"),
     "pepsin": ProteaseConfig(cleave_at="FWYL", restrict="", c_terminal=True, diann_cut="F*,W*,Y*,L*"),
     "aspn": ProteaseConfig(cleave_at="D", restrict="", c_terminal=False, diann_cut="*D"),
@@ -44,7 +44,7 @@ PROTEASE_CONFIGS = {
     "lysc": ProteaseConfig(cleave_at="K", restrict="", c_terminal=True, diann_cut="K*"),
     "lysn": ProteaseConfig(cleave_at="K", restrict="", c_terminal=False, diann_cut="*K"),
     "argc": ProteaseConfig(cleave_at="R", restrict="", c_terminal=True, diann_cut="R*"),
-    "hla": ProteaseConfig(cleave_at="", restrict="", c_terminal=True, diann_cut=None, min_len=7, max_len=13),
+    "hla": ProteaseConfig(cleave_at="", restrict="", c_terminal=True, diann_cut=None, min_len=7, max_len=11, forbid_miscleavages=True),
 }
 
 
@@ -362,11 +362,22 @@ def run_pipeline(inputs: PipelineInputs) -> None:
         )
         res["counts_vs_q"].to_csv(analysis_dir / "sage_psm_counts_vs_q.csv", index=False)
         res["entrapment_bounds_vs_q"].to_csv(analysis_dir / "sage_psm_entrapment_bounds_vs_q.csv", index=False)
-        plot_counts_vs_q(res["counts_vs_q"], analysis_dir / "sage_psm_counts_vs_q.png", title=f"Sage PSM counts vs q ({experiment_name})")
-        plot_entrapment_bounds(res["entrapment_bounds_vs_q"], analysis_dir / "sage_psm_entrapment_bounds.png", title=f"Sage entrapment FDP bounds (PSM-level) ({experiment_name})")
+        plot_counts_vs_q(res["counts_vs_q"], analysis_dir / f"sage_psm_counts_vs_q{plot_ext()}", title=f"Sage PSM counts vs q ({experiment_name})")
+        plot_entrapment_bounds(res["entrapment_bounds_vs_q"], analysis_dir / f"sage_psm_entrapment_bounds{plot_ext()}", title=f"Sage entrapment FDP bounds (PSM-level) ({experiment_name})")
 
         # Score distribution plots - Sage PSM level
         _pep_col_sage = "stripped_peptide" if "stripped_peptide" in sage_df.columns else "peptide"
+
+        try:
+            by_len = analyze_counts_and_entrapment_by_length(
+                sage_df, q_col=q_col, proteins_col=proteins_col, peptide_col=_pep_col_sage,
+                labeling=labeling, r_effective=r_effective,
+            )
+            if by_len:
+                plot_counts_vs_q_by_length(by_len, analysis_dir / f"sage_psm_counts_vs_q_by_length{plot_ext()}", title=f"Sage PSM counts vs q by length ({experiment_name})")
+                export_by_length_csv(by_len, analysis_dir / "sage_psm_counts_vs_q_by_length.csv")
+        except Exception as e:
+            print(f"Warning: Sage PSM per-length counts_vs_q failed: {e}")
         try:
             run_all_length_distribution_plots(
                 sage_df,
@@ -395,8 +406,19 @@ def run_pipeline(inputs: PipelineInputs) -> None:
             )
             pep_res["counts_vs_q"].to_csv(analysis_dir / "sage_peptide_counts_vs_q.csv", index=False)
             pep_res["entrapment_bounds_vs_q"].to_csv(analysis_dir / "sage_peptide_entrapment_bounds_vs_q.csv", index=False)
-            plot_counts_vs_q(pep_res["counts_vs_q"], analysis_dir / "sage_peptide_counts_vs_q.png", title=f"Sage peptide counts vs q ({experiment_name})")
-            plot_entrapment_bounds(pep_res["entrapment_bounds_vs_q"], analysis_dir / "sage_peptide_entrapment_bounds.png", title=f"Sage entrapment FDP bounds (peptide-level) ({experiment_name})")
+            plot_counts_vs_q(pep_res["counts_vs_q"], analysis_dir / f"sage_peptide_counts_vs_q{plot_ext()}", title=f"Sage peptide counts vs q ({experiment_name})")
+            plot_entrapment_bounds(pep_res["entrapment_bounds_vs_q"], analysis_dir / f"sage_peptide_entrapment_bounds{plot_ext()}", title=f"Sage entrapment FDP bounds (peptide-level) ({experiment_name})")
+
+            try:
+                pep_by_len = analyze_counts_and_entrapment_by_length(
+                    pep_df.rename(columns={"peptide_q": "q"}), q_col="q", proteins_col="proteins", peptide_col="peptide",
+                    labeling=labeling, r_effective=r_effective,
+                )
+                if pep_by_len:
+                    plot_counts_vs_q_by_length(pep_by_len, analysis_dir / f"sage_peptide_counts_vs_q_by_length{plot_ext()}", title=f"Sage peptide counts vs q by length ({experiment_name})")
+                    export_by_length_csv(pep_by_len, analysis_dir / "sage_peptide_counts_vs_q_by_length.csv")
+            except Exception as e:
+                print(f"Warning: Sage peptide per-length counts_vs_q failed: {e}")
 
             # Score distribution plots - Sage peptide level
             print(pep_df.columns)
@@ -428,10 +450,20 @@ def run_pipeline(inputs: PipelineInputs) -> None:
                 )
                 ores["counts_vs_q"].to_csv(analysis_dir / "ms2rescore_psm_counts_vs_q.csv", index=False)
                 ores["entrapment_bounds_vs_q"].to_csv(analysis_dir / "ms2rescore_psm_entrapment_bounds_vs_q.csv", index=False)
-                plot_counts_vs_q(ores["counts_vs_q"], analysis_dir / "ms2rescore_psm_counts_vs_q.png", title=f"MS2Rescore PSM counts vs q ({experiment_name})")
-                plot_entrapment_bounds(ores["entrapment_bounds_vs_q"], analysis_dir / "ms2rescore_psm_entrapment_bounds.png", title=f"MS2Rescore entrapment FDP bounds (PSM-level) ({experiment_name})")
+                plot_counts_vs_q(ores["counts_vs_q"], analysis_dir / f"ms2rescore_psm_counts_vs_q{plot_ext()}", title=f"MS2Rescore PSM counts vs q ({experiment_name})")
+                plot_entrapment_bounds(ores["entrapment_bounds_vs_q"], analysis_dir / f"ms2rescore_psm_entrapment_bounds{plot_ext()}", title=f"MS2Rescore entrapment FDP bounds (PSM-level) ({experiment_name})")
 
                 ms2_pep_col = "_peptide" if "_peptide" in mdf.columns else "peptide"
+                try:
+                    ms2_by_len = analyze_counts_and_entrapment_by_length(
+                        mdf, q_col="q", proteins_col="proteins", peptide_col=ms2_pep_col,
+                        labeling=labeling, r_effective=r_effective,
+                    )
+                    if ms2_by_len:
+                        plot_counts_vs_q_by_length(ms2_by_len, analysis_dir / f"ms2rescore_psm_counts_vs_q_by_length{plot_ext()}", title=f"MS2Rescore PSM counts vs q by length ({experiment_name})")
+                        export_by_length_csv(ms2_by_len, analysis_dir / "ms2rescore_psm_counts_vs_q_by_length.csv")
+                except Exception as e:
+                    print(f"Warning: MS2Rescore PSM per-length counts_vs_q failed: {e}")
                 run_all_length_distribution_plots(
                     mdf,
                     proteins_col="proteins",
@@ -459,8 +491,19 @@ def run_pipeline(inputs: PipelineInputs) -> None:
                     )
                     ms2_pep_res["counts_vs_q"].to_csv(analysis_dir / "ms2rescore_peptide_counts_vs_q.csv", index=False)
                     ms2_pep_res["entrapment_bounds_vs_q"].to_csv(analysis_dir / "ms2rescore_peptide_entrapment_bounds_vs_q.csv", index=False)
-                    plot_counts_vs_q(ms2_pep_res["counts_vs_q"], analysis_dir / "ms2rescore_peptide_counts_vs_q.png", title=f"MS2Rescore peptide counts vs q ({experiment_name})")
-                    plot_entrapment_bounds(ms2_pep_res["entrapment_bounds_vs_q"], analysis_dir / "ms2rescore_peptide_entrapment_bounds.png", title=f"MS2Rescore entrapment FDP bounds (peptide-level) ({experiment_name})")
+                    plot_counts_vs_q(ms2_pep_res["counts_vs_q"], analysis_dir / f"ms2rescore_peptide_counts_vs_q{plot_ext()}", title=f"MS2Rescore peptide counts vs q ({experiment_name})")
+                    plot_entrapment_bounds(ms2_pep_res["entrapment_bounds_vs_q"], analysis_dir / f"ms2rescore_peptide_entrapment_bounds{plot_ext()}", title=f"MS2Rescore entrapment FDP bounds (peptide-level) ({experiment_name})")
+
+                    try:
+                        ms2_pep_by_len = analyze_counts_and_entrapment_by_length(
+                            ms2_pep_agg, q_col="q", proteins_col="proteins", peptide_col="peptide",
+                            labeling=labeling, r_effective=r_effective,
+                        )
+                        if ms2_pep_by_len:
+                            plot_counts_vs_q_by_length(ms2_pep_by_len, analysis_dir / f"ms2rescore_peptide_counts_vs_q_by_length{plot_ext()}", title=f"MS2Rescore peptide counts vs q by length ({experiment_name})")
+                            export_by_length_csv(ms2_pep_by_len, analysis_dir / "ms2rescore_peptide_counts_vs_q_by_length.csv")
+                    except Exception as e:
+                        print(f"Warning: MS2Rescore peptide per-length counts_vs_q failed: {e}")
 
                     run_all_length_distribution_plots(
                         ms2_pep_agg,
@@ -484,10 +527,20 @@ def run_pipeline(inputs: PipelineInputs) -> None:
                 )
                 ores["counts_vs_q"].to_csv(analysis_dir / "oktoberfest_psm_counts_vs_q.csv", index=False)
                 ores["entrapment_bounds_vs_q"].to_csv(analysis_dir / "oktoberfest_psm_entrapment_bounds_vs_q.csv", index=False)
-                plot_counts_vs_q(ores["counts_vs_q"], analysis_dir / "oktoberfest_psm_counts_vs_q.png", title=f"Oktoberfest PSM counts vs q ({experiment_name})")
-                plot_entrapment_bounds(ores["entrapment_bounds_vs_q"], analysis_dir / "oktoberfest_psm_entrapment_bounds.png", title=f"Oktoberfest entrapment FDP bounds (PSM-level) ({experiment_name})")
+                plot_counts_vs_q(ores["counts_vs_q"], analysis_dir / f"oktoberfest_psm_counts_vs_q{plot_ext()}", title=f"Oktoberfest PSM counts vs q ({experiment_name})")
+                plot_entrapment_bounds(ores["entrapment_bounds_vs_q"], analysis_dir / f"oktoberfest_psm_entrapment_bounds{plot_ext()}", title=f"Oktoberfest entrapment FDP bounds (PSM-level) ({experiment_name})")
 
                 ms2_pep_col = "_peptide" if "_peptide" in odf.columns else "peptide"
+                try:
+                    okt_by_len = analyze_counts_and_entrapment_by_length(
+                        odf, q_col="q", proteins_col="proteins", peptide_col=ms2_pep_col,
+                        labeling=labeling, r_effective=r_effective,
+                    )
+                    if okt_by_len:
+                        plot_counts_vs_q_by_length(okt_by_len, analysis_dir / f"oktoberfest_psm_counts_vs_q_by_length{plot_ext()}", title=f"Oktoberfest PSM counts vs q by length ({experiment_name})")
+                        export_by_length_csv(okt_by_len, analysis_dir / "oktoberfest_psm_counts_vs_q_by_length.csv")
+                except Exception as e:
+                    print(f"Warning: Oktoberfest PSM per-length counts_vs_q failed: {e}")
                 run_all_length_distribution_plots(
                     odf,
                     proteins_col="proteins", label_col="label",
@@ -512,8 +565,19 @@ def run_pipeline(inputs: PipelineInputs) -> None:
                     )
                     okt_pep_res["counts_vs_q"].to_csv(analysis_dir / "oktoberfest_peptide_counts_vs_q.csv", index=False)
                     okt_pep_res["entrapment_bounds_vs_q"].to_csv(analysis_dir / "oktoberfest_peptide_entrapment_bounds_vs_q.csv", index=False)
-                    plot_counts_vs_q(okt_pep_res["counts_vs_q"], analysis_dir / "oktoberfest_peptide_counts_vs_q.png", title=f"Oktoberfest peptide counts vs q ({experiment_name})")
-                    plot_entrapment_bounds(okt_pep_res["entrapment_bounds_vs_q"], analysis_dir / "oktoberfest_peptide_entrapment_bounds.png", title=f"Oktoberfest entrapment FDP bounds (peptide-level) ({experiment_name})")
+                    plot_counts_vs_q(okt_pep_res["counts_vs_q"], analysis_dir / f"oktoberfest_peptide_counts_vs_q{plot_ext()}", title=f"Oktoberfest peptide counts vs q ({experiment_name})")
+                    plot_entrapment_bounds(okt_pep_res["entrapment_bounds_vs_q"], analysis_dir / f"oktoberfest_peptide_entrapment_bounds{plot_ext()}", title=f"Oktoberfest entrapment FDP bounds (peptide-level) ({experiment_name})")
+
+                    try:
+                        okt_pep_by_len = analyze_counts_and_entrapment_by_length(
+                            okt_pep_agg, q_col="q", proteins_col="proteins", peptide_col="peptide",
+                            labeling=labeling, r_effective=r_effective,
+                        )
+                        if okt_pep_by_len:
+                            plot_counts_vs_q_by_length(okt_pep_by_len, analysis_dir / f"oktoberfest_peptide_counts_vs_q_by_length{plot_ext()}", title=f"Oktoberfest peptide counts vs q by length ({experiment_name})")
+                            export_by_length_csv(okt_pep_by_len, analysis_dir / "oktoberfest_peptide_counts_vs_q_by_length.csv")
+                    except Exception as e:
+                        print(f"Warning: Oktoberfest peptide per-length counts_vs_q failed: {e}")
 
                     run_all_length_distribution_plots(
                         okt_pep_agg,
@@ -548,11 +612,21 @@ def run_pipeline(inputs: PipelineInputs) -> None:
         )
         res["counts_vs_q"].to_csv(analysis_dir / "diann_precursor_counts_vs_q.csv", index=False)
         res["entrapment_bounds_vs_q"].to_csv(analysis_dir / "diann_precursor_entrapment_bounds_vs_q.csv", index=False)
-        plot_counts_vs_q(res["counts_vs_q"], analysis_dir / "diann_precursor_counts_vs_q.png", title=f"DIA-NN precursor counts vs q ({experiment_name})")
-        plot_entrapment_bounds(res["entrapment_bounds_vs_q"], analysis_dir / "diann_precursor_entrapment_bounds.png", title=f"DIA-NN entrapment FDP bounds (precursor-level) ({experiment_name})")
+        plot_counts_vs_q(res["counts_vs_q"], analysis_dir / f"diann_precursor_counts_vs_q{plot_ext()}", title=f"DIA-NN precursor counts vs q ({experiment_name})")
+        plot_entrapment_bounds(res["entrapment_bounds_vs_q"], analysis_dir / f"diann_precursor_entrapment_bounds{plot_ext()}", title=f"DIA-NN entrapment FDP bounds (precursor-level) ({experiment_name})")
 
         # Score distribution plots - DIA-NN precursor level
         pep_col_diann = "_peptide"
+        try:
+            diann_by_len = analyze_counts_and_entrapment_by_length(
+                diann_df, q_col=q_col, proteins_col=proteins_col, peptide_col=pep_col_diann,
+                labeling=labeling, r_effective=r_effective,
+            )
+            if diann_by_len:
+                plot_counts_vs_q_by_length(diann_by_len, analysis_dir / f"diann_precursor_counts_vs_q_by_length{plot_ext()}", title=f"DIA-NN precursor counts vs q by length ({experiment_name})")
+                export_by_length_csv(diann_by_len, analysis_dir / "diann_precursor_counts_vs_q_by_length.csv")
+        except Exception as e:
+            print(f"Warning: DIA-NN precursor per-length counts_vs_q failed: {e}")
         try:
             run_all_length_distribution_plots(
                 diann_df,
@@ -580,8 +654,19 @@ def run_pipeline(inputs: PipelineInputs) -> None:
             )
             pep_res["counts_vs_q"].to_csv(analysis_dir / "diann_peptide_counts_vs_q.csv", index=False)
             pep_res["entrapment_bounds_vs_q"].to_csv(analysis_dir / "diann_peptide_entrapment_bounds_vs_q.csv", index=False)
-            plot_counts_vs_q(pep_res["counts_vs_q"], analysis_dir / "diann_peptide_counts_vs_q.png", title=f"DIA-NN peptide counts vs q ({experiment_name})")
-            plot_entrapment_bounds(pep_res["entrapment_bounds_vs_q"], analysis_dir / "diann_peptide_entrapment_bounds.png", title=f"DIA-NN entrapment FDP bounds (peptide-level) ({experiment_name})")
+            plot_counts_vs_q(pep_res["counts_vs_q"], analysis_dir / f"diann_peptide_counts_vs_q{plot_ext()}", title=f"DIA-NN peptide counts vs q ({experiment_name})")
+            plot_entrapment_bounds(pep_res["entrapment_bounds_vs_q"], analysis_dir / f"diann_peptide_entrapment_bounds{plot_ext()}", title=f"DIA-NN entrapment FDP bounds (peptide-level) ({experiment_name})")
+
+            try:
+                diann_pep_by_len = analyze_counts_and_entrapment_by_length(
+                    pep_df, q_col="q", proteins_col="proteins", peptide_col="peptide",
+                    labeling=labeling, r_effective=r_effective,
+                )
+                if diann_pep_by_len:
+                    plot_counts_vs_q_by_length(diann_pep_by_len, analysis_dir / f"diann_peptide_counts_vs_q_by_length{plot_ext()}", title=f"DIA-NN peptide counts vs q by length ({experiment_name})")
+                    export_by_length_csv(diann_pep_by_len, analysis_dir / "diann_peptide_counts_vs_q_by_length.csv")
+            except Exception as e:
+                print(f"Warning: DIA-NN peptide per-length counts_vs_q failed: {e}")
 
             run_all_length_distribution_plots(
                 pep_df,
@@ -618,7 +703,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     p.add_argument("--protease", default="trypsin", type=str.lower, choices=list(PROTEASE_CONFIGS),
                     help="Protease used for digestion. Configures enzyme in Sage and --cut in DIA-NN.")
     p.add_argument("--hla-min-len", type=int, default=7, help="Min peptide length for HLA non-specific digestion.")
-    p.add_argument("--hla-max-len", type=int, default=13, help="Max peptide length for HLA non-specific digestion.")
+    p.add_argument("--hla-max-len", type=int, default=11, help="Max peptide length for HLA non-specific digestion.")
     p.add_argument("--decoy-prefix", default="rev_", help="Prefix of decoys in FASTA files provided. If empty, decoys are generated by Sage.")
 
     # Sage options

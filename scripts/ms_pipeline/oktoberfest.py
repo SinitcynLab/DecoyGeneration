@@ -1,3 +1,25 @@
+#!/usr/bin/env python3
+"""
+Oktoberfest rescoring integration.
+
+This module provides:
+  - a small runner helper that writes an Oktoberfest config JSON and executes:
+        python -m oktoberfest --config_path <config.json>
+  - robust, search-engine-agnostic parsing helpers for the produced
+    mokapot/percolator PSM output files:
+        results/<method>/rescore.<method>.psms.txt
+        results/<method>/rescore.<method>.decoy.psms.txt
+
+Notes:
+  - Oktoberfest expects *unfiltered* search results (100% FDR) for rescoring.
+  - When integrating into your pipeline, keep in mind that Oktoberfest's "output"
+    path in config is interpreted relative to the config file location.
+
+This is intentionally a "stub" / integration shim:
+  - you can pass a fully custom config path and skip config generation
+  - you can customize extra config keys via `extra_config`.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -12,6 +34,12 @@ from .cmd import run_cmd
 
 
 def _read_table_guess(path: Path) -> pd.DataFrame:
+    """
+    Read a percolator/mokapot style table.
+
+    Oktoberfest outputs are typically tab-delimited .txt files; we try tab first,
+    then fall back to pandas' separator inference.
+    """
     try:
         df = pd.read_csv(path, sep="\t", comment="#", low_memory=False)
         # If it parsed into a single wide column, fallback to sep inference
@@ -40,6 +68,12 @@ def _find_col(df: pd.DataFrame, candidates: List[str], required: bool = False) -
 
 @dataclass
 class OktoberfestRescoreConfig:
+    """
+    Minimal config needed for an Oktoberfest rescoring job.
+
+    You can set `config_path` to an existing config JSON and skip generation.
+    Otherwise we write the config to: <work_dir>/oktoberfest_config.json
+    """
     work_dir: Path
     search_results: Path
     spectra: Path
@@ -168,6 +202,17 @@ def oktoberfest_psm_output_paths(
     fdr_method: str,
     kind: str = "rescore",
 ) -> Tuple[Path, Path]:
+    """
+    Return (target_psms_path, decoy_psms_path) for a given Oktoberfest run.
+
+    According to the docs, these live under:
+      <output_dir>/results/<method>/
+        rescore.<method>.psms.txt
+        rescore.<method>.decoy.psms.txt
+
+    kind: "rescore" or "original"
+    fdr_method: "mokapot" or "percolator"
+    """
     method = str(fdr_method).lower()
     sub = output_dir / "results" / method
     tgt = sub / f"{kind}.{method}.psms.txt"
@@ -327,6 +372,13 @@ def oktoberfest_tab_path(
     fdr_method: str,
     kind: str = "rescore",
 ) -> Path:
+    """
+    Path to the Percolator/Mokapot input tab created by Oktoberfest.
+
+    According to the docs this should exist (for rescoring runs) as:
+      <output_dir>/results/<method>/rescore.tab
+      <output_dir>/results/<method>/original.tab
+    """
     method = str(fdr_method).lower()
     sub = output_dir / "results" / method
     if kind not in ("rescore", "original"):
@@ -336,6 +388,12 @@ def oktoberfest_tab_path(
 
 
 def load_oktoberfest_tab(tab_path: Path) -> pd.DataFrame:
+    """
+    Load Oktoberfest's percolator/mokapot input tab.
+
+    This file is usually tab-delimited and *should* contain Protein/Label/etc
+    (see the Oktoberfest 'Features for target/decoy separation' docs).
+    """
     return _read_table_guess(tab_path)
 
 
@@ -347,6 +405,17 @@ def maybe_attach_proteins_from_tab(
     kind: str = "rescore",
     min_nonempty_fraction: float = 0.01,
 ) -> pd.DataFrame:
+    """
+    If `_proteins` is missing/empty in the loaded Oktoberfest output, try to
+    recover it from `rescore.tab` (or `original.tab`) by joining on a shared ID.
+
+    Why this exists:
+      In some toolchains, the exported mokapot/percolator output might not carry
+      a Protein column through, but the corresponding `*.tab` almost always does.
+
+    Join keys we try (in order):
+      SpecId, PSMId, ScanNr, scan, scan_number, SCAN_NUMBER
+    """
     if "_proteins" not in df.columns:
         return df
     if df.empty:

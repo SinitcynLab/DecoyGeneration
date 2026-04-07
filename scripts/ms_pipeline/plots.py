@@ -8,7 +8,7 @@ from typing import Optional
 import re
 import math
 
-from .util import split_proteins_field
+from .util import split_proteins_field, plot_ext
 
 
 def plot_counts_vs_q(counts_df: pd.DataFrame, out_png: Path, title: str) -> None:
@@ -27,6 +27,44 @@ def plot_counts_vs_q(counts_df: pd.DataFrame, out_png: Path, title: str) -> None
     plt.tight_layout()
     plt.savefig(out_png, dpi=200)
     plt.close()
+
+
+def plot_counts_vs_q_by_length(
+    length_results: dict,
+    out_png: Path,
+    title: str,
+) -> None:
+    """Multi-panel counts-vs-q plot, one subplot per peptide length."""
+    out_png.parent.mkdir(parents=True, exist_ok=True)
+    lengths = sorted(length_results.keys())
+    if not lengths:
+        return
+
+    n_lengths = len(lengths)
+    ncols = min(4, n_lengths)
+    nrows = math.ceil(n_lengths / ncols)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(5 * ncols, 4 * nrows), squeeze=False)
+
+    for idx, length in enumerate(lengths):
+        ax = axes[idx // ncols][idx % ncols]
+        counts_df = length_results[length]["counts_vs_q"]
+        df = counts_df[counts_df["q_threshold"] > 0].copy()
+        ax.plot(df["q_threshold"], df["n_rows"], label="All accepted")
+        ax.plot(df["q_threshold"], df["n_target_original"], label="Original target")
+        ax.plot(df["q_threshold"], df["n_entrapment"], label="Entrapment")
+        ax.set_xscale("log")
+        ax.set_xlabel("q-value threshold")
+        ax.set_ylabel("Count")
+        ax.set_title(f"Length {length}")
+        ax.legend(fontsize=6)
+
+    for idx in range(n_lengths, nrows * ncols):
+        axes[idx // ncols][idx % ncols].set_visible(False)
+
+    fig.suptitle(title, fontsize=14)
+    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.savefig(out_png, dpi=200)
+    plt.close(fig)
 
 
 def plot_entrapment_bounds(bounds_df: pd.DataFrame, out_png: Path, title: str) -> None:
@@ -98,6 +136,7 @@ def plot_score_distributions(
     x_name: str,
     absolute: bool,
 ) -> None:
+    """KDE line plots of score distributions for the 4 categories."""
     out_png.parent.mkdir(parents=True, exist_ok=True)
     fig, ax = plt.subplots(figsize=(10, 6))
 
@@ -236,13 +275,13 @@ def run_length_distribution_plots(
     if not discrete:
         plot_score_distributions(
             work, score_col, "_category",
-            out_dir / f"{file_prefix}_{short_name}_dist.png",
+            out_dir / f"{file_prefix}_{short_name}_dist{plot_ext()}",
             f"{title_prefix} {plot_name} Distribution ({experiment_name})",
             discrete=discrete, x_name=plot_name, absolute=False,
         )
     plot_score_distributions(
         work, score_col, "_category",
-        out_dir / f"{file_prefix}_{short_name}_abs_dist.png",
+        out_dir / f"{file_prefix}_{short_name}_abs_dist{plot_ext()}",
         f"{title_prefix} {plot_name} Distribution ({experiment_name})",
         discrete=discrete, x_name=plot_name, absolute=True,
     )
@@ -251,13 +290,13 @@ def run_length_distribution_plots(
         if not discrete:
             plot_score_distributions_by_length(
                 work, score_col, "_category", "_peptide_length",
-                out_dir / f"{file_prefix}_{short_name}_by_length.png",
+                out_dir / f"{file_prefix}_{short_name}_by_length{plot_ext()}",
                 f"{title_prefix} {plot_name} Distribution by Peptide Length ({experiment_name})",
                 discrete=discrete, x_name=plot_name, absolute=False,
             ) 
         plot_score_distributions_by_length(
             work, score_col, "_category", "_peptide_length",
-            out_dir / f"{file_prefix}_{short_name}_by_length_abs.png",
+            out_dir / f"{file_prefix}_{short_name}_by_length_abs{plot_ext()}",
             f"{title_prefix} {plot_name} Distribution by Peptide Length ({experiment_name})",
             discrete=discrete, x_name=plot_name, absolute=True,
         )

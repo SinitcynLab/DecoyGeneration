@@ -1,0 +1,1 @@
+Various scripts to transform outputs of ms pipeline and decoy space diagnostics into figures for the paper. Scripts here were only used to merge multiple plots into one and filter out some of the data. No new analyses were performed here except for `analyze_decoy_similarity.py` which performs a simple classification of close target-decoy pairs.

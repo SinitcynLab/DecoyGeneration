@@ -113,3 +113,69 @@ def analyze_counts_and_entrapment(
         "entrapment_bounds_vs_q": pd.DataFrame(bounds_rows),
     }
     return out
+
+
+def _peptide_length(seq) -> Optional[int]:
+    if pd.isna(seq) or str(seq).strip() == "":
+        return None
+    clean = re.sub(r"[^A-Za-z]", "", str(seq))
+    return len(clean) if clean else None
+
+
+def analyze_counts_and_entrapment_by_length(
+    df: pd.DataFrame,
+    *,
+    q_col: str,
+    proteins_col: str,
+    peptide_col: str,
+    label_col: str = "label",
+    labeling: Optional[EntrapmentLabeling] = None,
+    r_effective: Optional[float] = None,
+) -> Dict[int, Dict[str, pd.DataFrame]]:
+    """
+    Run analyze_counts_and_entrapment separately for each peptide length.
+
+    Returns dict mapping peptide_length -> same dict as analyze_counts_and_entrapment.
+    """
+    work = df.copy()
+    work["_peptide_length"] = work[peptide_col].apply(_peptide_length)
+    work = work.dropna(subset=["_peptide_length"])
+    work["_peptide_length"] = work["_peptide_length"].astype(int)
+
+    results: Dict[int, Dict[str, pd.DataFrame]] = {}
+    for length, group in work.groupby("_peptide_length"):
+        if len(group) < 2:
+            continue
+        try:
+            res = analyze_counts_and_entrapment(
+                group,
+                q_col=q_col,
+                proteins_col=proteins_col,
+                label_col=label_col,
+                labeling=labeling,
+                r_effective=r_effective,
+            )
+            results[int(length)] = res
+        except Exception:
+            continue
+    return results
+
+
+def export_by_length_csv(
+    length_results: Dict[int, Dict[str, pd.DataFrame]],
+    out_csv: Path,
+    key: str = "counts_vs_q",
+) -> None:
+    """Export per-length analysis results to a single CSV with a ``peptide_length`` column."""
+    if not length_results:
+        return
+    frames = []
+    for length in sorted(length_results):
+        df = length_results[length].get(key)
+        if df is None or df.empty:
+            continue
+        part = df.copy()
+        part.insert(0, "peptide_length", length)
+        frames.append(part)
+    if frames:
+        pd.concat(frames, ignore_index=True).to_csv(out_csv, index=False)

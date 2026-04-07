@@ -1,3 +1,22 @@
+#!/usr/bin/env python3
+"""
+diann.py — minimal wrapper / stub for invoking DIA-NN from a Python pipeline.
+
+This is intentionally lightweight and “pluggable”:
+- Build a DIA-NN command (either inline options or via --cfg).
+- Run DIA-NN using the project's run_cmd().
+- Provide an optional loader for the main report to normalize columns.
+
+Targeted to the open-source DIA-NN version at commit:
+  63b9b33ae0177fa75d09128afb41fd32d68fb575
+
+Notes:
+- DIA-NN parses command-line options (starting with --) and processes them in order,
+  but for most options order can be arbitrary.
+- A config file can be passed via --cfg; the config is simply a whitespace-separated
+  list of the same command tokens you would pass on the CLI.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -19,6 +38,12 @@ def _quote_if_needed(token: str) -> str:
 
 
 def write_diann_cfg(tokens: Sequence[str], cfg_path: Path) -> Path:
+    """
+    Write a DIA-NN --cfg file.
+
+    The cfg file can contain any DIA-NN commands/options. DIA-NN will treat it as
+    additional command tokens. This is convenient for huge lists of --f file inputs.
+    """
     cfg_path.parent.mkdir(parents=True, exist_ok=True)
     # One token per line keeps things readable; DIA-NN treats whitespace equivalently.
     with cfg_path.open("w", encoding="utf-8") as fh:
@@ -30,6 +55,14 @@ def write_diann_cfg(tokens: Sequence[str], cfg_path: Path) -> Path:
 
 @dataclass
 class DiannRunConfig:
+    """
+    Minimal set of knobs for a DIA-NN run.
+
+    You will likely extend this with more DIA-NN options as needed (cut/missed cleavages,
+    mass accuracies, DIA windowing, etc.). Keep those additions in `extra_args` or by
+    generating a cfg file.
+    """
+
     # Binary
     diann_bin: str = "diann"  # e.g. "diann", "/usr/diann/1.8/diann-1.8", "diann.exe"
 
@@ -73,6 +106,12 @@ class DiannRunConfig:
 
 
 def build_diann_cfg_tokens(cfg: DiannRunConfig) -> List[str]:
+    """
+    Build tokens that can be placed into a DIA-NN --cfg file.
+
+    By default we put the *file list* (potentially huge) into cfg; the rest can be
+    passed directly on the CLI, but you can also put everything into cfg if you prefer.
+    """
     tokens: List[str] = []
     if cfg.raw_dir is not None:
         tokens.extend(["--dir", str(cfg.raw_dir)])
@@ -82,6 +121,12 @@ def build_diann_cfg_tokens(cfg: DiannRunConfig) -> List[str]:
 
 
 def build_diann_cmd(cfg: DiannRunConfig) -> Tuple[List[str], Optional[Path]]:
+    """
+    Build a DIA-NN command.
+
+    Returns:
+      (cmd_tokens, cfg_path_used)
+    """
     cmd: List[str] = [cfg.diann_bin]
     used_cfg: Optional[Path] = None
 
@@ -158,6 +203,11 @@ def run_diann(
     cwd: Optional[Path] = None,
     env: Optional[Dict[str, str]] = None,
 ) -> Path:
+    """
+    Execute DIA-NN and return the expected main report path.
+
+    Raises if DIA-NN exits non-zero, via run_cmd().
+    """
     cmd, used_cfg = build_diann_cmd(cfg)
     run_cmd(cmd, cwd=cwd, env=env, dry_run=dry_run, log_path=log_path)
 
@@ -178,6 +228,20 @@ def load_diann_report(
     *,
     q_col: Optional[str] = None,
 ) -> pd.DataFrame:
+    """
+    Load DIA-NN main report TSV and normalize a few columns so it can be fed into the
+    project's analysis code with minimal glue.
+
+    Returned columns:
+      - _q: numeric q-value (chosen by q_col or heuristics)
+      - label: 1 for target, -1 for decoy (best-effort; may default to 1 if decoy column absent)
+      - _peptide: best-effort peptide identifier (stripped sequence if available)
+      - _proteins: proteins field (best-effort)
+      - _score: numeric score (best-effort; CScore if available)
+
+    NOTE: DIA-NN reports precursor-level evidence (not PSMs), so downstream should interpret
+    rows accordingly.
+    """
     # DIA-NN can output .tsv/.txt/.csv; assume tab by default
     if report_path.suffix.lower() == ".tsv":
         df = pd.read_csv(report_path, sep="\t", low_memory=False)
@@ -266,6 +330,13 @@ def load_diann_report(
 
 
 def aggregate_to_peptide_level_from_diann(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Build a peptide-level table from DIA-NN precursor-level results.
+
+    Groups by stripped peptide sequence (_peptide), keeps the row with the
+    best (minimum) q-value per peptide.  Returns a DataFrame with columns:
+      peptide, q, label, proteins, _score
+    """
     work = df.copy()
     if "_peptide" not in work.columns:
         raise KeyError("Cannot aggregate: missing _peptide column.")

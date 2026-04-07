@@ -50,6 +50,16 @@ def load_or_create_sage_config(
     fragmentation: str = "hcd",
     protease_cfg=None,
 ) -> Path:
+    """
+    Write a Sage config JSON to out_path.
+
+    If entrap_cfg.mode == paired_shuffled_peptides, set enzyme.cleave_at to "$"
+    so FASTA entries are used as-is (Sage docs: cleave_at="$" means no digestion).
+
+    If fragmentation == "etd", ion_kinds are set to ["c", "z"] instead of ["b", "y"].
+
+    If protease_cfg is given, override enzyme.cleave_at / restrict / c_terminal.
+    """
     if sage_config_in is None:
         cfg = json.loads(json.dumps(DEFAULT_SAGE_CONFIG))
     else:
@@ -70,6 +80,8 @@ def load_or_create_sage_config(
             enz["min_len"] = protease_cfg.min_len
         if protease_cfg.max_len is not None:
             enz["max_len"] = protease_cfg.max_len
+        if protease_cfg.forbid_miscleavages:
+            enz["missed_cleavages"] = 0
 
     if entrap_cfg.mode == "paired_shuffled_peptides":
         # ensure enzyme exists
@@ -81,11 +93,13 @@ def load_or_create_sage_config(
         enz.setdefault("max_len", entrap_cfg.paired_max_len)
         enz.setdefault("missed_cleavages", 0)
 
-    # TODO: why does not work?
+    db = cfg.setdefault("database", {})
     if entrap_cfg.decoy_prefix:
-        db = cfg.setdefault("database", {})
         db["decoy_tag"] = entrap_cfg.decoy_prefix
         db["generate_decoys"] = False
+    else:
+        db["generate_decoys"] = True
+        db.setdefault("decoy_tag", "rev_")
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(cfg, indent=2), encoding="utf-8")

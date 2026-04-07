@@ -1,7 +1,13 @@
 from pathlib import Path
 import hashlib
+import os
 
 from typing import List
+
+
+def plot_ext() -> str:
+    """Return '.pdf' if PLOT_PDFS=1, else '.png'."""
+    return ".pdf" if os.environ.get("PLOT_PDFS") == "1" else ".png"
 
 
 def sha256_file(path: Path) -> str:
