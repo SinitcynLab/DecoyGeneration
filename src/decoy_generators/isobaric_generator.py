@@ -5,7 +5,7 @@ from src.decoy_generators.decoy_generator import DecoyGenerator
 from src.proteins.protease import Protease
 
 
-class HardcoreGenerator(DecoyGenerator):
+class IsobaricGenerator(DecoyGenerator):
     def __init__(self, protease: Protease):
         super().__init__(protease)
 

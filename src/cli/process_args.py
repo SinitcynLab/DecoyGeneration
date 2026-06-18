@@ -8,7 +8,7 @@ from src.decoy_generators.decoy_generator import DecoyGenerator
 from src.decoy_generators.diann_generator import DiannGenerator
 from src.decoy_generators.dummy_generator import DummyGenerator
 from src.decoy_generators.esm_generator import EsmGenerator, MaskingType, MlGeneratorType
-from src.decoy_generators.hardcore_generator import HardcoreGenerator
+from src.decoy_generators.isobaric_generator import IsobaricGenerator
 from src.decoy_generators.terminus_esm_generator import TerminusEsmGenerator
 from src.decoy_generators.reverse_generator import ReverseGenerator
 from src.decoy_generators.shuffle_generator import ShuffleGenerator
@@ -76,7 +76,7 @@ def create_generator_from_parameters(args: argparse.Namespace, device: torch.dev
     elif args.generator == "dummy":
         generator = DummyGenerator(protease=protease)
     elif args.generator == "hardcore":
-        generator = HardcoreGenerator(protease=protease)
+        generator = IsobaricGenerator(protease=protease)
     elif args.generator == "esm":
         model_name = get_model_name(model_type=args.generator, model_size=args.parameter_count, custom_model_path=args.tuned_model_path)
         dtype = PARAM_PRECISION_TO_TYPE[args.parameter_precision]
