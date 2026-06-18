@@ -23,16 +23,33 @@ class DiannGenerator(DecoyGenerator):
     def __str__(self):
         return f"diann_{self.terminus}"
 
+    def _get_mutation_positions(self, peptide_length: int, flexible_range: range) -> List[int]:
+        if peptide_length <= 1:
+            return []
+
+        if self.terminus == 'N':
+            candidates = [0]
+        else:
+            candidates = [1, peptide_length - 2]
+
+        positions: List[int] = []
+        for pos in candidates:
+            if pos < 0 or pos >= peptide_length:
+                continue
+            if self.terminus == 'C' and pos == peptide_length - 1:
+                continue
+            if pos not in flexible_range:
+                continue
+            if pos not in positions:
+                positions.append(pos)
+        return positions
+
     def convert(self, targets: Iterator[str]) -> Iterator[str]:
         for target in targets:
             new_sequence = []
             for peptide in self.protease.cleave(target):
                 sequence = list(peptide.sequence)
-                if len(sequence) > 1:
-                    if self.terminus == 'C':
-                        pos = len(sequence) - 2
-                    else:
-                        pos = 0
+                for pos in self._get_mutation_positions(len(sequence), peptide.flexible_range):
                     old = sequence[pos]
                     if old in self.translation:
                         sequence[pos] = self.translation[old]

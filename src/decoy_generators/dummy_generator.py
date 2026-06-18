@@ -3,6 +3,8 @@ from typing import Iterator, List
 from src.decoy_generators.decoy_generator import DecoyGenerator
 
 from src.proteins.protease import Protease
+import random
+import string
 
 
 class DummyGenerator(DecoyGenerator):
@@ -20,7 +22,8 @@ class DummyGenerator(DecoyGenerator):
                 constant_prefix = peptide.sequence[:flexible_range.start]
                 constant_suffix = peptide.sequence[flexible_range.stop:]
                 mutable_part = list(peptide.sequence[flexible_range.start:flexible_range.stop])
-                mutable_part = "A" * len(mutable_part)
+                amino_acids = "ACDEFGHIKLMNPQRSTVWY"
+                mutable_part = ''.join(random.choices(amino_acids, k=15))
                 new_peptide = constant_prefix + "".join(mutable_part) + constant_suffix
                 new_sequence.append(new_peptide)
             yield "".join(new_sequence)
